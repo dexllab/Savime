@@ -1,0 +1,18 @@
+<map id="template_builder.h" name="template_builder.h">
+<area shape="rect" id="node2" href="$default__template_8h.html" title="default_template.h" alt="" coords="761,80,890,107"/>
+<area shape="rect" id="node47" href="$abstract__storage__manager_8h.html" title="../core/include/abstract\l_storage_manager.h" alt="" coords="203,155,357,196"/>
+<area shape="rect" id="node50" href="$default__apply__template_8h.html" title="default_apply_template.h" alt="" coords="315,80,482,107"/>
+<area shape="rect" id="node3" href="$util_8h.html" title="../core/include/util.h" alt="" coords="1045,579,1181,606"/>
+<area shape="rect" id="node24" href="$savime__hash_8h.html" title="../core/include/savime\l_hash.h" alt="" coords="686,155,837,196"/>
+<area shape="rect" id="node45" href="$query__data__manager_8h.html" title="../core/include/query\l_data_manager.h" alt="" coords="761,333,901,375"/>
+<area shape="rect" id="node46" href="$storage__manager_8h.html" title="../core/include/storage\l_manager.h" alt="" coords="390,244,541,285"/>
+<area shape="rect" id="node48" href="$default__storage__manager_8h.html" title="default_storage_manager.h" alt="" coords="483,162,661,189"/>
+<area shape="rect" id="node23" href="$symbols_8h.html" title="symbols.h" alt="" coords="212,661,295,688"/>
+<area shape="rect" id="node28" href="$metadata_8h.html" title="metadata.h" alt="" coords="613,423,699,449"/>
+<area shape="rect" id="node32" href="$rtree_8h.html" title="rtree.h" alt="" coords="423,579,481,606"/>
+<area shape="rect" id="node35" href="$types_8h.html" title="types.h" alt="" coords="302,497,367,524"/>
+<area shape="rect" id="node37" href="$savime_8h.html" title="savime.h" alt="" coords="1981,497,2056,524"/>
+<area shape="rect" id="node40" href="$dynamic__bitset_8h.html" title="dynamic_bitset.h" alt="" coords="595,497,717,524"/>
+<area shape="rect" id="node38" href="$system__logger_8h.html" title="system_logger.h" alt="" coords="2137,579,2255,606"/>
+<area shape="rect" id="node39" href="$config__manager_8h.html" title="config_manager.h" alt="" coords="2084,661,2209,688"/>
+</map>

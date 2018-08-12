@@ -1,0 +1,13 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="node1" href="$classMetadataObject.html" title="MetadataObject" alt="" coords="5,233,120,260"/>
+<area shape="rect" id="node2" href="$structAttribute.html" title="Attribute" alt="" coords="212,5,283,32"/>
+<area shape="rect" id="node3" href="$classDataElement.html" title="DataElement" alt="" coords="198,56,297,83"/>
+<area shape="rect" id="node4" href="$structDataset.html" title="Dataset" alt="" coords="213,107,281,133"/>
+<area shape="rect" id="node5" href="$structDimension.html" title="Dimension" alt="" coords="205,157,289,184"/>
+<area shape="rect" id="node6" href="$structDimensionSpecification.html" title="DimensionSpecification" alt="" coords="168,208,327,235"/>
+<area shape="rect" id="node7" href="$structRole.html" title="Role" alt="" coords="223,259,272,285"/>
+<area shape="rect" id="node8" href="$classSubtar.html" title="Subtar" alt="" coords="217,309,277,336"/>
+<area shape="rect" id="node9" href="$classTAR.html" title="TAR" alt="" coords="223,360,272,387"/>
+<area shape="rect" id="node10" href="$structTARS.html" title="TARS" alt="" coords="218,411,277,437"/>
+<area shape="rect" id="node11" href="$structType.html" title="Type" alt="" coords="222,461,273,488"/>
+</map>

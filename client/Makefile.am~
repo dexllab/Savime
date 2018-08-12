@@ -1,0 +1,2 @@
+bin_PROGRAMS = client
+client_SOURCES = main.cpp connecionmanager.cpp

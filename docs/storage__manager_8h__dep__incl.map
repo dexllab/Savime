@@ -1,0 +1,22 @@
+<map id="storage_manager.h" name="storage_manager.h">
+<area shape="rect" id="node2" href="$parser_8h.html" title="parser.h" alt="" coords="368,80,437,107"/>
+<area shape="rect" id="node3" href="$engine_8h.html" title="engine.h" alt="" coords="95,155,166,181"/>
+<area shape="rect" id="node9" href="$default__parser_8h.html" title="default_parser.h" alt="" coords="632,155,747,181"/>
+<area shape="rect" id="node14" href="$schema__builder_8h.html" title="schema_builder.h" alt="" coords="627,80,751,107"/>
+<area shape="rect" id="node15" href="$default__storage__manager_8h.html" title="default_storage_manager.h" alt="" coords="776,80,955,107"/>
+<area shape="rect" id="node16" href="$default__template_8h.html" title="default_template.h" alt="" coords="941,155,1070,181"/>
+<area shape="rect" id="node19" href="$abstract__storage__manager_8h.html" title="abstract_storage_manager.h" alt="" coords="1029,80,1216,107"/>
+<area shape="rect" id="node20" href="$default__apply__template_8h.html" title="default_apply_template.h" alt="" coords="1146,155,1313,181"/>
+<area shape="rect" id="node21" href="$ddl__operators_8cpp.html" title="ddl_operators.cpp" alt="" coords="1291,80,1416,107"/>
+<area shape="rect" id="node5" href="$builder_8cpp.html" title="builder.cpp" alt="" coords="221,379,307,405"/>
+<area shape="rect" id="node8" href="$optimizer_8h.html" title="optimizer.h" alt="" coords="190,155,277,181"/>
+<area shape="rect" id="node12" href="$metadata_8cpp.html" title="metadata.cpp" alt="" coords="352,155,453,181"/>
+<area shape="rect" id="node13" href="$default__engine_8cpp.html" title="default_engine.cpp" alt="" coords="477,155,608,181"/>
+<area shape="rect" id="node4" href="$builder_8h.html" title="builder.h" alt="" coords="7,304,78,331"/>
+<area shape="rect" id="node7" href="$session_8h.html" title="session.h" alt="" coords="147,229,226,256"/>
+<area shape="rect" id="node6" href="$main_8cpp.html" title="main.cpp" alt="" coords="5,379,80,405"/>
+<area shape="rect" id="node10" href="$default__parser_8cpp.html" title="default_parser.cpp" alt="" coords="522,229,651,256"/>
+<area shape="rect" id="node11" href="$schema__builder_8cpp.html" title="schema_builder.cpp" alt="" coords="676,229,815,256"/>
+<area shape="rect" id="node18" href="$default__storage__manager_8cpp.html" title="default_storage_manager.cpp" alt="" coords="925,304,1118,331"/>
+<area shape="rect" id="node17" href="$template__builder_8h.html" title="template_builder.h" alt="" coords="992,229,1120,256"/>
+</map>

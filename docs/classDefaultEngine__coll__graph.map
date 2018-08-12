@@ -1,0 +1,8 @@
+<map id="DefaultEngine" name="DefaultEngine">
+<area shape="rect" id="node2" href="$classEngine.html" title="Engine" alt="" coords="5,171,68,197"/>
+<area shape="rect" id="node3" href="$classSavimeModule.html" title="SavimeModule" alt="" coords="97,95,205,121"/>
+<area shape="rect" id="node6" href="$classStorageManager.html" title="StorageManager" alt="" coords="93,171,210,197"/>
+<area shape="rect" id="node7" href="$classMetadataManager.html" title="MetadataManager" alt="" coords="235,171,361,197"/>
+<area shape="rect" id="node4" href="$classSystemLogger.html" title="SystemLogger" alt="" coords="22,5,129,32"/>
+<area shape="rect" id="node5" href="$classConfigurationManager.html" title="ConfigurationManager" alt="" coords="153,5,302,32"/>
+</map>

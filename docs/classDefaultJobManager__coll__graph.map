@@ -1,0 +1,13 @@
+<map id="DefaultJobManager" name="DefaultJobManager">
+<area shape="rect" id="node2" href="$classJobManager.html" title="JobManager" alt="" coords="753,171,846,197"/>
+<area shape="rect" id="node3" href="$classSavimeModule.html" title="SavimeModule" alt="" coords="372,95,480,121"/>
+<area shape="rect" id="node7" href="$classEngine.html" title="Engine" alt="" coords="5,171,68,197"/>
+<area shape="rect" id="node8" href="$classOptimizer.html" title="Optimizer" alt="" coords="92,171,171,197"/>
+<area shape="rect" id="node9" href="$classConnectionManager.html" title="ConnectionManager" alt="" coords="195,171,334,197"/>
+<area shape="rect" id="node10" href="$classQueryDataManager.html" title="QueryDataManager" alt="" coords="359,171,493,197"/>
+<area shape="rect" id="node11" href="$classMetadataManager.html" title="MetadataManager" alt="" coords="517,171,644,197"/>
+<area shape="rect" id="node12" href="$classParser.html" title="Parser" alt="" coords="668,171,728,197"/>
+<area shape="rect" id="node4" href="$classSystemLogger.html" title="SystemLogger" alt="" coords="297,5,403,32"/>
+<area shape="rect" id="node5" href="$classConfigurationManager.html" title="ConfigurationManager" alt="" coords="427,5,577,32"/>
+<area shape="rect" id="node6" href="$classConnectionListener.html" title="ConnectionListener" alt="" coords="732,95,867,121"/>
+</map>

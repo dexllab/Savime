@@ -1,0 +1,6 @@
+<map id="JobManager" name="JobManager">
+<area shape="rect" id="node2" href="$classSavimeModule.html" title="SavimeModule" alt="" coords="81,95,189,121"/>
+<area shape="rect" id="node3" href="$classSystemLogger.html" title="SystemLogger" alt="" coords="5,5,112,32"/>
+<area shape="rect" id="node4" href="$classConfigurationManager.html" title="ConfigurationManager" alt="" coords="136,5,285,32"/>
+<area shape="rect" id="node5" href="$classConnectionListener.html" title="ConnectionListener" alt="" coords="213,95,347,121"/>
+</map>

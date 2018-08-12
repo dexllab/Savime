@@ -1,0 +1,14 @@
+create_type("CartesianGeometry2d(*simulation, *time, x, y, index)");
+create_type("CartesianGeometry3d(*simulation, *time, x, y, z, index)");
+create_type("CartesianGeometry(*simulation, *time, coords, index)");
+create_type("CartesianFieldData2d(*simulation, *time, x, y)");
+create_type("CartesianFieldData3d(*simulation, *time, x, y, z)");
+create_type("PolarGeometry(*simulation, *time, radius, theta, index)");
+create_type("PolarFieldData(*simulation, *time, radius, theta)");
+create_type("SphericalGeometry(*simulation, *time, rho, theta, phi, index)");
+create_type("SphericalFieldData(*simulation, *time, rho, theta, phi)");
+create_type("CylindricalGeometry(*simulation, *time, rho, phi, z, index)");
+create_type("CylindricalFieldData(*simulation, *time, rho, phi, z)");
+create_type("UnstructuredFieldData(*simulation, *time, index)");
+create_type("IncidenceTopology(*simulation, *time, incident, incidentee, celltype)");
+create_type("AdjacenceTopology(*simulation, *time, incidentI, incidentJ, value, *type)");

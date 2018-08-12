@@ -1,0 +1,8 @@
+<map id="GeneralLiteral" name="GeneralLiteral">
+<area shape="rect" id="node4" href="$classBitStringLiteral.html" title="BitStringLiteral" alt="" coords="5,229,112,256"/>
+<area shape="rect" id="node5" href="$classCharacterStringLiteral.html" title="CharacterStringLiteral" alt="" coords="137,229,285,256"/>
+<area shape="rect" id="node6" href="$classHexStringLiteral.html" title="HexStringLiteral" alt="" coords="309,229,424,256"/>
+<area shape="rect" id="node7" href="$classTruthValue.html" title="TruthValue" alt="" coords="448,229,533,256"/>
+<area shape="rect" id="node2" href="$classValueExpression.html" title="ValueExpression" alt="" coords="228,80,348,107"/>
+<area shape="rect" id="node3" href="$classParseTreeNode.html" title="ParseTreeNode" alt="" coords="231,5,345,32"/>
+</map>

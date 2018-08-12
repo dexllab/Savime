@@ -1,0 +1,6 @@
+/usr/local/lib/libsavime.a
+/usr/local/bin/savimec
+/usr/local/bin/savime
+/usr/local/lib/libsavime-mapped-memory.a
+/usr/local/lib/libsavime-rdmap.a
+/usr/local/lib/libsavime-staging.a

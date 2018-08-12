@@ -1,0 +1,196 @@
+#include <mapi.h> 
+#include <stdio.h> 
+#include <stdlib.h> 
+#include <string.h> 
+
+void die(Mapi dbh, MapiHdl hdl) { 
+  if (hdl != NULL) { 
+    mapi_explain_query(hdl, stderr); 
+    do { 
+      if (mapi_result_error(hdl) != NULL) 
+        mapi_explain_result(hdl, stderr); 
+    } while (mapi_next_result(hdl) == 1); 
+    mapi_close_handle(hdl); 
+    mapi_destroy(dbh); 
+  } else if (dbh != NULL) { 
+    mapi_explain(dbh, stderr); 
+    mapi_destroy(dbh); 
+  } else { 
+    fprintf(stderr, "command failed\n"); 
+  } 
+  exit(-1); 
+} 
+
+MapiHdl query(Mapi dbh, char *q) { 
+  MapiHdl ret = NULL; 
+
+  if ((ret = mapi_query(dbh, q)) == NULL || mapi_error(dbh) != MOK) 
+    die(dbh, ret); 
+
+  return(ret); 
+} 
+
+void update(Mapi dbh, char *q) { 
+  MapiHdl ret = query(dbh, q); 
+
+  if (mapi_close_handle(ret) != MOK) 
+    die(dbh, ret); 
+} 
+
+/*int main(int argc, char *argv[]) { 
+  Mapi dbh; 
+  MapiHdl hdl = NULL; 
+  char *name; 
+  char *age; 
+  dbh = mapi_connect("localhost", 50000, "monetdb", "monetdb", "sql", "teste"); 
+
+  if (mapi_error(dbh)) 
+    die(dbh, hdl); 
+
+  update(dbh, "CREATE TABLE emp (name VARCHAR(20), age INT)"); 
+  update(dbh, "INSERT INTO emp VALUES ('John', 23)"); 
+  update(dbh, "INSERT INTO emp VALUES ('Mary', 22)"); 
+  hdl = query(dbh, "SELECT * FROM emp"); 
+
+  while (mapi_fetch_row(hdl)) { 
+    name = mapi_fetch_field(hdl, 0); 
+    age = mapi_fetch_field(hdl, 1); 
+    printf("%s is %s\n", name, age); 
+  } 
+
+  mapi_close_handle(hdl); 
+  mapi_destroy(dbh); 
+  return(0); 
+} */
+
+void convertArray(int * arr, int size)
+{
+	int i;
+	for(i=0;i<size;i++)
+		arr[i] = ((arr[i]>>24) & 0xff) | 
+			 ((arr[i]<<8)  & 0xff0000) | 
+			 ((arr[i]>>8)  & 0xff00) | 
+			 ((arr[i]<<24) & 0xff000000);
+	
+}
+
+void create_file(int time_step, float * points, int p_size, int * topology, int t_size, float * data, int d_size)
+{
+	char file_name[100]; int i, cell_type = 10;
+	sprintf(file_name, "%s%d", "/home/hermano/savime_data.vtk", time_step);
+	FILE * f = fopen(file_name, "w");	
+	
+	fprintf(f, "# vtk DataFile Version 2.0\n");
+	fprintf(f,"Savime Query Output\n");
+	fprintf(f,"BINARY\n");
+	fprintf(f,"DATASET UNSTRUCTURED_GRID\n");
+	fprintf(f,"POINTS %d float\n", p_size/3);
+
+	fwrite(points, p_size, sizeof(float), f);
+	
+	fprintf(f,"\nCELLS %d %d\n", t_size/5, t_size);
+	fwrite(topology, t_size, sizeof(int), f);
+
+	fprintf(f, "\nCELL_TYPES %d\n", t_size/5);
+	convertArray(&cell_type, 1);
+	for(i=0; i<t_size/5; i++) 
+		fwrite(&cell_type, 1, sizeof(int), f);
+	
+	fprintf(f, "\nPOINT_DATA %d\n", d_size);
+	fprintf(f, "SCALARS scalars float 1\n");
+	fprintf(f, "LOOKUP_TABLE default\n");
+	fwrite(data, d_size, sizeof(float), f);
+
+	fclose(f);
+
+}
+
+int main(int argc, char *argv[]) { 
+  Mapi dbh; 
+  MapiHdl hdl = NULL; 
+  float x, y, z, pre; 
+  int i, inc1, inc2, inc3, inc4, p, idcount=0, coordcount=0, topcount = 0, dcount=0, t_step_counter=0;
+
+  dbh = mapi_connect("localhost", 50000, "monetdb", "monetdb", "sql", "teste2"); 
+
+  if (mapi_error(dbh)) 
+    die(dbh, hdl); 
+
+ //Getting geometry
+ hdl = query(dbh, "SELECT pointid, x, y, z FROM geometry g WHERE x >= -8.842383 and x <= -8.000000 and y >= -18.742517 and y <= -17.436583 and z >= -13.689364 and z <= -12.943301"); 
+
+ int coord_number=mapi_get_row_count(hdl);
+ float * points = (float *) malloc(sizeof(float)*coord_number*3);
+ int * pointids =  (int *) malloc(sizeof(int)*coord_number);
+
+ while (mapi_fetch_row(hdl)) { 
+    pointids[idcount++] =  atoi(mapi_fetch_field(hdl, 0)); 
+    points[coordcount++] = atof(mapi_fetch_field(hdl, 1));
+    points[coordcount++] = atof(mapi_fetch_field(hdl, 2));
+    points[coordcount++] = atof(mapi_fetch_field(hdl, 3));   
+ }
+ mapi_close_handle(hdl);
+ convertArray((int*)points, coord_number*3); 
+ 
+
+ int total_points_size = 93000;
+ int map = 1, * mapping = (int *)malloc(sizeof(int)*total_points_size);
+ memset((char*)mapping, 0, sizeof(int)*total_points_size);
+
+ for(i=0; i < total_points_size ; i++)
+ {
+	mapping[pointids[i]] = map++;
+ }
+
+ //getting topology
+ hdl = query(dbh, "select incident1, incident2, incident3, incident4 from topology where incident1 in (SELECT pointid FROM geometry g WHERE x >= -8.842383 and x <= -8.000000 and y >= -18.742517  and y <= -17.436583 and z >= -13.689364 and z <= -12.943301) and incident2 in (SELECT pointid FROM geometry g WHERE x >= -8.842383 and x <= -8.000000 and y >= -18.742517 and y <= -17.436583 and z >= -13.689364 and z <= -12.943301) and incident3 in (SELECT pointid FROM geometry g WHERE x >= -8.842383 and x <= -8.000000 and y >= -18.742517 and y <= -17.436583 and z >= -13.689364 and z <= -12.943301) and incident4 in (SELECT pointid FROM geometry g WHERE x >= -8.842383 and x <= -8.000000 and y >= -18.742517  and y <= -17.436583 and z >= -13.689364 and z <= -12.943301);"); 
+
+ int cell_number=mapi_get_row_count(hdl);
+ int * top = (int *) malloc(sizeof(int)*cell_number*5);
+
+ while (mapi_fetch_row(hdl)) { 
+    int i1, i2, i3, i4;	
+    
+    i1 = atoi(mapi_fetch_field(hdl, 4));
+    i2 = atoi(mapi_fetch_field(hdl, 4)); 
+    i3 = atoi(mapi_fetch_field(hdl, 4));  
+    i4 = atoi(mapi_fetch_field(hdl, 4));  
+
+    i1 = mapping[i1];
+    i2 = mapping[i2];
+    i3 = mapping[i3];
+    i4 = mapping[i4];
+
+    if(i1 && i2 && i3 && i4)
+    {
+	top[topcount++] = 4;
+	top[topcount++] = atoi(mapi_fetch_field(hdl, 0)); 
+    	top[topcount++] = atoi(mapi_fetch_field(hdl, 1));
+	top[topcount++] = atoi(mapi_fetch_field(hdl, 2));
+    	top[topcount++] = atoi(mapi_fetch_field(hdl, 3)); 
+    }
+ }
+ mapi_close_handle(hdl);  
+ convertArray((int*)top, cell_number*5); 
+
+ hdl = query(dbh, "SELECT r.pressure FROM raw r INNER JOIN geometry g ON r.pointid = g.pointid WHERE x >= -8.842383 and x <= -8.000000 and y >= -18.742517 and y <= -17.436583 and z >= -13.689364 and z <= -12.943301;"); 
+
+ int data_number=mapi_get_row_count(hdl);
+ float *  data = (float *) malloc(sizeof(float)*coord_number);
+
+ while (mapi_fetch_row(hdl)) { 
+    data[dcount++] = atof(mapi_fetch_field(hdl, 0));
+
+    if(dcount == coord_number) 
+    {
+	convertArray((int*)data, coord_number);
+	create_file(t_step_counter++, points, coord_number*3, top, cell_number*5, data, coord_number);
+	dcount = 0;
+    } 
+ }
+ mapi_close_handle(hdl);
+
+ mapi_destroy(dbh); 
+ return(0); 
+}
+

@@ -1,0 +1,15 @@
+<map id="ddl_operators.h" name="ddl_operators.h">
+<area shape="rect" id="node2" href="$engine_8h.html" title="include/engine.h" alt="" coords="1248,80,1364,107"/>
+<area shape="rect" id="node22" href="$util_8h.html" title="util.h" alt="" coords="2450,550,2501,577"/>
+<area shape="rect" id="node47" href="$storage__manager_8h.html" title="storage_manager.h" alt="" coords="1445,244,1578,271"/>
+<area shape="rect" id="node48" href="$query__data__manager_8h.html" title="query_data_manager.h" alt="" coords="1337,319,1492,345"/>
+<area shape="rect" id="node3" href="$savime_8h.html" title="savime.h" alt="" coords="332,468,406,495"/>
+<area shape="rect" id="node8" href="$parser_8h.html" title="parser.h" alt="" coords="1272,162,1341,189"/>
+<area shape="rect" id="node49" href="$connection__manager_8h.html" title="include/connection\l_manager.h" alt="" coords="932,155,1062,196"/>
+<area shape="rect" id="node6" href="$system__logger_8h.html" title="system_logger.h" alt="" coords="30,550,148,577"/>
+<area shape="rect" id="node7" href="$config__manager_8h.html" title="include/config_manager.h" alt="" coords="173,550,344,577"/>
+<area shape="rect" id="node9" href="$metadata_8h.html" title="metadata.h" alt="" coords="1428,393,1515,420"/>
+<area shape="rect" id="node14" href="$rtree_8h.html" title="rtree.h" alt="" coords="2118,550,2177,577"/>
+<area shape="rect" id="node20" href="$types_8h.html" title="types.h" alt="" coords="2202,468,2267,495"/>
+<area shape="rect" id="node36" href="$dynamic__bitset_8h.html" title="dynamic_bitset.h" alt="" coords="1468,468,1590,495"/>
+</map>

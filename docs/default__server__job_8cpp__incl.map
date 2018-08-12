@@ -1,0 +1,17 @@
+<map id="default_server_job.cpp" name="default_server_job.cpp">
+<area shape="rect" id="node8" href="$default__server__job_8h.html" title="default_server_job.h" alt="" coords="2955,80,3094,107"/>
+<area shape="rect" id="node48" href="$protocol_8h.html" title="../lib/protocol.h" alt="" coords="3464,162,3572,189"/>
+<area shape="rect" id="node10" href="$job__manager_8h.html" title="../core/include/job\l_manager.h" alt="" coords="3138,155,3263,196"/>
+<area shape="rect" id="node12" href="$optimizer_8h.html" title="optimizer.h" alt="" coords="3117,244,3204,271"/>
+<area shape="rect" id="node13" href="$savime_8h.html" title="savime.h" alt="" coords="3161,632,3235,659"/>
+<area shape="rect" id="node45" href="$engine_8h.html" title="include/engine.h" alt="" coords="2977,244,3093,271"/>
+<area shape="rect" id="node46" href="$connection__manager_8h.html" title="include/connection\l_manager.h" alt="" coords="3161,319,3291,360"/>
+<area shape="rect" id="node17" href="$parser_8h.html" title="parser.h" alt="" coords="3017,326,3086,353"/>
+<area shape="rect" id="node15" href="$system__logger_8h.html" title="system_logger.h" alt="" coords="3301,714,3420,741"/>
+<area shape="rect" id="node16" href="$config__manager_8h.html" title="include/config_manager.h" alt="" coords="3106,714,3277,741"/>
+<area shape="rect" id="node18" href="$metadata_8h.html" title="metadata.h" alt="" coords="2853,557,2940,584"/>
+<area shape="rect" id="node43" href="$storage__manager_8h.html" title="storage_manager.h" alt="" coords="2842,408,2975,435"/>
+<area shape="rect" id="node44" href="$query__data__manager_8h.html" title="query_data_manager.h" alt="" coords="2985,483,3139,509"/>
+<area shape="rect" id="node22" href="$rtree_8h.html" title="rtree.h" alt="" coords="2801,632,2859,659"/>
+<area shape="rect" id="node27" href="$dynamic__bitset_8h.html" title="dynamic_bitset.h" alt="" coords="1523,632,1644,659"/>
+</map>

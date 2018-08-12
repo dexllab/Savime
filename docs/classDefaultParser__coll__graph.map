@@ -1,0 +1,11 @@
+<map id="DefaultParser" name="DefaultParser">
+<area shape="rect" id="node2" href="$classParser.html" title="Parser" alt="" coords="479,235,539,261"/>
+<area shape="rect" id="node3" href="$classSavimeModule.html" title="SavimeModule" alt="" coords="229,95,337,121"/>
+<area shape="rect" id="node6" href="$classStorageManager.html" title="StorageManager" alt="" coords="240,184,357,211"/>
+<area shape="rect" id="node8" href="$classMetadataManager.html" title="MetadataManager" alt="" coords="89,184,215,211"/>
+<area shape="rect" id="node4" href="$classSystemLogger.html" title="SystemLogger" alt="" coords="229,5,336,32"/>
+<area shape="rect" id="node5" href="$classConfigurationManager.html" title="ConfigurationManager" alt="" coords="5,5,155,32"/>
+<area shape="rect" id="node7" href="$classSchemaBuilder.html" title="SchemaBuilder" alt="" coords="229,285,339,312"/>
+<area shape="rect" id="node9" href="$structTARS.html" title="TARS" alt="" coords="592,285,651,312"/>
+<area shape="rect" id="node10" href="$classMetadataObject.html" title="MetadataObject" alt="" coords="564,184,679,211"/>
+</map>

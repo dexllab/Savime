@@ -1,0 +1,79 @@
+#ifndef PARSE_TREE_H
+#define PARSE_TREE_H
+
+#include <stdio.h>
+
+class ParseTreeNode{
+public:
+    void printTreeNode();
+};
+
+class DerivedColumn : public ParseTreeNode{
+p
+}
+
+class SelectSubListElement : public ParseTreeNode{
+
+public:
+    
+};
+
+select_sublist_element:
+derived_column {}
+| qualified_asterisk {}
+;
+
+class SelectSubList : public ParseTreeNode
+{
+
+    SelectSubListElement * _selectSubListElement;
+    SelectSubList * _selectSubList;
+
+public:
+  
+    SelectSubList(SelectSubListElement * selectSubListElement, SelectSubList * selectSubList)
+    {
+        _selectSubListElement = selectSubListElement;
+        _selectSubList = selectSubList;
+    }
+            
+};
+
+class SelectList : public ParseTreeNode
+{
+    bool _isSelectStar;
+    SelectSubList * _selectSubList;
+    
+public :
+    
+    SelectList(bool isSelectStar, SelectSubList * selectList)
+    {
+        _isSelectStar = isSelectStar;
+        _selectSubList = selectList;
+    }
+};
+
+class TableExpression : public ParseTreeNode
+{
+    
+};
+
+class QueryExpression : public ParseTreeNode
+{
+    SelectList * _selectList;
+    TableExpression * _tableExpression;
+    
+public:
+    QueryExpression(SelectList * selectList, TableExpression * tableExpression)
+    {
+	_selectList = selectList;
+        _tableExpression = tableExpression;
+    }
+   
+};
+
+
+
+
+#endif /* PARSE_TREE_H */
+

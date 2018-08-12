@@ -1,0 +1,8 @@
+<map id="DataElement" name="DataElement">
+<area shape="rect" id="node2" href="$classMetadataObject.html" title="MetadataObject" alt="" coords="19,13,133,39"/>
+<area shape="rect" id="node3" href="$structAttribute.html" title="Attribute" alt="" coords="25,109,95,136"/>
+<area shape="rect" id="node5" href="$structDimension.html" title="Dimension" alt="" coords="165,199,249,225"/>
+<area shape="rect" id="node6" href="$structDataset.html" title="Dataset" alt="" coords="290,109,358,136"/>
+<area shape="rect" id="node4" href="$classDataType.html" title="DataType" alt="" coords="182,13,261,39"/>
+<area shape="rect" id="node7" href="$classboost_1_1dynamic__bitset.html" title="boost::dynamic_bitset\l\&lt; Block, Allocator \&gt;" alt="" coords="285,5,435,47"/>
+</map>

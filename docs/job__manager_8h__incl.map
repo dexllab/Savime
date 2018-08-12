@@ -1,0 +1,15 @@
+<map id="job_manager.h" name="job_manager.h">
+<area shape="rect" id="node3" href="$optimizer_8h.html" title="optimizer.h" alt="" coords="3271,80,3357,107"/>
+<area shape="rect" id="node4" href="$savime_8h.html" title="savime.h" alt="" coords="3315,468,3390,495"/>
+<area shape="rect" id="node46" href="$engine_8h.html" title="include/engine.h" alt="" coords="3131,80,3247,107"/>
+<area shape="rect" id="node47" href="$connection__manager_8h.html" title="include/connection\l_manager.h" alt="" coords="3339,155,3470,196"/>
+<area shape="rect" id="node8" href="$parser_8h.html" title="parser.h" alt="" coords="3130,162,3199,189"/>
+<area shape="rect" id="node6" href="$system__logger_8h.html" title="system_logger.h" alt="" coords="3511,550,3629,577"/>
+<area shape="rect" id="node7" href="$config__manager_8h.html" title="include/config_manager.h" alt="" coords="3315,550,3486,577"/>
+<area shape="rect" id="node9" href="$metadata_8h.html" title="metadata.h" alt="" coords="2025,393,2112,420"/>
+<area shape="rect" id="node44" href="$storage__manager_8h.html" title="storage_manager.h" alt="" coords="2929,244,3062,271"/>
+<area shape="rect" id="node45" href="$query__data__manager_8h.html" title="query_data_manager.h" alt="" coords="2918,319,3073,345"/>
+<area shape="rect" id="node14" href="$rtree_8h.html" title="rtree.h" alt="" coords="346,468,405,495"/>
+<area shape="rect" id="node20" href="$dynamic__bitset_8h.html" title="dynamic_bitset.h" alt="" coords="2008,468,2129,495"/>
+<area shape="rect" id="node37" href="$util_8h.html" title="util.h" alt="" coords="575,550,626,577"/>
+</map>

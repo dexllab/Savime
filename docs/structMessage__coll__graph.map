@@ -1,0 +1,4 @@
+<map id="Message" name="Message">
+<area shape="rect" id="node2" href="$structPayload.html" title="Payload" alt="" coords="5,5,75,32"/>
+<area shape="rect" id="node3" href="$structConnectionDetails.html" title="ConnectionDetails" alt="" coords="99,5,229,32"/>
+</map>

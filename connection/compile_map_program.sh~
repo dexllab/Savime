@@ -1,0 +1,8 @@
+#!/bin/bash
+
+libtool --mode=compile --tag=CC gcc -c `env PKG_CONFIG_PATH=/usr/lib/pkgconfig pkg-config --cflags monetdb-mapi` monet_mapi_example.c
+ 
+libtool --mode=link --tag=CC gcc -o monet `env PKG_CONFIG_PATH=/usr/lib/pkgconfig pkg-config --libs monetdb-mapi` monet_mapi_example.c.o 
+
+./monet
+

@@ -1,0 +1,3 @@
+#!/bin/bash
+
+bison -t -d grammar.y && lex lexer.l  && g++ lex.yy.c grammar.tab.c -o prog

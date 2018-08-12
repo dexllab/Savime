@@ -1,0 +1,14 @@
+<map id="VizConfiguration" name="VizConfiguration">
+<area shape="rect" id="node2" href="$classDataElement.html" title="DataElement" alt="" coords="839,228,937,255"/>
+<area shape="rect" id="node3" href="$classMetadataObject.html" title="MetadataObject" alt="" coords="63,192,177,219"/>
+<area shape="rect" id="node4" href="$structAttribute.html" title="Attribute" alt="" coords="382,175,453,201"/>
+<area shape="rect" id="node6" href="$structDimension.html" title="Dimension" alt="" coords="636,312,720,339"/>
+<area shape="rect" id="node7" href="$structDataset.html" title="Dataset" alt="" coords="383,347,451,373"/>
+<area shape="rect" id="node10" href="$classTAR.html" title="TAR" alt="" coords="653,69,703,96"/>
+<area shape="rect" id="node13" href="$structType.html" title="Type" alt="" coords="392,73,443,100"/>
+<area shape="rect" id="node5" href="$classDataType.html" title="DataType" alt="" coords="81,413,159,440"/>
+<area shape="rect" id="node8" href="$classboost_1_1dynamic__bitset.html" title="boost::dynamic_bitset\l\&lt; Block, Allocator \&gt;" alt="" coords="45,347,195,389"/>
+<area shape="rect" id="node9" href="$classsemaphore.html" title="semaphore" alt="" coords="845,291,931,317"/>
+<area shape="rect" id="node11" href="$classRTree.html" title="RTree\&lt; int64_t, int64_t \&gt;" alt="" coords="333,23,501,49"/>
+<area shape="rect" id="node12" href="$structRTree_1_1Node.html" title="Node for each branch level. " alt="" coords="5,8,235,64"/>
+</map>

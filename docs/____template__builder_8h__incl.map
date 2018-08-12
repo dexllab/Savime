@@ -1,0 +1,16 @@
+<map id="__template_builder.h" name="__template_builder.h">
+<area shape="rect" id="node2" href="$default__template_8h.html" title="default_template.h" alt="" coords="787,80,917,107"/>
+<area shape="rect" id="node48" href="$abstract__template_8h.html" title="abstract_template.h" alt="" coords="531,155,669,181"/>
+<area shape="rect" id="node50" href="$default__apply__template_8h.html" title="default_apply_template.h" alt="" coords="941,80,1107,107"/>
+<area shape="rect" id="node3" href="$util_8h.html" title="include/util.h" alt="" coords="627,550,722,577"/>
+<area shape="rect" id="node23" href="$query__data__manager_8h.html" title="include/query_data\l_manager.h" alt="" coords="1036,304,1167,345"/>
+<area shape="rect" id="node46" href="$storage__manager_8h.html" title="include/storage_manager.h" alt="" coords="885,229,1064,256"/>
+<area shape="rect" id="node47" href="$default__storage__manager_8h.html" title="default_storage_manager.h" alt="" coords="827,155,1005,181"/>
+<area shape="rect" id="node25" href="$metadata_8h.html" title="metadata.h" alt="" coords="953,393,1039,420"/>
+<area shape="rect" id="node33" href="$savime_8h.html" title="savime.h" alt="" coords="1888,468,1963,495"/>
+<area shape="rect" id="node28" href="$rtree_8h.html" title="rtree.h" alt="" coords="324,550,383,577"/>
+<area shape="rect" id="node31" href="$types_8h.html" title="types.h" alt="" coords="635,468,701,495"/>
+<area shape="rect" id="node36" href="$dynamic__bitset_8h.html" title="dynamic_bitset.h" alt="" coords="827,468,949,495"/>
+<area shape="rect" id="node34" href="$system__logger_8h.html" title="system_logger.h" alt="" coords="2097,550,2215,577"/>
+<area shape="rect" id="node35" href="$config__manager_8h.html" title="include/config_manager.h" alt="" coords="1901,550,2072,577"/>
+</map>

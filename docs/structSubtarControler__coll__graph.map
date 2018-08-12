@@ -1,0 +1,8 @@
+<map id="SubtarControler" name="SubtarControler">
+<area shape="rect" id="node2" href="$classSubtar.html" title="Subtar" alt="" coords="32,303,92,329"/>
+<area shape="rect" id="node3" href="$classMetadataObject.html" title="MetadataObject" alt="" coords="25,20,139,47"/>
+<area shape="rect" id="node4" href="$classTAR.html" title="TAR" alt="" coords="89,213,139,240"/>
+<area shape="rect" id="node7" href="$structType.html" title="Type" alt="" coords="119,124,170,151"/>
+<area shape="rect" id="node5" href="$classRTree.html" title="RTree\&lt; int64_t, int64_t \&gt;" alt="" coords="194,124,362,151"/>
+<area shape="rect" id="node6" href="$structRTree_1_1Node.html" title="Node for each branch level. " alt="" coords="163,5,393,61"/>
+</map>

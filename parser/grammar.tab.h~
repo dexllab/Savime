@@ -1,0 +1,142 @@
+/* A Bison parser, made by GNU Bison 3.0.2.  */
+
+/* Bison interface for Yacc-like parsers in C
+
+   Copyright (C) 1984, 1989-1990, 2000-2013 Free Software Foundation, Inc.
+
+   This program is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.  */
+
+/* As a special exception, you may create a larger work that contains
+   part or all of the Bison parser skeleton and distribute that work
+   under terms of your choice, so long as that work isn't itself a
+   parser generator using the skeleton or a modified version thereof
+   as a parser skeleton.  Alternatively, if you modify or redistribute
+   the parser skeleton itself, you may (at your option) remove this
+   special exception, which will cause the skeleton and the resulting
+   Bison output files to be licensed under the GNU General Public
+   License without this special exception.
+
+   This special exception was added by the Free Software Foundation in
+   version 2.2 of Bison.  */
+
+#ifndef YY_YY_GRAMMAR_TAB_H_INCLUDED
+# define YY_YY_GRAMMAR_TAB_H_INCLUDED
+/* Debug traces.  */
+#ifndef YYDEBUG
+# define YYDEBUG 0
+#endif
+#if YYDEBUG
+extern int yydebug;
+#endif
+
+/* Token type.  */
+#ifndef YYTOKENTYPE
+# define YYTOKENTYPE
+  enum yytokentype
+  {
+    INTEGER = 258,
+    SELECT = 259,
+    FROM = 260,
+    WHERE = 261,
+    GROUP = 262,
+    BY = 263,
+    HAVING = 264,
+    ASTERISK = 265,
+    COMMA = 266,
+    PERIOD = 267,
+    AS = 268,
+    PLUS_SIGN = 269,
+    MINUS_SIGN = 270,
+    SOLIDUS = 271,
+    OR = 272,
+    AND = 273,
+    LEFT_PAREN = 274,
+    RIGHT_PAREN = 275,
+    DOUBLE_QUOTE = 276,
+    CROSS = 277,
+    JOIN = 278,
+    NOT = 279,
+    IS = 280,
+    DOUBLE_PIPE = 281,
+    RIGHT_ARROW = 282,
+    IDENTIFIER_BODY = 283,
+    INNER = 284,
+    OUTER = 285,
+    TRUE = 286,
+    FALSE = 287,
+    UNKNOWN = 288,
+    AVG = 289,
+    MAX = 290,
+    MIN = 291,
+    SUM = 292,
+    EVERY = 293,
+    ANY = 294,
+    SOME = 295,
+    COUNT = 296,
+    ON = 297,
+    LEFT = 298,
+    RIGHT = 299,
+    FULL = 300,
+    B = 301,
+    BITS = 302,
+    X = 303,
+    HEX = 304,
+    BETWEEN = 305,
+    IN = 306,
+    EXACT_NUMBER = 307,
+    APROX_NUMBER = 308,
+    STRING = 309,
+    QUOTE = 310,
+    EQ = 311,
+    NEQ = 312,
+    LE = 313,
+    GE = 314,
+    LEQ = 315,
+    GEQ = 316,
+    COUNT_STAR = 317,
+    EMPTY = 318,
+    EMPTY1 = 319,
+    EMPTY2 = 320,
+    EMPTY3 = 321,
+    EMPTY4 = 322,
+    EMPTY5 = 323
+  };
+#endif
+
+/* Value type.  */
+#if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
+typedef union YYSTYPE YYSTYPE;
+union YYSTYPE
+{
+#line 78 "grammar.y" /* yacc.c:1909  */
+
+  float num;
+  char * id;
+  ParseTreeNode * node;
+  QueryExpression * queryExpression;
+  SelectList * selectList;
+  TableExpression * tableExpression;
+
+#line 132 "grammar.tab.h" /* yacc.c:1909  */
+};
+# define YYSTYPE_IS_TRIVIAL 1
+# define YYSTYPE_IS_DECLARED 1
+#endif
+
+
+extern YYSTYPE yylval;
+
+int yyparse (void);
+
+#endif /* !YY_YY_GRAMMAR_TAB_H_INCLUDED  */

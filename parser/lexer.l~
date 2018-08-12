@@ -1,0 +1,300 @@
+%{
+#include <stdlib.h>
+#include <string.h>
+#include "parse_tree.h"
+#include "grammar.tab.h"
+%}
+%%
+
+[sS][eE][lL][eE][cC][tT] {
+			    return SELECT;
+       			 }
+
+[fF][rR][oO][mM]	 {
+			    return FROM;
+       			 }
+
+[wW][hH][eE][rR][eE]	 {
+			    return WHERE;
+       			 }
+
+[gG][rR][oO][uU][pP]	 {
+			    return GROUP;
+       			 }
+
+[bB][yY]	 	 {
+			    return BY;
+       			 }
+
+[oO][rR][dD][eE][rR] 	 {
+			    return ORDER;
+	       		 }
+
+[hH][aA][vV][iI][nN][gG] {
+			    return HAVING;
+	       		 }
+
+[*] 			 {
+			    return ASTERISK;
+	       		 }
+
+[,] 			 {
+			    return COMMA;
+	       		 }
+
+[.] 			 {
+			    return PERIOD;
+	       		 }
+
+[aA][sS] 		 {
+			    return AS;
+	       		 }
+
+[+] 			 {
+			    return PLUS_SIGN;
+	       		 }
+
+[-] 			 {
+			    return MINUS_SIGN;
+	       		 }
+
+[/] 			 {
+			    return SOLIDUS;
+	       		 }
+
+[oO][rR] 		 {
+			    return OR;
+	       		 }
+
+[aA][nN][dD] 		 {
+			    return AND;
+	       		 }
+
+[(]			 {
+			    return LEFT_PAREN;
+	       		 }
+
+[)]			 {
+			    return RIGHT_PAREN;
+	       		 }
+
+["]			 {
+			    return DOUBLE_QUOTE;
+	       		 }
+
+[;]			 {
+			    return SEMICOLON;
+	       		 }
+ 
+[cC][rR][oO][sS][sS]	 {
+			    return CROSS;
+       			 }
+
+[jJ][oO][iI][nN]	 {
+			    return JOIN;
+       			 }
+
+[nN][oO][tT] 		 {
+			    return NOT;
+	       		 }
+
+[iI][sS] 		 {
+			    return IS;
+	       		 }
+
+[|][|] 		 	 {
+			    return DOUBLE_PIPE;
+	       		 }
+
+[-][>] 		 	 {
+			    return RIGHT_ARROW;
+	       		 }
+
+[iI][nN][nN][eE][rR]	 {
+			    return INNER;
+       			 }
+
+[oO][uU][tT][eE][rR]	 {
+			    return OUTER;
+       			 }
+
+[tT][rR][uU][eE]	 {
+			    return TRUE;
+       			 }
+
+[fF][aA][lL][sS][eE]	 {
+			    return FALSE;
+       			 }
+
+[uU][nN][kK][nN][oO][wW][nN] {
+			    	return UNKNOWN;
+       			     }
+
+[aA][vV][gG] 		 {
+			    return AVG;
+	       		 }
+
+[mM][aA][xX] 		 {
+			    return MAX;
+	       		 }
+
+[mM][iI][nN] 		 {
+			    return MIN;
+	       		 }
+
+[sS][uU][mM] 		 {
+			    return SUM;
+	       		 }
+
+[eE][vV][eE][rR][yY]	 {
+			    return EVERY;
+       			 }
+
+[aA][nN][yY] 		 {
+			    return ANY;
+	       		 }
+
+[sS][oO][mM][eE] 	 {
+			    return SOME;
+	       		 }
+
+[cC][oO][uU][nN][tT]	 {
+			    return COUNT;
+       			 }
+
+[oO][nN] 		 {
+			    return ON;
+	       		 }
+
+[lL][eE][fF][tT] 	 {
+			    return LEFT;
+	       		 }
+
+[rR][iI][gG][hH][tT]	 {
+			    return RIGHT;
+       			 }
+
+[fF][uU][lL][lL] 	 {
+			    return FULL;
+	       		 }
+
+[iI][nN]	 	 {
+			    return IN;
+	       		 }
+
+[bB][eE][tT][wW][eE][eE][nN] {
+			    	return BETWEEN;
+       			     }
+
+[bB]\"[01]+\" 	 	 {
+			    yylval.value = strdup(yytext);
+			    return BITS;
+	       		 }
+
+[hH]\"[0-9a-fA-F]+\" 	 {
+			    yylval.value = strdup(yytext);	
+			    return HEX;
+	       		 }
+
+[\']	 	 	 {
+			    return QUOTE;
+	       		 }
+
+[=]	 	 	 {
+			    return EQ;
+	       		 }
+
+\<\>	 	 	 {
+			    return NEQ;
+	       		 }
+
+\<	 	 	 {
+			    return LE;
+	       		 }
+
+\>	 	 	 {
+			    return GE;
+	       		 }
+
+\<=	 	 	 {
+			    return LEQ;
+	       		 }
+
+\>=	 	 	 {
+			    return GEQ;
+	       		 }
+
+
+[cC][oO][uU][nN][tT][(][*][)]	{
+				   return COUNT_STAR;	
+				}
+
+[0-9]+		 	 {
+			    yylval.value = strdup(yytext);
+			    return EXACT_NUMBER;
+	       		 }
+
+[0-9]*\.[0-9]+	 	 {
+			    yylval.value = strdup(yytext);
+			    return EXACT_NUMBER;
+	       		 }
+
+[+-][0-9]+		 {
+			    yylval.value = strdup(yytext);	
+			    return SIGNED_EXACT_NUMBER;
+	       		 }
+
+[+-][0-9]*\.[0-9]+	 {
+			    yylval.value = strdup(yytext);	
+			    return SIGNED_EXACT_NUMBER;
+	       		 }
+
+[+-]*[0-9]*\.[0-9]+	 {
+			    yylval.value = strdup(yytext);	
+			    return EXACT_NUMBER;
+	       		 }
+
+[0-9]+[eE][+-]*[0-9]+ 	 {
+			      yylval.value = strdup(yytext);
+			      return APROX_NUMBER;
+	       		 }
+
+[+-][0-9]+[eE][+-]*[0-9]+ {
+			      yylval.value = strdup(yytext);	
+			      return SIGNED_APROX_NUMBER;
+	       		  }
+   
+\'(\\.|[^"])*\'		 {
+			    return STRING;
+	       		 }
+
+[a-zA-Z_][a-zA-Z0-9_]*   {
+			    return IDENTIFIER_BODY;
+	       		 }
+
+       
+[\n] 	{
+		return NEWLINE;
+	}
+
+
+[ \t] 	{
+		/*Ignore whitespaces*/
+	}
+
+.  	{
+	
+ 	}
+%%
+
+int yywrap(void) {
+ return 1;
+}
+
+void test(){
+	/*int code;
+	while((code = yylex()) > 0){
+		printf("%d ", code);
+	}*/
+	printf("\n");
+}

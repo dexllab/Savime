@@ -1,0 +1,329 @@
+%{
+ #include <stdlib.h>
+ #include <string.h>
+ #include <string>
+ #include <map>
+ #include <list>
+
+int yylval;
+%}
+%%
+
+[\'][.]*[\']		{
+					return 23;
+       			 }
+
+\<[a-zA-Z:\- _\t\n]+\>[ ]*::= {
+				return 6;
+		 	  }
+
+\<[a-zA-Z:\- _\t\n]+\> {
+			return 5;
+		   }
+
+^[\-][.]* {
+		return 10;
+	   }
+
+[a-zA-Z]* 	{
+		 	yylval = *yytext - 'a';
+		 	return 1;
+	 	  }
+
+
+[0-9]+ 	 {
+		 yylval = atoi(yytext);
+		 return 1;
+	 }
+
+
+<<EOF>> {
+		return 42;
+	}
+
+yyerror("invalid character");
+
+%%
+int yywrap(void) {
+	return 1;
+}
+
+std::map<std::string, std::list<std::string> > symbols;
+std::map<std::string, int > expanded;
+std::map<std::string, int > forbidden;
+std::map<std::string, std::string > replaceable;
+
+void remove_trailing(char * symbol){
+	int len = strlen(symbol);
+	
+	for(int i = 0; i < len; i++){
+		if(symbol[i] == '>' && i+1 < len){
+			symbol[i+1] = '\0';
+			break;
+		}
+	}
+}
+
+
+void init_forbidden(){
+	std::string a = "";
+	a = "<set quantifier>";
+	forbidden[a] = 1;
+	a = "<user-defined type value expression>";
+	forbidden[a] = 1;
+	a = "<rollup list>";
+	forbidden[a] = 1;
+	a = "<cube list>";
+	forbidden[a] = 1;
+	a = "<grouping sets specification>";
+	forbidden[a] = 1;
+	a = "<datetime value expression>";
+	forbidden[a] = 1;
+	a = "<interval value expression>";
+	forbidden[a] = 1;
+
+	a = "<lateral derived table>";
+	forbidden[a] = 1;
+	a = "<collection derived table>";
+	forbidden[a] = 1;
+	a = "<only spec>";
+	forbidden[a] = 1;
+	a = "<solidus>";
+	forbidden[a] = 1;
+	a = "<concatenation>";
+	forbidden[a] = 1;
+	a = "<character factor>";
+	forbidden[a] = 1;
+	a = "<blob concatenation>"; 
+	forbidden[a] = 1;
+	a = "<blob factor>";
+	forbidden[a] = 1;
+	a = "<cast specification>"; 
+	forbidden[a] = 1;
+	a = "<subtype treatment>";
+	forbidden[a] = 1;
+	a = "<reference resolution>";
+	forbidden[a] = 1;
+	a = "<collection value constructor>";
+	forbidden[a] = 1;
+	a = "<method invocation>";
+	forbidden[a] = 1;
+	a = "<static method invocation>";
+	forbidden[a] = 1;
+	a = "<collate clause>";
+	forbidden[a] = 1;
+	a = "<grouping operation>";
+	forbidden[a] = 1;
+	a = "<cast target>";
+	forbidden[a] = 1;
+	a = "<new specification>";
+	forbidden[a] = 1;
+	a = "<named columns join>";
+	forbidden[a] = 1;
+	a = "<host parameter specification>";
+	forbidden[a] = 1;
+	a = "<SQL parameter reference>"; 
+	forbidden[a] = 1;
+	a = "<SQL variable reference>";
+	forbidden[a] = 1;
+	a = "<dynamic parameter specification>";
+	forbidden[a] = 1;
+	a = "<embedded variable specification>";
+	forbidden[a] = 1;
+	a = "<user-defined type>";
+	forbidden[a] = 1;
+	a = "<simple case>";
+	forbidden[a] = 1;
+	a = "<searched case>";
+	forbidden[a] = 1;
+	a = "<datetime literal>"; 
+	forbidden[a] = 1;
+	a = "<interval literal>"; 
+	forbidden[a] = 1;
+	a = "<indicator variable>"; 
+	forbidden[a] = 1;
+	a = "<user-defined type name>"; 
+	forbidden[a] = 1;
+	a = "<with clause>";
+	forbidden[a] = 1;
+	a = "<simple when clause>";
+	forbidden[a] = 1;
+	a = "<else clause>";
+	forbidden[a] = 1;
+
+	a = "<array value constructor>"; 
+	forbidden[a] = 1;
+	a = "<array concatenation>";
+	forbidden[a] = 1;
+	a = "<national character string literal>"; 
+	forbidden[a] = 1;
+	a = "<bit string literal>";
+	forbidden[a] = 1;
+	a = "<hex string literal>";
+	forbidden[a] = 1;
+	a = "<binary string literal>";
+	forbidden[a] = 1;	
+	a = "<between predicate>";
+	forbidden[a] = 1;
+	a = "<like predicate>";
+	forbidden[a] = 1;
+	a = "<exists predicate>";
+	forbidden[a] = 1;
+	a = "<unique predicate>";
+	forbidden[a] = 1;
+	a = "<match predicate>";
+	forbidden[a] = 1;
+	a = "<overlaps predicate>";
+	forbidden[a] = 1;
+	a = "<similar predicate>";
+	forbidden[a] = 1;
+	a = "<distinct predicate>";
+	forbidden[a] = 1;
+	a = "<type predicate>";
+	forbidden[a] = 1;
+	a = "<string position expression>";
+	forbidden[a] = 1;
+	a = "<char length expression>";
+	forbidden[a] = 1;
+	a = "<octet length expression>";
+	forbidden[a] = 1;
+	a = "<bit length expression>";
+	forbidden[a] = 1;
+	a = "<character substring function>";
+	forbidden[a] = 1;
+	a = "<regular expression substring function>"; 
+	forbidden[a] = 1;
+	a = "<fold>";
+	forbidden[a] = 1;
+	a = "<form-of-use conversion>";
+	forbidden[a] = 1;
+	a = "<character translation>";
+	forbidden[a] = 1;
+	a = "<trim function>";
+	forbidden[a] = 1;
+	a = "<character overlay function>";
+	forbidden[a] = 1;
+
+	a = "<character value function>";
+	forbidden[a] = 1;
+	a = "<specific type method>"; 
+	forbidden[a] = 1;
+	a = "<blob substring function>";
+	forbidden[a] = 1;
+	a = "<blob trim function>";
+	forbidden[a] = 1;
+	a = "<blob overlay function>";
+	forbidden[a] = 1;
+	a = "<bit substring function>";
+	forbidden[a] = 1;
+	a = "<character set specification>";
+	forbidden[a] = 1;
+	a = "<nondoublequote character>";
+	forbidden[a] = 1;
+	a = "<primary datetime field>";
+	forbidden[a] = 1;
+	a = "<time zone field>";
+	forbidden[a] = 1;
+	a = "<blob trim operands>"; 
+	forbidden[a] = 1;
+	a = "<non-second primary datetime field>"; 
+	forbidden[a] = 1;
+	a = "<trim specification>"; 
+	forbidden[a] = 1;
+	a = "<trim octet>";
+	forbidden[a] = 1;
+	a = "<blob trim source>";
+	forbidden[a] = 1;
+	a = "<grand total>"; 
+	forbidden[a] = 1;
+}
+
+void print_grammar(){
+	std::list<std::string> stack;
+	std::string start("<query specification>");	
+	expanded[start] = 1;
+	stack.push_front(start);
+
+	while(stack.size() > 0){
+
+		std::string symbol = stack.front();
+		stack.pop_front();
+		printf("%s ::= ", symbol.c_str());
+
+		for(std::list<std::string>::iterator it = symbols[symbol].begin();
+	    		 it != symbols[symbol].end(); it++){
+			 printf("%s ", (*it).c_str());
+	
+			if((*it).c_str()[0] == '<'){
+				if(expanded.find(*it) == expanded.end()
+					&& forbidden.find(*it) == forbidden.end()){
+					stack.push_back(*it);
+					expanded[*it] = 1;
+				}
+			}
+		}
+		printf("\n\n");
+		//break;
+	}
+		
+}
+
+void search_replaceable_symbols(){
+	
+	for(std::map<std::string, std::list<std::string> >::iterator iter = symbols.begin(); iter != symbols.end(); ++iter)
+	{
+		std::string k =  iter->first;
+		std::list<std::string> v = iter->second;
+
+		if((v.size() == 1) && (v.front().c_str()[0]  == '<')){
+			replaceable[k] = v.front();
+		}
+	}
+
+	for(std::map<std::string, std::string>::iterator iter = replaceable.begin(); iter != replaceable.end(); ++iter)
+	{
+		symbols.erase(iter->first);
+	}
+
+}
+
+void replace_symbols(){
+	for(std::map<std::string, std::list<std::string> >::iterator iter = symbols.begin(); iter != symbols.end(); ++iter)
+	{
+		std::string k =  iter->first;
+		std::list<std::string> v = iter->second;
+
+		for(std::list<std::string>::iterator iter = v.begin(); iter != v.end(); ++iter)
+		{
+			if(replaceable.find(*iter) != replaceable.end()){
+				*iter = replaceable[*iter];
+			}
+		}
+	}
+}
+
+main(){
+	
+	int code;
+	std::string current_key;
+	init_forbidden();
+
+	while((code = yylex()) != 42){
+
+		if(code == 6){
+			remove_trailing(yytext);
+			std::string key(yytext);
+			current_key = key;
+		}else if(code == 5 || code == 1){
+			std::string val(yytext);
+			symbols[current_key].push_back(val);
+		}
+		printf("%d ", code);
+	}
+
+	printf("%ld\n\n\n", symbols.size());			
+	//search_replaceable_symbols();
+	//replace_symbols();
+	//print_grammar();
+	
+}

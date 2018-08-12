@@ -1,0 +1,13 @@
+<map id="ModulesBuilder" name="ModulesBuilder">
+<area shape="rect" id="node2" href="$classEngineListener.html" title="EngineListener" alt="" coords="646,5,754,32"/>
+<area shape="rect" id="node3" href="$classStorageManager.html" title="StorageManager" alt="" coords="641,107,759,133"/>
+<area shape="rect" id="node4" href="$classSavimeModule.html" title="SavimeModule" alt="" coords="339,259,447,285"/>
+<area shape="rect" id="node7" href="$classEngine.html" title="Engine" alt="" coords="669,157,731,184"/>
+<area shape="rect" id="node8" href="$classOptimizer.html" title="Optimizer" alt="" coords="661,208,739,235"/>
+<area shape="rect" id="node9" href="$classConnectionManager.html" title="ConnectionManager" alt="" coords="631,259,769,285"/>
+<area shape="rect" id="node10" href="$classQueryDataManager.html" title="QueryDataManager" alt="" coords="633,309,767,336"/>
+<area shape="rect" id="node11" href="$classMetadataManager.html" title="MetadataManager" alt="" coords="637,360,763,387"/>
+<area shape="rect" id="node12" href="$classParser.html" title="Parser" alt="" coords="670,411,730,437"/>
+<area shape="rect" id="node5" href="$classSystemLogger.html" title="SystemLogger" alt="" coords="27,192,133,219"/>
+<area shape="rect" id="node6" href="$classConfigurationManager.html" title="ConfigurationManager" alt="" coords="5,329,155,356"/>
+</map>
