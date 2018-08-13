@@ -130,29 +130,45 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 	The following packages must be installed for successfully compiling and running SAVIME:
 
 	<code class="codebox">sudo apt install git
-			      sudo apt install bison
-			      sudo apt install flex
-			      sudo apt install autoconf
-			      sudo apt install libtool
+			      sudo apt install cmake
 			      sudo apt install libboost-all-dev
-			      sudo apt install librdmacm-dev
+    	</code>	
+	It is also advisable to install  other packages depending on intended usage. In order to have
+	a better performance in some operations, SAVIME uses TBB, which can be installed as follows:
+        <code class="codebox"> 
+		             sudo apt-get install libtbb-dev		      
+    	</code>	
+	  
+	If it is necessary to change the base of SAVIME grammar, then, the following 
+	packages (bison and flex) are required.
+	 
+	<code class="codebox"> 
+		              sudo apt install bison
+			      sudo apt install flex
+    	</code>	
+	  
+	If the experimental RDMA support is required, then it is necessary to install the following package:
+	  
+	<code class="codebox"> 
+		sudo apt install librdmacm-dev
     	</code>	
 
 	<br> <h3>Compiling and running SAVIME</h3>
 	
-	Once you have all dependencies installed, clone the repository.
+	Once you have all dependencies are installed, clone the repository:
 
 	<br> <code class="codebox"> git clone https://github.com/hllustosa/Savime </code>	
 
-	<br> <br> Enter the respository and build SAVIME:
+	<br> <br> Create a separate build directory, configure and build SAVIME:
 
-	<br><code class="codebox"> cd Savime
-				   autoreconf -f -i
-				   ./configure
-				   make
+	<br><code class="codebox"> mkdir savime-build
+				   cd savime-build
+				   cmake ${SAVIME_BUILD} -DCMAKE_BUILD_TYPE=Release
+				   make -j 4
 				   sudo make install 
 	</code>	
-
+        Where  ${SAVIME_BUILD} is the path where the SAVIME repository is in your environment.
+	  
 	<br><br>Once it is done, you can run the SAVIME server by typing:
 
 	<br><code class="codebox"> savime
@@ -164,12 +180,19 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 	</code>
 		
 	<br><br>You can test savime by running these commands from savime build directory:
-	<br><code class="codebox"> cd test
-				   nohup savime & 
+	<br><code class="codebox"> cd ${SAVIME_BUILD}/examples
+				   savime -D
 				   ./test_savime.sh
 	</code>
-
-	<br><br>You should see the outputs of various samples of queries in teste_savime.sh file.
+	
+	Where the option -D makes Savime run as a daemon. You should see the outputs of various 
+	samples of queries in teste_savime.sh file. 
+	  
+	You can finish Savime by running:
+        <code class="codebox"> savimec -k
+	</code>
+     
+	<br><br>
 	
 	<br> <h3>Compiling and running SAVIME with catalyst support</h3>
 
@@ -209,21 +232,22 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 
 	<br><br> Once you finished this, you should compile SAVIME set configure parameter to enable catalyst. Like this:
 
- 	<br><code class="codebox"> cd Savime
-				   autoreconf -f -i
-				   ./configure --enable-catalyst=yes
-				   make
+ 	<br><code class="codebox"> mkdir savime-build
+				   cd savime-build
+				   cmake ${SAVIME_BUILD} -DCMAKE_BUILD_TYPE=Release -DBUILD_WITH_CATALYST=yes
+				   make -j 4
 				   sudo make install 
 	</code>	
 
 	<br><br>Finally, you can test it by running these commands from savime build directory:
 
-	<br><code class="codebox"> cd test
-				   nohup savime -b ../etc/savime.boot & 
+	<br><code class="codebox"> cd examples
+				   savime -D -b ${SAVIME_BUILD}/etc/savime.boot 
 				   ./test_savime_catalyst.sh
 	</code>	
 
-	After running it for a while you should see a bunch of VTU files in test/viz directory. They contain a visualization for a numerical simulation compatible with Paraview.
+	After running it for a while you should see a bunch of PVTU files in examples/viz directory. They contain 
+	a visualization for a numerical simulation compatible with Paraview.
 
 	<h2><span class="headline">Operators</span></h2>
 
