@@ -26,6 +26,7 @@
 #include <algorithm>
 #include <cmath>
 #include <omp.h>
+#include <cstdlib>
 
 template <class T1, class T2>
 class TemplateStorageManager : public AbstractStorageManager {
@@ -78,7 +79,7 @@ public:
 
         if (buffer[first] <= logicalIndex && buffer[last] >= logicalIndex) {
           while (first <= last) {
-            if (abs(buffer[middle] - logicalIndex) < DIFF) {
+            if (abs((double)(buffer[middle] - logicalIndex)) < DIFF) {
               realIndex = middle;
               break;
             } else if (buffer[middle] < logicalIndex) {
@@ -164,7 +165,7 @@ public:
         }
 
         while (first <= last) {
-          if (abs(buffer[middle] - logicalIndex) < DIFF) {
+          if (std::abs((double)(buffer[middle] - logicalIndex)) < DIFF) {
             realIndex = middle;
             break;
           } else if (buffer[middle] < logicalIndex) {
@@ -206,7 +207,7 @@ public:
           minDiff[omp_get_thread_num()] = std::numeric_limits<double>::max();
 
           for (SubTARPosition i = THREAD_FIRST(); i < THREAD_LAST(); ++i) {
-            auto diff = abs(buffer[i] - logicalIndex);
+            auto diff = std::abs((double)(buffer[i] - logicalIndex));
             if (diff < minDiff[omp_get_thread_num()]) {
               positions[omp_get_thread_num()] = i;
               minDiff[omp_get_thread_num()] = diff;

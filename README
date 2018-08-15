@@ -1,6 +1,0 @@
-SAVIME is a tool designed for managing simulation data in multidimensional arrays. However, it can be used as a general purpose
-in-memory array database and analytical software. In its current form, it is able only to execute very simple operations, such
-as: PROJECTIONS, FILTERS BASED ON PREDICATES, CALCULALION OF DERIVED VALUES, SIMPLE AGGREGATIONS, CARTESIAN PRODUCTS AND JOINS BASED ON DIMENSIONS (EXPERIMENTAL).
-
-It is integrated with the catalyst library, thus it is possible to call a catalyst script to be carried out upon an output of a query, if the correct type configuration
-for the array structures is set. To do so, SAVIME must be installed with catalyst support.

@@ -1,9 +1,0 @@
-#include <config.h>
-#include <stdio.h>
-
-int main(int argc, char** args){
-
-	printf("Initalizing program\n");
-	printf("This is " PACKAGE_STRING ".");
-	return 0;
-}

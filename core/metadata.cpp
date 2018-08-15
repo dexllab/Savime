@@ -332,7 +332,7 @@ DataElement::DataElement(DimensionPtr dimension) {
 
   if (dimension == nullptr)
     throw runtime_error(
-      "Attempt to create data element for dimension with invalid dimension.");
+      "Attempt to create data element for dimension with an invalid reference.");
   _dimension = dimension;
   _attribute = nullptr;
   _type = DIMENSION_SCHEMA_ELEMENT;
@@ -341,7 +341,7 @@ DataElement::DataElement(DimensionPtr dimension) {
 DataElement::DataElement(AttributePtr attribute) {
   if (attribute == nullptr)
     throw runtime_error(
-      "Attempt to create data element for dimension with invalid dimension.");
+      "Attempt to create data element for attribute with an invalid reference.");
   _attribute = attribute;
   _dimension = nullptr;
   _type = ATTRIBUTE_SCHEMA_ELEMENT;
@@ -905,7 +905,7 @@ void TAR::AddDimension(string name, DataType type, double lowerBound,
     throw runtime_error("Attempt to add dimension in filled TAR.");
 
   if (_elements.size() >= MAX_NUM_OF_DIMS_IN_TAR)
-    throw runtime_error("Attempt to extra dimension in a complete TAR.");
+    throw runtime_error("Attempt to add extra dimension in a complete TAR.");
 
   DimensionPtr dimension = make_shared<Dimension>(
     UNSAVED_ID, name, type, lowerBound, upperBound, spacing);
