@@ -2,7 +2,7 @@ var searchData=
 [
   ['echo',['ECHO',['../flex_8cpp.html#aad1dc60a04a1d8cfc8b3ded13601e361',1,'flex.cpp']]],
   ['empty',['EMPTY',['../client_8cpp.html#a2b7cf2a3641be7b89138615764d60ba3',1,'client.cpp']]],
-  ['empty_5fsubset',['EMPTY_SUBSET',['../parser_8h.html#a4cd1d8456584b38c264d0ca095604246',1,'parser.h']]],
+  ['empty_5fsubset',['EMPTY_SUBSET',['../query__data__manager_8h.html#a4cd1d8456584b38c264d0ca095604246',1,'query_data_manager.h']]],
   ['end_5fof_5fregisters',['END_OF_REGISTERS',['../default__storage__manager_8h.html#a8c71593539623ae1835d616707c230c1',1,'default_storage_manager.h']]],
   ['eob_5fact_5fcontinue_5fscan',['EOB_ACT_CONTINUE_SCAN',['../flex_8cpp.html#adf4b0db227e07782e28ade353a7ba7a1',1,'flex.cpp']]],
   ['eob_5fact_5fend_5fof_5ffile',['EOB_ACT_END_OF_FILE',['../flex_8cpp.html#a7f71d7fa2c403eb4b2f38cb9536f3c63',1,'flex.cpp']]],

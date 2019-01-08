@@ -1,5 +1,6 @@
 var searchData=
 [
-  ['queryexpression',['queryExpression',['../unionYYSTYPE.html#a190a235f464da59a8390f961ec28e594',1,'YYSTYPE::queryExpression()'],['../classGeneralSetFunction.html#aa26afa6443687b08c0a6563d1d69c957',1,'GeneralSetFunction::QueryExpression()']]],
-  ['queryid',['queryid',['../structMessageHeader.html#ad859ef2944b4e090c89da47161726e84',1,'MessageHeader::queryid()'],['../structSavimeConn.html#adf0c38d59c11d3f04fd9672da50f7be5',1,'SavimeConn::queryid()']]]
+  ['response_5ftext',['response_text',['../structQueryResultHandle.html#aaad8ee508f35575683e6f3293770b8eb',1,'QueryResultHandle']]],
+  ['roles',['roles',['../structType.html#ab5d612a8d87c771337d622379291d3b2',1,'Type']]],
+  ['rootnode',['rootNode',['../default__parser_8h.html#adacfe1abab9066ead8fe579d9202d3e5',1,'default_parser.h']]]
 ];

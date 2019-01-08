@@ -8,7 +8,7 @@ var searchData=
   ['reset_5fthreads',['RESET_THREADS',['../util_8h.html#a3992323876669e182e7f86dd731a0fde',1,'util.h']]],
   ['rethrow',['RETHROW',['../util_8h.html#ac8d720dd87a0d11d335c873336c65cee',1,'util.h']]],
   ['return_5funsuccessful',['RETURN_UNSUCCESSFUL',['../savime__lib_8cpp.html#a585986b1e51447cb4daf1c3d54b7b249',1,'savime_lib.cpp']]],
-  ['right_5fdataelement_5fprefix',['RIGHT_DATAELEMENT_PREFIX',['../parser_8h.html#ab72f288d263086160842928821faf235',1,'parser.h']]],
+  ['right_5fdataelement_5fprefix',['RIGHT_DATAELEMENT_PREFIX',['../query__data__manager_8h.html#ab72f288d263086160842928821faf235',1,'query_data_manager.h']]],
   ['rtree_5fdont_5fuse_5fmempools',['RTREE_DONT_USE_MEMPOOLS',['../rtree_8h.html#a48ab98477536b7144da4b56f4a69af99',1,'rtree.h']]],
   ['rtree_5fqual',['RTREE_QUAL',['../rtree_8h.html#a21aed6cfcbda84c4663c90768cefee0b',1,'rtree.h']]],
   ['rtree_5ftemplate',['RTREE_TEMPLATE',['../rtree_8h.html#aa9b462b3b7b1c8cda40b182c09eed713',1,'rtree.h']]],

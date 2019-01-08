@@ -1,0 +1,20 @@
+digraph "IsBooleanValueExpression"
+{
+  edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
+  node [fontname="Helvetica",fontsize="10",shape=record];
+  Node4 [label="IsBooleanValueExpression",height=0.2,width=0.4,color="black", fillcolor="grey75", style="filled", fontcolor="black"];
+  Node5 -> Node4 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node5 [label="BooleanValueExpression",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$classBooleanValueExpression.html"];
+  Node6 -> Node5 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node6 [label="ValueExpression",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$classValueExpression.html"];
+  Node7 -> Node6 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node7 [label="ParseTreeNode",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$classParseTreeNode.html"];
+  Node6 -> Node5 [dir="back",color="darkorchid3",fontsize="10",style="dashed",label=" _notValueExpression" ,fontname="Helvetica"];
+  Node5 -> Node5 [dir="back",color="darkorchid3",fontsize="10",style="dashed",label=" _parenthesized_boolean\l_value_expression" ,fontname="Helvetica"];
+  Node8 -> Node4 [dir="back",color="darkorchid3",fontsize="10",style="dashed",label=" _rightOperand" ,fontname="Helvetica"];
+  Node8 [label="TruthValue",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$classTruthValue.html"];
+  Node9 -> Node8 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node9 [label="GeneralLiteral",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$classGeneralLiteral.html"];
+  Node6 -> Node9 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node6 -> Node4 [dir="back",color="darkorchid3",fontsize="10",style="dashed",label=" _leftOperand" ,fontname="Helvetica"];
+}

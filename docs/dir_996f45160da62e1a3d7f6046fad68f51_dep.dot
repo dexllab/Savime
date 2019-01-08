@@ -1,0 +1,8 @@
+digraph "engine" {
+  compound=true
+  node [ fontsize="10", fontname="Helvetica"];
+  edge [ labelfontsize="10", labelfontname="Helvetica"];
+  dir_996f45160da62e1a3d7f6046fad68f51 [shape=box, label="engine", style="filled", fillcolor="#eeeeff", pencolor="black", URL="dir_996f45160da62e1a3d7f6046fad68f51.html"];
+  dir_4270bfced15e0e73154b13468c7c9ad9 [shape=box label="core" fillcolor="white" style="filled" color="red" URL="dir_4270bfced15e0e73154b13468c7c9ad9.html"];
+  dir_996f45160da62e1a3d7f6046fad68f51->dir_4270bfced15e0e73154b13468c7c9ad9 [headlabel="3", labeldistance=1.5 headhref="dir_000002_000000.html"];
+}

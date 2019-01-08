@@ -1,0 +1,9 @@
+digraph "storage" {
+  compound=true
+  node [ fontsize="10", fontname="Helvetica"];
+  edge [ labelfontsize="10", labelfontname="Helvetica"];
+  dir_70f20ecf11358dff00a0daf546d3147e [shape=box, label="storage", style="filled", fillcolor="#eeeeff", pencolor="black", URL="dir_70f20ecf11358dff00a0daf546d3147e.html"];
+  dir_4270bfced15e0e73154b13468c7c9ad9 [shape=box label="core" fillcolor="white" style="filled" color="red" URL="dir_4270bfced15e0e73154b13468c7c9ad9.html"];
+  dir_70f20ecf11358dff00a0daf546d3147e->dir_4270bfced15e0e73154b13468c7c9ad9 [headlabel="12", labeldistance=1.5 headhref="dir_000005_000000.html"];
+  dir_4270bfced15e0e73154b13468c7c9ad9->dir_70f20ecf11358dff00a0daf546d3147e [headlabel="1", labeldistance=1.5 headhref="dir_000000_000005.html"];
+}

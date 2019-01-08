@@ -18,8 +18,7 @@ var searchData=
   ['set_5fthreads_5faligned',['SET_THREADS_ALIGNED',['../util_8h.html#a4c2acdd6232a161a708b3405a67c91ff',1,'util.h']]],
   ['shm_5fstorage_5fdir',['SHM_STORAGE_DIR',['../config__manager_8h.html#a9cf2886b3d18c95c044d6d0c4bda1d76',1,'config_manager.h']]],
   ['sim_5fname',['SIM_NAME',['../catalyst_8cpp.html#a10d2c17b91e87e911de9fa6ac3c41c9b',1,'SIM_NAME():&#160;catalyst.cpp'],['../viz_8cpp.html#a10d2c17b91e87e911de9fa6ac3c41c9b',1,'SIM_NAME():&#160;viz.cpp']]],
-  ['startup_5fmsg',['STARTUP_MSG',['../builder_8cpp.html#ab7800e80798d2627d0f08072ecf6b116',1,'builder.cpp']]],
+  ['startup_5fmsg',['STARTUP_MSG',['../builder_8cpp.html#a8e8d07be61e0d73526e15cbe6907bae7',1,'builder.cpp']]],
   ['subdirs_5fnum',['SUBDIRS_NUM',['../config__manager_8h.html#a0fb8f3c7a336134e4065b9a63ce68373',1,'config_manager.h']]],
-  ['suffix',['SUFFIX',['../viz_8cpp.html#ab562f4faafffa3db2dcffc196c249223',1,'viz.cpp']]],
-  ['synthetic_5fdimension',['SYNTHETIC_DIMENSION',['../parser_8h.html#a2678b3e5d3b51d19faa8199ed49888e4',1,'parser.h']]]
+  ['suffix',['SUFFIX',['../viz_8cpp.html#ab562f4faafffa3db2dcffc196c249223',1,'viz.cpp']]]
 ];

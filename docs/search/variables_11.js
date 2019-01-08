@@ -1,6 +1,19 @@
 var searchData=
 [
-  ['response_5ftext',['response_text',['../structQueryResultHandle.html#aaad8ee508f35575683e6f3293770b8eb',1,'QueryResultHandle']]],
-  ['roles',['roles',['../structType.html#ab5d612a8d87c771337d622379291d3b2',1,'Type']]],
-  ['rootnode',['rootNode',['../default__parser_8h.html#adacfe1abab9066ead8fe579d9202d3e5',1,'default_parser.h']]]
+  ['scan_5ferror',['scan_error',['../default__parser_8cpp.html#a4ab29f8eb919db8fcd00ae3a855cee8c',1,'default_parser.cpp']]],
+  ['schema',['schema',['../structQueryResultHandle.html#a8a837c478c90e7300c1e43d820663c69',1,'QueryResultHandle']]],
+  ['select_5ferror',['select_error',['../default__parser_8cpp.html#a25a2fedb58103940242856d01053a9da',1,'default_parser.cpp']]],
+  ['set_5fname',['set_name',['../structBufferSet.html#adf2d120c57b11e66aa05b0e1c7121c85',1,'BufferSet::set_name()'],['../structFileBufferSet.html#a09a7f2b6efc8a0ccce3ef22a2e9a5a61',1,'FileBufferSet::set_name()']]],
+  ['signame',['signame',['../system__logger_8cpp.html#a48699cdbfdde8be9b74b322cfaae6767',1,'system_logger.cpp']]],
+  ['signednumericliteral',['signedNumericLiteral',['../unionYYSTYPE.html#a827d8e4096a71b27f5908655658c39a9',1,'YYSTYPE']]],
+  ['simulation_5fdirs',['simulation_dirs',['../catalyst_8cpp.html#a57643702a54a25a75f1f488945dc29ce',1,'catalyst.cpp']]],
+  ['size',['size',['../structPayload.html#af720713b05857b0bfdbb5246fd98d1d0',1,'Payload']]],
+  ['socket',['socket',['../structConnectionDetails.html#a0250b208fcc1bba71c7c42678018d3f7',1,'ConnectionDetails']]],
+  ['socketfd',['socketfd',['../structSavimeConn.html#a5b306141171c49ee6576a7114fcc6e0d',1,'SavimeConn']]],
+  ['split_5ferror',['split_error',['../default__parser_8cpp.html#a5ce461bd209374930062a6e4b8518f33',1,'default_parser.cpp']]],
+  ['str',['str',['../structLiteral.html#af101f29fe77eb397728a180652f610ec',1,'Literal']]],
+  ['subset_5ferror',['subset_error',['../default__parser_8cpp.html#aaec0f4e699eb8a87a5849394fd9c7719',1,'default_parser.cpp']]],
+  ['successful',['successful',['../structQueryResultHandle.html#ad72c0fae03ec5353550f07911ed5435c',1,'QueryResultHandle']]],
+  ['sup',['sup',['../structIndexPair.html#a177bb363ff82b08db906837e41a5a298',1,'IndexPair']]],
+  ['systemlogger',['systemLogger',['../viz_8cpp.html#a360b194904767bd61c270a51a002f836',1,'viz.cpp']]]
 ];

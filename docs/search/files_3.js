@@ -1,6 +1,5 @@
 var searchData=
 [
-  ['ddl_5foperators_2ecpp',['ddl_operators.cpp',['../ddl__operators_8cpp.html',1,'']]],
   ['default_5fapply_5ftemplate_2eh',['default_apply_template.h',['../default__apply__template_8h.html',1,'']]],
   ['default_5fconfig_5fmanager_2ecpp',['default_config_manager.cpp',['../default__config__manager_8cpp.html',1,'']]],
   ['default_5fconfig_5fmanager_2eh',['default_config_manager.h',['../default__config__manager_8h.html',1,'']]],
@@ -14,6 +13,10 @@ var searchData=
   ['default_5fstorage_5fmanager_2ecpp',['default_storage_manager.cpp',['../default__storage__manager_8cpp.html',1,'']]],
   ['default_5fstorage_5fmanager_2eh',['default_storage_manager.h',['../default__storage__manager_8h.html',1,'']]],
   ['default_5ftemplate_2eh',['default_template.h',['../default__template_8h.html',1,'']]],
-  ['dml_5foperators_2ecpp',['dml_operators.cpp',['../dml__operators_8cpp.html',1,'']]],
+  ['dimjoin_2ecpp',['dimjoin.cpp',['../dimjoin_8cpp.html',1,'']]],
+  ['drop_5fdataset_2ecpp',['drop_dataset.cpp',['../drop__dataset_8cpp.html',1,'']]],
+  ['drop_5ftar_2ecpp',['drop_tar.cpp',['../drop__tar_8cpp.html',1,'']]],
+  ['drop_5ftars_2ecpp',['drop_tars.cpp',['../drop__tars_8cpp.html',1,'']]],
+  ['drop_5ftype_2ecpp',['drop_type.cpp',['../drop__type_8cpp.html',1,'']]],
   ['dynamic_5fbitset_2eh',['dynamic_bitset.h',['../dynamic__bitset_8h.html',1,'']]]
 ];

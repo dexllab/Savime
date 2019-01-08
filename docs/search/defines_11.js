@@ -7,5 +7,6 @@ var searchData=
   ['t3_5fapply_5fdef',['T3_APPLY_DEF',['../template__builder_8h.html#a0e4d388bb3f635c1e3980f99b4a570a4',1,'template_builder.h']]],
   ['thread_5ffirst',['THREAD_FIRST',['../util_8h.html#a33e0cac45e28d73022971e9fb4ed2d4c',1,'util.h']]],
   ['thread_5flast',['THREAD_LAST',['../util_8h.html#a2454868965d112a6ebadbecfff87bfa4',1,'util.h']]],
+  ['tolerance',['TOLERANCE',['../default__template_8h.html#a30c17564229ec2e37dfea9c6c9ad643e',1,'default_template.h']]],
   ['try',['TRY',['../util_8h.html#ae671493057440f296b6180da61b17e10',1,'util.h']]]
 ];

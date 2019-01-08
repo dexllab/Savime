@@ -25,17 +25,13 @@ var searchData=
   ['savime_5ffailure',['SAVIME_FAILURE',['../savime_8h.html#a7a25962aaf051ae7b917f85448488227a4a8237037f55d372ea7ab8a50d91857f',1,'savime.h']]],
   ['savime_5fsuccess',['SAVIME_SUCCESS',['../savime_8h.html#a7a25962aaf051ae7b917f85448488227a5e9912b098b22024bba678c7f0fa8125',1,'savime.h']]],
   ['script',['SCRIPT',['../catalyst_8cpp.html#ab126c13bc335f4a996ef88c85aec7a24a65154c0ec97cb74cba7359ca02c4ab54',1,'catalyst.cpp']]],
-  ['select',['SELECT',['../query__data__manager_8h.html#a19d0dbccbad1fadba338f21ea100313ca1697a91b22c2369eb2ba427c2d193329',1,'query_data_manager.h']]],
   ['semicolon',['SEMICOLON',['../bison_8h.html#a15c9f7bd2f0e9686df5d9df4f3314aa9a55eebe3c7e08b49cd5969442f4f8c4ce',1,'bison.h']]],
   ['send_5fresponse',['SEND_RESPONSE',['../protocol_8h.html#aeee15ce451435cc7f2fdb211337d0694ac745453d482ba1db8cd55046b3d7eb94',1,'protocol.h']]],
   ['send_5fresponse_5fblock',['SEND_RESPONSE_BLOCK',['../protocol_8h.html#aeee15ce451435cc7f2fdb211337d0694a6d69e58d76032960f8623159b29c5e1c',1,'protocol.h']]],
-  ['show',['SHOW',['../query__data__manager_8h.html#a19d0dbccbad1fadba338f21ea100313caf6b54e2f964c3204c88d0d82a509f65a',1,'query_data_manager.h']]],
   ['shutdown_5fsignal',['SHUTDOWN_SIGNAL',['../protocol_8h.html#ac6606ebe91c8ac66a2c314c79f5ab013a3694975687db0d301d42846cea3ef192',1,'protocol.h']]],
   ['signed_5faprox_5fnumber',['SIGNED_APROX_NUMBER',['../bison_8h.html#a15c9f7bd2f0e9686df5d9df4f3314aa9a8371913934f72b4bfcf05c6b9d5ccddf',1,'bison.h']]],
   ['signed_5fexact_5fnumber',['SIGNED_EXACT_NUMBER',['../bison_8h.html#a15c9f7bd2f0e9686df5d9df4f3314aa9aaf23d851231d0ebd254cd683ceb451e8',1,'bison.h']]],
-  ['slice',['SLICE',['../query__data__manager_8h.html#a19d0dbccbad1fadba338f21ea100313caf6c0cdb0758b9c1e55687711ef7b7fd2',1,'query_data_manager.h']]],
   ['solidus',['SOLIDUS',['../bison_8h.html#a15c9f7bd2f0e9686df5d9df4f3314aa9a86c1dd18fd16c38c5e2c00b28307bbfb',1,'bison.h']]],
   ['string',['STRING',['../bison_8h.html#a15c9f7bd2f0e9686df5d9df4f3314aa9aee847e634a4297b274316de8a8ca9921',1,'bison.h']]],
-  ['subset',['SUBSET',['../query__data__manager_8h.html#a19d0dbccbad1fadba338f21ea100313ca242b63503669cbe592c44149cee260be',1,'query_data_manager.h']]],
   ['subtar_5fposition',['SUBTAR_POSITION',['../types_8h.html#ad2fa1830c9fa89ddb4dacfb71a7b8aa1a0205e6703062099cef1da72f4f9de027',1,'types.h']]]
 ];

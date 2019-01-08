@@ -17,7 +17,7 @@ var searchData=
   ['buildconfigurationmanager',['BuildConfigurationManager',['../classModulesBuilder.html#ad45aa28b548fae2357fe8db63227e92a',1,'ModulesBuilder']]],
   ['buildconnectionmanager',['BuildConnectionManager',['../classModulesBuilder.html#afac06ec6bd0414ab018fb13bf5cbf13e',1,'ModulesBuilder']]],
   ['buildengine',['BuildEngine',['../classModulesBuilder.html#a5c66b21ea6e2297eac9724b667ac5dff',1,'ModulesBuilder']]],
-  ['buildmetadamanager',['BuildMetadaManager',['../classModulesBuilder.html#a74e183b863835a749ada43253576dad1',1,'ModulesBuilder']]],
+  ['buildmetadatamanager',['BuildMetadataManager',['../classModulesBuilder.html#adbfe9bb4a776c748df42b28499d4ae34',1,'ModulesBuilder']]],
   ['buildoptimizer',['BuildOptimizer',['../classModulesBuilder.html#a2a5e8046a883518cbc640668a2d28f5c',1,'ModulesBuilder']]],
   ['buildparser',['BuildParser',['../classModulesBuilder.html#ad518a1366d6e01b729cbaff1b2fba625',1,'ModulesBuilder']]],
   ['buildquerydatamanager',['BuildQueryDataManager',['../classModulesBuilder.html#a03584db4017d41a921d063f86340c9bf',1,'ModulesBuilder']]],

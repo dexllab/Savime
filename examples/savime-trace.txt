@@ -1,0 +1,8 @@
+Stack trace:
+         savime : DefaultSystemLogger::SystemLoggerHandler(int)+0x42
+         /lib/x86_64-linux-gnu/libc.so.6 : +0x354b0
+         /lib/x86_64-linux-gnu/libpthread.so.0 : pthread_cond_wait+0xbe
+         /usr/lib/x86_64-linux-gnu/libstdc++.so.6 : std::condition_variable::wait(std::unique_lock<std::mutex>&)+0xc
+         savime : main+0xfb
+         /lib/x86_64-linux-gnu/libc.so.6 : __libc_start_main+0xf0
+         savime : _start+0x29
