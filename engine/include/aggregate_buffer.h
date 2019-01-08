@@ -65,34 +65,34 @@ public:
     this->size = size;
   }
 
-  int64_t GetHash(vector<int64_t> indexes) { return hashMap->GetHash(indexes); }
+  int64_t GetHash(vector<int64_t> indexes) override { return hashMap->GetHash(indexes); }
 
-  double &operator[](uint64_t index) { return (*hashMap)[index]; }
+  double &operator[](uint64_t index) override { return (*hashMap)[index]; }
 
-  double &operator[](vector<int64_t> indexes) {
+  double &operator[](vector<int64_t> indexes) override {
     auto index = GetHash(indexes);
     return (*hashMap)[index];
   }
 
-  SavimeIndexesHashPtr getIndexesMap() {
+  SavimeIndexesHashPtr getIndexesMap() override {
     throw runtime_error(
         "Calling getIndexesMap from VectorWithBitmaskAggregateBuffer.");
   }
 
-  map<uint64_t, double> &getMap() {
+  map<uint64_t, double> &getMap() override {
     throw runtime_error(
         "Calling getMap from VectorWithBitmaskAggregateBuffer.");
   }
 
   int64_t GetSize() { return size; }
 
-  BitsetPtr Bitmask() { return bitmask; }
+  BitsetPtr Bitmask() override { return bitmask; }
 
-  void SetBit(int64_t index) { (*bitmask)[index] = true; }
+  void SetBit(int64_t index) override { (*bitmask)[index] = true; }
 
-  bool GetBit(int64_t index) { return (*bitmask)[index]; }
+  bool GetBit(int64_t index) override { return (*bitmask)[index]; }
 
-  void dbg_print() {
+  void dbg_print() override {
     printf("Print buffer %ld \n", size);
     printf("-----------------\n");
     for (int64_t i = 0; i < size; i++) {
@@ -115,9 +115,9 @@ public:
     this->defaultValue = fill;
   }
 
-  int64_t GetHash(vector<int64_t> indexes) { return hashMap->GetHash(indexes); }
+  int64_t GetHash(vector<int64_t> indexes) override { return hashMap->GetHash(indexes); }
 
-  double &operator[](uint64_t index) {
+  double &operator[](uint64_t index) override {
     auto pair = (*hashMap).map.find(index);
     if (pair == (*hashMap).map.end()) {
       (*hashMap).map[index] = defaultValue;
@@ -125,17 +125,17 @@ public:
     return (*hashMap).map[index];
   }
 
-  double &operator[](vector<int64_t> indexes) {
+  double &operator[](vector<int64_t> indexes) override {
     return (*this)[GetHash(indexes)];
   }
 
-  SavimeIndexesHashPtr getIndexesMap() { return hashMap->indexesMap; }
+  SavimeIndexesHashPtr getIndexesMap() override { return hashMap->indexesMap; }
 
-  map<uint64_t, double> &getMap() { return hashMap->map; }
+  map<uint64_t, double> &getMap() override { return hashMap->map; }
 
   int64_t GetSize() { return 0; }
 
-  void dbg_print() {
+  void dbg_print() override {
     printf("Print buffer\n");
     printf("-----------------\n");
     for (auto entry : hashMap->map) {

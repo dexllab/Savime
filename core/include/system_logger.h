@@ -28,8 +28,8 @@ class DefaultSystemLogger : public SystemLogger {
   static void WriteLog(string module, string message);
 
 public:
-  DefaultSystemLogger(ConfigurationManagerPtr configurationManager);
-  void LogEvent(string module, string message);
+  explicit DefaultSystemLogger(ConfigurationManagerPtr configurationManager);
+  void LogEvent(string module, string message) override;
 };
 
 #endif /* SYSTEM_LOGGER_H */

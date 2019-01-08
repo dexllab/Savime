@@ -73,9 +73,9 @@ public:
 
   bool CheckSorted(DatasetPtr dataset) { return SAVIME_FAILURE; }
 
-  SavimeResult Copy(DatasetPtr originDataset, int64_t lowerBound,
-                    int64_t upperBound, int64_t offsetInDestiny,
-                    int64_t spacingInDestiny, DatasetPtr destinyDataset) {
+  SavimeResult Copy(DatasetPtr originDataset, SubTARPosition lowerBound,
+                    SubTARPosition upperBound, SubTARPosition offsetInDestiny,
+                    savime_size_t spacingInDestiny, DatasetPtr destinyDataset) {
     return SAVIME_FAILURE;
   }
 

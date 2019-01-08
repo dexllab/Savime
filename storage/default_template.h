@@ -18,6 +18,7 @@
 #define DEFAULT_TEMPLATE_H
 
 #include "../core/include/util.h"
+#include "../core/include/metadata.h"
 #include "../core/include/savime_hash.h"
 #include "../core/include/query_data_manager.h"
 #include "../core/include/storage_manager.h"
@@ -27,6 +28,58 @@
 #include <cmath>
 #include <omp.h>
 #include <cstdlib>
+
+#define TOLERANCE 1e-06
+#define IMPLICIT_LOGICAL2REAL(DIM, PRE, INDEX, OUT)                            \
+  double intpart;                                                              \
+  double fRealIndex = 0.0;                                                     \
+  fRealIndex = (INDEX * PRE - dimension->GetLowerBound() * PRE);               \
+  double mod = abs(std::modf(fRealIndex, &intpart));                           \
+  if (mod < TOLERANCE) {                                                       \
+    OUT = (RealIndex)intpart;                                                  \
+  } else if ((1 - mod) < TOLERANCE) {                                          \
+    OUT = (RealIndex)intpart + 1;                                              \
+  }
+
+
+#define BIN_SEARCH(BUFFER, VALUE, OUT, SIZE)                                   \
+  RealIndex first = 0, last = SIZE;                                            \
+  RealIndex middle = (last + first) / 2;                                       \
+                                                                               \
+  if (BUFFER[first] <= VALUE && BUFFER[last] >= VALUE) {                       \
+    while (first <= last) {                                                    \
+      if (abs((double)(BUFFER[middle] - VALUE)) < TOLERANCE) {                 \
+        OUT = middle;                                                          \
+        break;                                                                 \
+      } else if (BUFFER[middle] < VALUE) {                                     \
+        first = middle + 1;                                                    \
+      } else {                                                                 \
+        last = middle - 1;                                                     \
+      }                                                                        \
+      middle = (first + last) / 2;                                             \
+    }                                                                          \
+  }                                                                            \
+
+
+#define BIN_SEARCH_POS(BUFFER, VALUE, OUT, SIZE)                               \
+  RealIndex first = 0, last = SIZE;                                            \
+  RealIndex middle = (last + first) / 2;                                       \
+                                                                               \
+  while (first <= last) {                                                      \
+    if (abs((double)(BUFFER[middle] - VALUE)) < TOLERANCE) {                   \
+      OUT = 1;                                                                 \
+      break;                                                                   \
+    } else if (BUFFER[middle] < VALUE) {                                       \
+      first = middle + 1;                                                      \
+    } else {                                                                   \
+      last = middle - 1;                                                       \
+    }                                                                          \
+    middle = (first + last) / 2;                                               \
+  }                                                                            \
+
+
+#define IMPLICIT_REAL2LOGICAL(DIMENSION, REAL)                                 \
+  (REAL * DIMENSION->GetSpacing()) + DIMENSION->GetLowerBound()
 
 template <class T1, class T2>
 class TemplateStorageManager : public AbstractStorageManager {
@@ -43,29 +96,21 @@ public:
     _systemLogger = systemLogger;
   }
 
-  RealIndex Logical2Real(DimensionPtr dimension, Literal _logicalIndex) {
+  RealIndex Logical2Real(DimensionPtr dimension, Literal _logicalIndex) override {
+
+    RealIndex realIndex = INVALID_EXACT_REAL_INDEX;
     T2 logicalIndex;
+
     GET_LITERAL(logicalIndex, _logicalIndex, T2);
 
-    double DIFF = 0.000001;
-    double intpart;
-    RealIndex realIndex = INVALID_EXACT_REAL_INDEX;
-
     if (dimension->GetDimensionType() == IMPLICIT) {
-      // If it is in the range
+
       if (dimension->GetLowerBound() <= logicalIndex &&
-        dimension->GetUpperBound() >= logicalIndex) {
-        double fRealIndex = 0.0;
+          dimension->GetUpperBound() >= logicalIndex) {
         double preamble = 1 / dimension->GetSpacing();
-
-        fRealIndex =
-          (logicalIndex * preamble - dimension->GetLowerBound() * preamble);
-        double mod = std::modf(fRealIndex, &intpart);
-
-        if (mod < DIFF) {
-          // returns lowest index closest to the logical value
-          realIndex = (RealIndex)intpart;
-        }
+        IMPLICIT_LOGICAL2REAL(dimension, preamble, logicalIndex, realIndex);
+        if(realIndex < 0 || realIndex > dimension->GetRealUpperBound())
+          realIndex = INVALID_EXACT_REAL_INDEX;
       }
     } else if (dimension->GetDimensionType() == EXPLICIT) {
 
@@ -73,34 +118,20 @@ public:
       T1 *buffer = (T1 *)handler->GetBuffer();
 
       if (dimension->GetDataset()->Sorted()) {
-        RealIndex first = 0,
-          last = dimension->GetDataset()->GetEntryCount() - 1;
-        RealIndex middle = (last + first) / 2;
+        BIN_SEARCH(buffer, logicalIndex, realIndex,
+                   dimension->GetDataset()->GetEntryCount() - 1);
 
-        if (buffer[first] <= logicalIndex && buffer[last] >= logicalIndex) {
-          while (first <= last) {
-            if (abs((double)(buffer[middle] - logicalIndex)) < DIFF) {
-              realIndex = middle;
-              break;
-            } else if (buffer[middle] < logicalIndex) {
-              first = middle + 1;
-            } else {
-              last = middle - 1;
-            }
-            middle = (first + last) / 2;
-          }
-        }
       } else {
 
         int32_t numCores = _configurationManager->GetIntValue(MAX_THREADS);
         int32_t minWorkPerThread =
-          _configurationManager->GetIntValue(WORK_PER_THREAD);
+            _configurationManager->GetIntValue(WORK_PER_THREAD);
         int64_t entryCount = dimension->GetDataset()->GetEntryCount();
 
         SET_THREADS(entryCount, minWorkPerThread, numCores);
 #pragma omp parallel
         for (SubTARPosition i = THREAD_FIRST(); i < THREAD_LAST(); ++i) {
-          if (buffer[i] == logicalIndex) {
+          if (abs((double)buffer[i] - logicalIndex) < TOLERANCE){
             realIndex = i;
           }
 
@@ -115,11 +146,12 @@ public:
     return realIndex;
   }
 
-  IndexPair Logical2ApproxReal(DimensionPtr dimension, Literal _logicalIndex) {
+
+  IndexPair Logical2ApproxReal(DimensionPtr dimension, Literal _logicalIndex) override {
+
     T2 logicalIndex;
     GET_LITERAL(logicalIndex, _logicalIndex, T2);
 
-    double DIFF = 0.000001;
     double intpart;
     RealIndex realIndex = INVALID_EXACT_REAL_INDEX;
 
@@ -130,51 +162,43 @@ public:
       if (dimension->GetUpperBound() < logicalIndex)
         return {dimension->GetRealUpperBound(), dimension->GetRealUpperBound()};
 
-      double fRealIndex =
-        (logicalIndex - dimension->GetLowerBound()) / dimension->GetSpacing();
+      double preamble = 1 / dimension->GetSpacing();
+      IMPLICIT_LOGICAL2REAL(dimension, preamble, logicalIndex, realIndex);
 
-      std::modf(fRealIndex, &intpart);
-      realIndex = (RealIndex)intpart;
-      realIndex = std::min(realIndex, dimension->GetRealUpperBound());
-
-      if (realIndex == dimension->GetRealUpperBound() || realIndex == intpart)
-        return {realIndex, realIndex};
-      else
+      if(realIndex == INVALID_EXACT_REAL_INDEX) {
+        realIndex =
+            std::min((RealIndex) intpart, dimension->GetRealUpperBound());
         return {realIndex, realIndex + 1};
+      } else {
+        return {realIndex, realIndex};
+      }
 
     } else if (dimension->GetDimensionType() == EXPLICIT) {
-      int numCores = _configurationManager->GetIntValue(MAX_THREADS);
+
+      int32_t numCores = _configurationManager->GetIntValue(MAX_THREADS);
+      int32_t minWorkPerThread =
+          _configurationManager->GetIntValue(WORK_PER_THREAD);
 
       auto handler = _storageManager->GetHandler(dimension->GetDataset());
       T1 *buffer = (T1 *)handler->GetBuffer();
 
       if (dimension->GetDataset()->Sorted()) {
-        RealIndex first = 0,
-          last = dimension->GetDataset()->GetEntryCount() - 1;
-        RealIndex middle = (last + first) / 2;
+        RealIndex _first = 0,
+            _last = dimension->GetDataset()->GetEntryCount() - 1;
 
-        if (buffer[first] > logicalIndex) {
+
+        if (buffer[_first] > logicalIndex) {
           handler->Close();
           return {0, 0};
         }
 
-        if (buffer[last] < logicalIndex) {
+        if (buffer[_last] < logicalIndex) {
           handler->Close();
           return {dimension->GetRealUpperBound(),
                   dimension->GetRealUpperBound()};
         }
 
-        while (first <= last) {
-          if (std::abs((double)(buffer[middle] - logicalIndex)) < DIFF) {
-            realIndex = middle;
-            break;
-          } else if (buffer[middle] < logicalIndex) {
-            first = middle + 1;
-          } else {
-            last = middle - 1;
-          }
-          middle = (first + last) / 2;
-        }
+        BIN_SEARCH(buffer, logicalIndex, realIndex, _last);
 
         if (realIndex == INVALID_EXACT_REAL_INDEX) {
           realIndex = middle;
@@ -193,18 +217,16 @@ public:
 
       } else {
 
-        int32_t numCores = _configurationManager->GetIntValue(MAX_THREADS);
-        int32_t minWorkPerThread =
-          _configurationManager->GetIntValue(WORK_PER_THREAD);
+
         int64_t entryCount = dimension->GetDataset()->GetEntryCount();
         double minDiff[numCores];
         int64_t positions[numCores];
 
-        /*Search for values with minimum distance.*/
         SET_THREADS(entryCount, minWorkPerThread, numCores);
 #pragma omp parallel
         {
           minDiff[omp_get_thread_num()] = std::numeric_limits<double>::max();
+          positions[omp_get_thread_num()] = 0;
 
           for (SubTARPosition i = THREAD_FIRST(); i < THREAD_LAST(); ++i) {
             auto diff = std::abs((double)(buffer[i] - logicalIndex));
@@ -215,7 +237,6 @@ public:
           }
         }
 
-        /*Reduce to get the min value among all threads*/
         IndexPair pair;
         double minDiffAll = std::numeric_limits<double>::max();
         for (int64_t i = 0; i < numCores; ++i) {
@@ -237,16 +258,18 @@ public:
         handler->Close();
         pair.inf = std::max(pair.inf, (RealIndex)0);
         pair.sup =
-          std::min(pair.sup,
-                   (RealIndex)(dimension->GetDataset()->GetEntryCount() - 1));
+            std::min(pair.sup,
+                     (RealIndex)(dimension->GetDataset()->GetEntryCount() - 1));
         return pair;
       }
     }
   }
 
+
   SavimeResult Logical2Real(DimensionPtr dimension, DimSpecPtr dimSpecs,
                             DatasetPtr logicalIndexes,
-                            DatasetPtr &destinyDataset) {
+                            DatasetPtr &destinyDataset) override {
+
     bool invalidMapping = false;
     int32_t numCores = _configurationManager->GetIntValue(MAX_THREADS);
     int32_t minWorkPerThread =
@@ -267,14 +290,15 @@ public:
       _storageManager->GetHandler(destinyDataset);
 
     T1 *logicalBuffer = (T1 *)logicalIndexesHandler->GetBuffer();
-    RealIndex *destinyBuffer = (RealIndex *)destinyHandler->GetBuffer();
+    auto * destinyBuffer = (RealIndex *)destinyHandler->GetBuffer();
 
+    double preamble = 1 / dimension->GetSpacing();
     if (dimension->GetDimensionType() == IMPLICIT) {
 #pragma omp parallel
       for (SubTARPosition i = THREAD_FIRST(); i < THREAD_LAST(); ++i) {
-        destinyBuffer[i] =
-          (RealIndex)((logicalBuffer[i] - dimension->GetLowerBound()) /
-            dimension->GetSpacing());
+
+        destinyBuffer[i] = INVALID_REAL_INDEX;
+        IMPLICIT_LOGICAL2REAL(dimension, preamble, logicalBuffer[i], destinyBuffer[i]);
 
         if (destinyBuffer[i] < dimSpecs->GetLowerBound() ||
           destinyBuffer[i] > dimSpecs->GetUpperBound()) {
@@ -308,7 +332,7 @@ public:
         if (indexMap.find(logicalBuffer[i]) != indexMap.end()) {
           destinyBuffer[i] = indexMap[logicalBuffer[i]];
           if (destinyBuffer[i] < dimSpecs->GetLowerBound() ||
-            destinyBuffer[i] > dimSpecs->GetUpperBound()) {
+              destinyBuffer[i] > dimSpecs->GetUpperBound()) {
             invalidMapping = true;
             break;
           }
@@ -332,7 +356,7 @@ public:
 
   SavimeResult UnsafeLogical2Real(DimensionPtr dimension, DimSpecPtr dimSpecs,
                                   DatasetPtr logicalIndexes,
-                                  DatasetPtr &destinyDataset) {
+                                  DatasetPtr &destinyDataset) override {
 
     bool invalidMapping = false;
     int32_t numCores = _configurationManager->GetIntValue(MAX_THREADS);
@@ -354,14 +378,19 @@ public:
       _storageManager->GetHandler(destinyDataset);
 
     T1 *logicalBuffer = (T1 *)logicalIndexesHandler->GetBuffer();
-    RealIndex *destinyBuffer = (RealIndex *)destinyHandler->GetBuffer();
+    auto * destinyBuffer = (RealIndex *)destinyHandler->GetBuffer();
 
     if (dimension->GetDimensionType() == IMPLICIT) {
+
+      double preamble = 1 / dimension->GetSpacing();
 #pragma omp parallel
       for (SubTARPosition i = THREAD_FIRST(); i < THREAD_LAST(); ++i) {
-        destinyBuffer[i] =
-          (RealIndex)(logicalBuffer[i] - dimension->GetLowerBound()) /
-            dimension->GetSpacing();
+        //destinyBuffer[i] =
+        //   (RealIndex)(logicalBuffer[i] - dimension->GetLowerBound()) /
+        //    dimension->GetSpacing();
+
+        destinyBuffer[i] = INVALID_REAL_INDEX;
+        IMPLICIT_LOGICAL2REAL(dimension, preamble, logicalBuffer[i], destinyBuffer[i]);
 
         // if (destinyBuffer[i] < dimSpecs->lower_bound ||
         //    destinyBuffer[i] > dimSpecs->upper_bound) {
@@ -373,12 +402,22 @@ public:
         _storageManager->GetHandler(dimension->GetDataset());
       T2 *dimensionBuffer = (T2 *)dimensionHandler->GetBuffer();
 
-      // TODO: MAKE MAPPING PARALLEL
+
+#ifdef TBB_SUPPORT
+      tbb::concurrent_unordered_map<T2, RealIndex> indexMap;
+#pragma omp parallel for
+      for (SubTARPosition i = 0; i < dimension->GetDataset()->GetEntryCount();
+           ++i) {
+        indexMap[dimensionBuffer[i]] = i;
+      }
+#else
       std::unordered_map<T2, RealIndex> indexMap;
       for (SubTARPosition i = 0; i < dimension->GetDataset()->GetEntryCount();
            ++i) {
         indexMap[dimensionBuffer[i]] = i;
       }
+#endif
+
 
 #pragma omp parallel
       for (SubTARPosition i = THREAD_FIRST(); i < THREAD_LAST(); ++i) {
@@ -405,13 +444,16 @@ public:
       return SAVIME_FAILURE;
   }
 
-  Literal Real2Logical(DimensionPtr dimension, RealIndex realIndex) {
+  Literal Real2Logical(DimensionPtr dimension, RealIndex realIndex) override {
+
     Literal _logicalIndex;
     T1 logicalIndex = 0;
 
     if (dimension->GetDimensionType() == IMPLICIT) {
-      logicalIndex = (T1)(realIndex * dimension->GetSpacing() +
-        dimension->GetLowerBound());
+      //logicalIndex = (T1)(realIndex * dimension->GetSpacing() +
+      //  dimension->GetLowerBound());
+      logicalIndex = (T1)IMPLICIT_REAL2LOGICAL(dimension, realIndex);
+
     } else if (dimension->GetDimensionType() == EXPLICIT) {
       auto handler = _storageManager->GetHandler(dimension->GetDataset());
       T1 *buffer = (T1 *)handler->GetBuffer();
@@ -428,7 +470,8 @@ public:
 
   SavimeResult Real2Logical(DimensionPtr dimension, DimSpecPtr dimSpecs,
                             DatasetPtr realIndexes,
-                            DatasetPtr &destinyDataset) {
+                            DatasetPtr &destinyDataset) override {
+
     bool invalidMapping = false;
     int numCores = _configurationManager->GetIntValue(MAX_THREADS);
     int32_t minWorkPerThread =
@@ -445,7 +488,7 @@ public:
       _storageManager->GetHandler(realIndexes);
     DatasetHandlerPtr destinyHandler =
       _storageManager->GetHandler(destinyDataset);
-    RealIndex *realBuffer = (RealIndex *)realIndexesHandler->GetBuffer();
+    auto *realBuffer = (RealIndex *)realIndexesHandler->GetBuffer();
     T1 *destinyBuffer = (T1 *)destinyHandler->GetBuffer();
 
     if (dimension->GetDimensionType() == IMPLICIT) {
@@ -457,8 +500,7 @@ public:
           break;
         }
 
-        destinyBuffer[i] = (T1)(realBuffer[i] * dimension->GetSpacing() +
-          dimension->GetLowerBound());
+        destinyBuffer[i] = (T1)IMPLICIT_REAL2LOGICAL(dimension, realBuffer[i]);
       }
     } else if (dimension->GetDimensionType() == EXPLICIT) {
       auto dimensionHandler =
@@ -494,7 +536,7 @@ public:
   }
 
   SavimeResult IntersectDimensions(DimensionPtr dim1, DimensionPtr dim2,
-                                   DimensionPtr &destinyDim) {
+                                   DimensionPtr &destinyDim) override {
 
     int numCores = _configurationManager->GetIntValue(MAX_THREADS);
     int workPerThread = _configurationManager->GetIntValue(WORK_PER_THREAD);
@@ -518,7 +560,7 @@ public:
     T2 *buffer2 = (T2 *)handler2->GetBuffer();
 
     DatasetPtr filterDs = make_shared<Dataset>(dim1->GetCurrentLength());
-    filterDs->Addlistener(
+    filterDs->AddListener(
       std::dynamic_pointer_cast<DefaultStorageManager>(_storageManager));
     filterDs->HasIndexes() = false;
     filterDs->Sorted() = false;
@@ -531,22 +573,7 @@ public:
       {
         for (SubTARPosition i = THREAD_FIRST(); i < THREAD_LAST(); ++i) {
           T1 value = buffer1[i];
-
-          RealIndex first = 0, last = dim2->GetCurrentLength();
-          RealIndex middle = (last + first) / 2;
-
-          while (first <= last) {
-            if (buffer2[middle] < value) {
-              first = middle + 1;
-            } else if (buffer2[middle] == value) {
-              (*filterDs->BitMask())[i] = 1;
-              break;
-            } else {
-              last = middle - 1;
-            }
-
-            middle = (first + last) / 2;
-          }
+          BIN_SEARCH_POS(buffer2, value, (*filterDs->BitMask())[i],  dim2->GetCurrentLength());
         }
       }
     } else if (CheckSorted(materializedDimensions[0])) {
@@ -557,22 +584,7 @@ public:
       {
         for (SubTARPosition i = THREAD_FIRST(); i < THREAD_LAST(); ++i) {
           T2 value = buffer2[i];
-
-          RealIndex first = 0, last = dim1->GetCurrentLength();
-          RealIndex middle = (last + first) / 2;
-
-          while (first <= last) {
-            if (buffer1[middle] < value) {
-              first = middle + 1;
-            } else if (buffer1[middle] == value) {
-              (*filterDs->BitMask())[i] = 1;
-              break;
-            } else {
-              last = middle - 1;
-            }
-
-            middle = (first + last) / 2;
-          }
+          BIN_SEARCH_POS(buffer1, value, (*filterDs->BitMask())[i],  dim1->GetCurrentLength());
         }
       }
 
@@ -620,7 +632,7 @@ public:
     return SAVIME_SUCCESS;
   }
 
-  bool CheckSorted(DatasetPtr dataset) {
+  bool CheckSorted(DatasetPtr dataset) override {
     bool isSorted = true;
     int32_t numCores = _configurationManager->GetIntValue(MAX_THREADS);
     int32_t minWorkPerThread =
@@ -647,9 +659,9 @@ public:
     return dataset->Sorted();
   }
 
-  SavimeResult Copy(DatasetPtr originDataset, int64_t lowerBound,
-                    int64_t upperBound, int64_t offsetInDestiny,
-                    int64_t spacingInDestiny, DatasetPtr destinyDataset) {
+  SavimeResult Copy(DatasetPtr originDataset, SubTARPosition lowerBound,
+                    SubTARPosition upperBound, SubTARPosition offsetInDestiny,
+                    savime_size_t spacingInDestiny, DatasetPtr destinyDataset) override {
 
     int32_t numCores = _configurationManager->GetIntValue(MAX_THREADS);
     int32_t minWorkPerThread =
@@ -691,8 +703,7 @@ public:
   }
 
   SavimeResult Copy(DatasetPtr originDataset, Mapping mapping,
-                    DatasetPtr destinyDataset, int64_t &copied) {
-#define INVALID -1
+                    DatasetPtr destinyDataset, int64_t &copied) override {
 
     int32_t numCores = _configurationManager->GetIntValue(MAX_THREADS);
     int32_t minWorkPerThread =
@@ -716,7 +727,7 @@ public:
 #pragma omp parallel for reduction(+ : copied)
       for (SubTARPosition i = 0; i < originDataset->GetEntryCount(); i++) {
         SubTARPosition pos = (*mapping)[i];
-        if (pos != INVALID) {
+        if (pos != INVALID_SUBTAR_POSITION) {
           (*destinyBuffer)[pos] = (T2)(*originBuffer)[i];
           copied++;
         }
@@ -725,7 +736,7 @@ public:
 #pragma omp parallel for reduction(+ : copied)
       for (SubTARPosition i = 0; i < originDataset->GetEntryCount(); i++) {
         SubTARPosition pos = (*mapping)[i];
-        if (pos != INVALID) {
+        if (pos != INVALID_SUBTAR_POSITION) {
           destinyBuffer->copyTuple(pos, &(*originBuffer)[i]);
           copied++;
         }
@@ -740,8 +751,7 @@ public:
   }
 
   SavimeResult Copy(DatasetPtr originDataset, DatasetPtr mapping,
-                    DatasetPtr destinyDataset, int64_t &copied) {
-#define INVALID -1
+                    DatasetPtr destinyDataset, int64_t &copied) override {
 
     int32_t numCores = _configurationManager->GetIntValue(MAX_THREADS);
     int32_t minWorkPerThread =
@@ -769,7 +779,7 @@ public:
 #pragma omp parallel for reduction(+ : copied)
       for (SubTARPosition i = 0; i < originDataset->GetEntryCount(); i++) {
         SubTARPosition pos = mappingBuffer[i];
-        if (pos != INVALID) {
+        if (pos != INVALID_SUBTAR_POSITION) {
           (*destinyBuffer)[pos] = (T2)(*originBuffer)[i];
           copied++;
         }
@@ -778,7 +788,7 @@ public:
 #pragma omp parallel for reduction(+ : copied)
       for (SubTARPosition i = 0; i < originDataset->GetEntryCount(); i++) {
         SubTARPosition pos = mappingBuffer[i];
-        if (pos != INVALID) {
+        if (pos != INVALID_SUBTAR_POSITION) {
           destinyBuffer->copyTuple(pos, &(*originBuffer)[i]);
           copied++;
         }
@@ -788,13 +798,12 @@ public:
     originHandler->Close();
     destinyHandler->Close();
     mappingHandler->Close();
-    // delete originBuffer;
-    // delete destinyBuffer;
+
     return SAVIME_SUCCESS;
   }
 
   SavimeResult Filter(DatasetPtr originDataset, DatasetPtr filterDataSet,
-                      DataType type, DatasetPtr &destinyDataset) {
+                      DataType type, DatasetPtr &destinyDataset) override {
     int32_t numCores = _configurationManager->GetIntValue(MAX_THREADS);
     int32_t minWorkPerThread =
       _configurationManager->GetIntValue(WORK_PER_THREAD);
@@ -812,7 +821,7 @@ public:
       _storageManager->GetHandler(originDataset);
     DatasetHandlerPtr filterHandler =
       _storageManager->GetHandler(filterDataSet);
-    RealIndex *filterBuffer = (RealIndex *)filterHandler->GetBuffer();
+    auto * filterBuffer = (RealIndex *)filterHandler->GetBuffer();
 
     destinyDataset =
       _storageManager->Create(type, filterDataSet->GetEntryCount());
@@ -844,13 +853,11 @@ public:
     filterHandler->Close();
     destinyHandler->Close();
 
-    // delete destinyBuffer;
-    // delete originBuffer;
     return SAVIME_SUCCESS;
   }
 
   SavimeResult Comparison(string op, DatasetPtr operand1, DatasetPtr operand2,
-                          DatasetPtr &destinyDataset) {
+                          DatasetPtr &destinyDataset) override {
     int numCores = _configurationManager->GetIntValue(MAX_THREADS);
     int32_t minWorkPerThread =
       _configurationManager->GetIntValue(WORK_PER_THREAD);
@@ -868,35 +875,35 @@ public:
       BUILD_VECTOR<T2>(op2Handler->GetBuffer(), operand2->GetType());
 
     destinyDataset = make_shared<Dataset>(entryCount);
-    destinyDataset->Addlistener(
+    destinyDataset->AddListener(
       std::dynamic_pointer_cast<DefaultStorageManager>(_storageManager));
     destinyDataset->HasIndexes() = false;
     destinyDataset->Sorted() = false;
 
     SET_THREADS_ALIGNED(entryCount, minWorkPerThread, numCores,
-                        destinyDataset->GetBitsPerBlock());
+                        (int32_t)destinyDataset->GetBitsPerBlock());
 
-    if (!op.compare(_EQ)) {
+    if (op == _EQ) {
 #pragma omp parallel
       for (SubTARPosition i = THREAD_FIRST(); i < THREAD_LAST(); ++i)
         (*destinyDataset->BitMask())[i] = (*op1Buffer)[i] == (*op2Buffer)[i];
-    } else if (!op.compare(_NEQ)) {
+    } else if (op == _NEQ) {
 #pragma omp parallel
       for (SubTARPosition i = THREAD_FIRST(); i < THREAD_LAST(); ++i)
         (*destinyDataset->BitMask())[i] = (*op1Buffer)[i] != (*op2Buffer)[i];
-    } else if (!op.compare(_LE)) {
+    } else if (op == _LE) {
 #pragma omp parallel
       for (SubTARPosition i = THREAD_FIRST(); i < THREAD_LAST(); ++i)
         (*destinyDataset->BitMask())[i] = (*op1Buffer)[i] < (*op2Buffer)[i];
-    } else if (!op.compare(_GE)) {
+    } else if (op == _GE) {
 #pragma omp parallel
       for (SubTARPosition i = THREAD_FIRST(); i < THREAD_LAST(); ++i)
         (*destinyDataset->BitMask())[i] = (*op1Buffer)[i] > (*op2Buffer)[i];
-    } else if (!op.compare(_LEQ)) {
+    } else if (op == _LEQ) {
 #pragma omp parallel
       for (SubTARPosition i = THREAD_FIRST(); i < THREAD_LAST(); ++i)
         (*destinyDataset->BitMask())[i] = (*op1Buffer)[i] <= (*op2Buffer)[i];
-    } else if (!op.compare(_GEQ)) {
+    } else if (op == _GEQ) {
 #pragma omp parallel
       for (SubTARPosition i = THREAD_FIRST(); i < THREAD_LAST(); ++i)
         (*destinyDataset->BitMask())[i] = (*op1Buffer)[i] >= (*op2Buffer)[i];
@@ -906,14 +913,12 @@ public:
 
     op1Handler->Close();
     op2Handler->Close();
-    // delete op1Buffer;
-    // delete op2Buffer;
 
     return SAVIME_SUCCESS;
   }
 
   SavimeResult Comparison(string op, DatasetPtr operand1, Literal _operand2,
-                          DatasetPtr &destinyDataset) {
+                          DatasetPtr &destinyDataset) override {
     int numCores = _configurationManager->GetIntValue(MAX_THREADS);
     int32_t minWorkPerThread =
       _configurationManager->GetIntValue(WORK_PER_THREAD);
@@ -927,7 +932,7 @@ public:
     GET_LITERAL(operand2, _operand2, T2);
 
     destinyDataset = make_shared<Dataset>(entryCount);
-    destinyDataset->Addlistener(
+    destinyDataset->AddListener(
       std::dynamic_pointer_cast<DefaultStorageManager>(_storageManager));
     destinyDataset->HasIndexes() = false;
     destinyDataset->Sorted() = false;
@@ -971,7 +976,8 @@ public:
   SavimeResult SubsetDims(vector<DimSpecPtr> dimSpecs,
                           vector<RealIndex> lowerBounds,
                           vector<RealIndex> upperBounds,
-                          DatasetPtr &destinyDataset) {
+                          DatasetPtr &destinyDataset) override {
+
     vector<DimSpecPtr> subsetSpecs;
     int64_t offset = 0, subsetLen = 1;
 
@@ -996,31 +1002,11 @@ public:
     std::sort(subsetSpecs.begin(), subsetSpecs.end(), compareAdj);
     std::sort(dimSpecs.begin(), dimSpecs.end(), compareAdj);
 
-    for (DimSpecPtr spec : subsetSpecs) {
-      bool isPosterior = false;
-      savime_size_t skew = 1;
-      savime_size_t adjacency = 1;
+    ADJUST_SPECS(subsetSpecs);
 
-      for (DimSpecPtr innerSpec : subsetSpecs) {
-        if (isPosterior)
-          adjacency *= innerSpec->GetFilledLength();
-
-        if (!spec->GetDimension()->GetName().compare(
-          innerSpec->GetDimension()->GetName())) {
-          isPosterior = true;
-        }
-
-        if (isPosterior)
-          skew *= innerSpec->GetFilledLength();
-      }
-
-      spec->AlterSkew(skew);
-      spec->AlterAdjacency(adjacency);
-    }
-
-    int64_t subsetSkews[subsetSpecs.size()];
-    int64_t subsetSkewsMul[subsetSpecs.size()];
-    int64_t subsetSkewsShift[subsetSpecs.size()];
+    int64_t subsetStrides[subsetSpecs.size()];
+    int64_t subsetStridesMul[subsetSpecs.size()];
+    int64_t subsetStridesShift[subsetSpecs.size()];
     int64_t subsetAdjacenciesMul[subsetSpecs.size()];
     int64_t subsetAdjacenciesShift[subsetSpecs.size()];
     int64_t dimSpecsAdjacencies[subsetSpecs.size()];
@@ -1041,9 +1027,10 @@ public:
     SubTARPosition *buffer = (SubTARPosition *)handler->GetBuffer();
 
     for (SubTARPosition dim = 0; dim < subsetSpecs.size(); dim++) {
-      subsetSkews[dim] = subsetSpecs[dim]->GetSkew();
-      fast_division(subsetLen, subsetSpecs[dim]->GetSkew(), subsetSkewsMul[dim],
-                    subsetSkewsShift[dim]);
+      subsetStrides[dim] = subsetSpecs[dim]->GetStride();
+      fast_division(subsetLen,
+                    subsetSpecs[dim]->GetStride(), subsetStridesMul[dim],
+                    subsetStridesShift[dim]);
       fast_division(subsetLen, subsetSpecs[dim]->GetAdjacency(),
                     subsetAdjacenciesMul[dim], subsetAdjacenciesShift[dim]);
     }
@@ -1060,17 +1047,17 @@ public:
 
       for (int64_t dim = 0; dim < numDim; dim++) {
         // ------------------Slow Divisions------------------------------
-        // realIndexes[dim] = (i%subsetSpecs[dim]->skew)/subsetSpecs[dim]
+        // realIndexes[dim] = (i%subsetSpecs[dim]->stride)/subsetSpecs[dim]
         //                                                   ->adjacency;
-        // realIndexes[dim] = (i%subsetSkews[dim])/subsetAdjacencies[dim];
+        // realIndexes[dim] = (i%subsetStrides[dim])/subsetAdjacencies[dim];
         // ------------------Fast Divisions------------------------------
-        realIndexes[dim] = REMAINDER(i, subsetSkewsMul[dim],
-                                     subsetSkewsShift[dim], subsetSkews[dim]);
+        realIndexes[dim] = REMAINDER(i, subsetStridesMul[dim],
+                                     subsetStridesShift[dim], subsetStrides[dim]);
         realIndexes[dim] = DIVIDE(realIndexes[dim], subsetAdjacenciesMul[dim],
                                   subsetAdjacenciesShift[dim]);
         // int64_t subsetSkewDiv =
-        //    (i * subsetSkewsMul[dim]) >> subsetSkewsShift[dim];
-        // realIndexes[dim] = i - subsetSkewDiv * subsetSkews[dim];
+        //    (i * subsetStridesMul[dim]) >> subsetStridesShift[dim];
+        // realIndexes[dim] = i - subsetSkewDiv * subsetStrides[dim];
         // realIndexes[dim] = (realIndexes[dim] * subsetAdjacenciesMul[dim]) >>
         //                   subsetAdjacenciesShift[dim];
       }
@@ -1089,7 +1076,7 @@ public:
 
   SavimeResult ComparisonOrderedDim(string op, DimSpecPtr dimSpecs,
                                     Literal operand2, int64_t totalLength,
-                                    DatasetPtr &destinyDataset) {
+                                    DatasetPtr &destinyDataset) override {
 
     /*This function either sets all bits, leaves them unset, or does nothing.*/
     typedef enum { __SET_ALL, __UNSET_ALL, __DO_NOTHING } CompOrderDimBehavior;
@@ -1151,7 +1138,7 @@ public:
 
     if (behavior == __SET_ALL || behavior == __UNSET_ALL) {
       destinyDataset = make_shared<Dataset>(totalLength);
-      destinyDataset->Addlistener(
+      destinyDataset->AddListener(
         std::dynamic_pointer_cast<DefaultStorageManager>(_storageManager));
       destinyDataset->HasIndexes() = false;
       destinyDataset->Sorted() = false;
@@ -1168,7 +1155,7 @@ public:
   }
 
   SavimeResult ComparisonDim(string op, DimSpecPtr dimSpecs, Literal _operand2,
-                             int64_t totalLength, DatasetPtr &destinyDataset) {
+                             int64_t totalLength, DatasetPtr &destinyDataset) override {
     bool fastDimComparsionPossible = false;
     auto dimension = dimSpecs->GetDimension();
     auto dataset = dimension->GetDataset();
@@ -1186,6 +1173,8 @@ public:
                            destinyDataset);
     }
 
+    fastDimComparsionPossible = false;
+
     if (!fastDimComparsionPossible || destinyDataset == nullptr) {
       DatasetPtr materializeDimDataset;
       if (_storageManager->MaterializeDim(
@@ -1200,17 +1189,17 @@ public:
   }
 
   SavimeResult Apply(string op, DatasetPtr operand1, DatasetPtr operand2,
-                     DatasetPtr &destinyDataset) {
+                     DatasetPtr &destinyDataset) override {
     throw runtime_error("Unsupported apply operation in default template.");
   }
 
   SavimeResult Apply(string op, DatasetPtr operand1, Literal _operand2,
-                     DataType type, DatasetPtr &destinyDataset) {
+                     DataType type, DatasetPtr &destinyDataset) override {
     throw runtime_error("Unsupported apply operation in default template.");
   }
 
   SavimeResult MaterializeDim(DimSpecPtr dimSpecs, int64_t totalLength,
-                              DataType type, DatasetPtr &destinyDataset) {
+                              DataType type, DatasetPtr &destinyDataset) override {
 
 #define MIN(X, Y) (X < Y) ? X : Y
 #define MAX(X, Y) (X > Y) ? X : Y
@@ -1229,6 +1218,7 @@ public:
     availableThreads = MAX(MIN(availableThreads, adjacency), 1);
 
     destinyDataset = _storageManager->Create(type, totalLength);
+
     if (destinyDataset == nullptr)
       throw std::runtime_error("Could not create dataset.");
 
@@ -1255,7 +1245,7 @@ public:
           int64_t offset = i * adjacency;
           double rangeMark = preamble1 + i * spacing;
           omp_set_num_threads(availableThreads);
-#pragma omp parallel for
+//#pragma omp parallel for
           for (int64_t adjMark = 0; adjMark < adjacency; ++adjMark) {
             destinyBuffer[offset + adjMark] = rangeMark;
           }
@@ -1385,7 +1375,8 @@ public:
   SavimeResult PartiatMaterializeDim(DatasetPtr filter, DimSpecPtr dimSpecs,
                                      savime_size_t totalLength, DataType type,
                                      DatasetPtr &destinyLogicalDataset,
-                                     DatasetPtr &destinyRealDataset) {
+                                     DatasetPtr &destinyRealDataset) override {
+
     int numCores = _configurationManager->GetIntValue(MAX_THREADS);
     int workPerThread = _configurationManager->GetIntValue(WORK_PER_THREAD);
 
@@ -1590,7 +1581,7 @@ public:
   }
 
   SavimeResult Match(DatasetPtr ds1, DatasetPtr ds2, DatasetPtr &ds1Mapping,
-                     DatasetPtr &ds2Mapping) {
+                     DatasetPtr &ds2Mapping) override {
 
     int numCores = _configurationManager->GetIntValue(MAX_THREADS);
     int workPerThread = _configurationManager->GetIntValue(WORK_PER_THREAD);
@@ -1759,7 +1750,7 @@ public:
 
   SavimeResult MatchDim(DimSpecPtr dim1, int64_t totalLen1, DimSpecPtr dim2,
                         int64_t totalLen2, DatasetPtr &ds1Mapping,
-                        DatasetPtr &ds2Mapping) {
+                        DatasetPtr &ds2Mapping) override{
 
     DatasetPtr dim1Materialized, dim2Materialized;
     MaterializeDim(dim1, totalLen1, dim1->GetDimension()->GetType(),
@@ -1773,7 +1764,7 @@ public:
 
   SavimeResult Stretch(DatasetPtr origin, int64_t entryCount,
                        int64_t recordsRepetitions, int64_t datasetRepetitions,
-                       DataType type, DatasetPtr &destinyDataset) {
+                       DataType type, DatasetPtr &destinyDataset)  override {
     int numCores = _configurationManager->GetIntValue(MAX_THREADS);
     int workPerThread = _configurationManager->GetIntValue(WORK_PER_THREAD);
     int64_t totalDestinySize =
@@ -1834,7 +1825,8 @@ public:
   }
 
   SavimeResult Split(DatasetPtr origin, int64_t totalLength, int64_t parts,
-                     vector<DatasetPtr> &brokenDatasets) {
+                     vector<DatasetPtr> &brokenDatasets) override {
+
     int numCores = _configurationManager->GetIntValue(MAX_THREADS);
     int workPerThread = _configurationManager->GetIntValue(WORK_PER_THREAD);
 

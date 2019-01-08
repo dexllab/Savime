@@ -53,7 +53,7 @@ size_t print_header(QueryResultHandle handle) {
       el.push_back(entry.first);
   }
 
-  for (auto entry : el) {
+  for (const auto &entry : el) {
     int32_t len = handle.schema[entry].type.length;
 
     if (handle.schema[entry].type == SAV_CHAR) {
@@ -83,10 +83,10 @@ void print_block(QueryResultHandle &handle, size_t totalLineWidth) {
     std::string name = entry.first;
     SavimeDataElement dataElement = entry.second;
 
-    struct stat s;
+    struct stat s{};
     fstat(handle.descriptors[name], &s);
 
-    buf_map[name] = (char *)mmap(0, s.st_size, PROT_READ, MAP_SHARED,
+    buf_map[name] = (char *)mmap(nullptr, static_cast<size_t>(s.st_size), PROT_READ, MAP_SHARED,
                                  handle.descriptors[name], 0);
 
     if (buf_map[name] == MAP_FAILED) {
@@ -129,6 +129,7 @@ void print_block(QueryResultHandle &handle, size_t totalLineWidth) {
     case SAV_DOUBLE:
       entry_count = s.st_size / (sizeof(double) * dataElement.type.length);
       break;
+    case INVALID_TYPE:break;
     }
 
     if (minimal_count == 0 || entry_count < minimal_count) {
@@ -168,11 +169,13 @@ void print_block(QueryResultHandle &handle, size_t totalLineWidth) {
     std::cout << ' ';                                                          \
   }                                                                            \
   for (int32_t _i = 0; _i < LEN; _i++) {                                       \
-    std::cout << ((char *)buf_map[ELEMENT])[INDEX * LEN + _i];                 \
+    char c = (char)((char *)buf_map[ELEMENT])[INDEX * LEN + _i];               \
+    c =  (c != '\0')? c : ' ';                                                 \
+    std::cout << c;                                                            \
   }
 
   for (int64_t i = 0; i < entry_count; i++) {
-    for (auto element : el) {
+    for (const auto &element : el) {
       SavimeDataElement dataElement = handle.schema[element];
 
       switch (dataElement.type.type) {
@@ -209,6 +212,7 @@ void print_block(QueryResultHandle &handle, size_t totalLineWidth) {
       case SAV_DOUBLE:
         PRINT_NUMERICAL_COLUMN(double, element, i, dataElement.type.length);
         break;
+      case INVALID_TYPE:break;
       }
     }
 
@@ -258,7 +262,7 @@ void parser_args(int argc, char *argv[], char* query, char *address,
 #define MIN(X, Y) (X < Y) ? X : Y
   
   char c;
-  while ((c = getopt (argc, argv, "c:f:pk")) != -1){
+  while ((c = static_cast<char>(getopt (argc, argv, "c:f:pk"))) != -1){
     
     switch (c) {
       case 'c': {
@@ -309,9 +313,10 @@ int main(int argc, char *argv[]) {
     con = open_connection(0, "");
   } else {
     std::string str_connection = std::string(address);
-    const auto c = str_connection.find(_COLON);
+    const auto c = str_connection.find(_COLON[0]);
     std::string host = str_connection.substr(0, c);
-    int32_t port = atoi(str_connection.substr(c + 1).c_str());
+    //int32_t port = atoi(str_connection.substr(c + 1).c_str());
+    int32_t port = (int32_t)strtol(str_connection.substr(c + 1).c_str(), NULL, 10);
     con = open_connection(port, host.c_str());
   }
   
@@ -325,7 +330,7 @@ int main(int argc, char *argv[]) {
     return 0;
   }
   
-  if (strcmp(file, EMPTY)) {
+  if (strcmp(file, EMPTY) != 0) {
     std::string line;
     std::ifstream infile(file);
     
@@ -342,7 +347,7 @@ int main(int argc, char *argv[]) {
     }
     infile.close();
     
-  } else if (strcmp(query, EMPTY)) {
+  } else if (strcmp(query, EMPTY) != 0) {
     handle = execute(con, query);
     
     if (!handle.successful) {
@@ -354,7 +359,7 @@ int main(int argc, char *argv[]) {
     dipose_query_handle(handle);
   } else {
      while (true) {
-      memset(query, sizeof(char), '\0');
+      memset(query, '\0', sizeof(char));
       printf("query> ");
       fgets(query, _BUFFER, stdin);
       handle = execute(con, query);

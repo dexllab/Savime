@@ -40,17 +40,17 @@ public:
   DefaultDatasetHandler(DatasetPtr ds, StorageManagerPtr storageManager,
                         int64_t hugeTblThreshold, int64_t hugeTblSize);
 
-  int32_t GetValueLength();
-  DatasetPtr GetDataSet();
-  void Append(void *value);
-  void *Next();
-  bool HasNext();
-  void InsertAt(void *value, RealIndex offset);
-  void CursorAt(RealIndex index);
-  void *GetBuffer();
-  void *GetBufferAt(RealIndex offset);
-  void TruncateAt(RealIndex offset);
-  void Close();
+  int32_t GetValueLength() override;
+  DatasetPtr GetDataSet() override;
+  void Append(void *value) override;
+  void *Next() override;
+  bool HasNext() override;
+  void InsertAt(void *value, RealIndex offset) override;
+  void CursorAt(RealIndex index) override;
+  void *GetBuffer() override;
+  void *GetBufferAt(RealIndex offset) override;
+  void TruncateAt(RealIndex offset) override;
+  void Close() override;
   ~DefaultDatasetHandler();
 };
 
@@ -76,129 +76,135 @@ public:
   std::shared_ptr<DefaultStorageManager> GetOwn() { return _this; }
 
   /*Dataset management*/
-  DatasetPtr Create(DataType type, savime_size_t size);
+  DatasetPtr Create(DataType type, savime_size_t size) override;
   DatasetPtr Create(DataType type, double init, double spacing, 
-                     double end, int64_t rep);
-  DatasetPtr Create(DataType type, vector<string> literals);
-  SavimeResult Save(DatasetPtr dataset);
-  DatasetHandlerPtr GetHandler(DatasetPtr dataset);
-  SavimeResult Drop(DatasetPtr dataset);
-  void SetUseSecStorage(bool use);
+                     double end, int64_t rep) override;
+  DatasetPtr Create(DataType type, vector<string> literals) override;
+  SavimeResult Save(DatasetPtr dataset) override;
+  DatasetHandlerPtr GetHandler(DatasetPtr dataset) override;
+  SavimeResult Drop(DatasetPtr dataset) override;
+  void SetUseSecStorage(bool use) override;
 
   /*Misc*/
-  bool CheckSorted(DatasetPtr dataset);
+  bool CheckSorted(DatasetPtr dataset) override;
 
-  RealIndex Logical2Real(DimensionPtr dimension, Literal logicalIndex);
+  RealIndex Logical2Real(DimensionPtr dimension, Literal logicalIndex) override;
 
-  IndexPair Logical2ApproxReal(DimensionPtr dimension, Literal logicalIndex);
+  IndexPair Logical2ApproxReal(DimensionPtr dimension, Literal logicalIndex) override;
 
   SavimeResult Logical2Real(DimensionPtr dimension, DimSpecPtr dimSpecs,
                             DatasetPtr logicalIndexes,
-                            DatasetPtr &destinyDataset);
+                            DatasetPtr &destinyDataset) override;
 
   SavimeResult UnsafeLogical2Real(DimensionPtr dimension, DimSpecPtr dimSpecs,
                                   DatasetPtr logicalIndexes,
-                                  DatasetPtr &destinyDataset);
+                                  DatasetPtr &destinyDataset) override;
 
-  Literal Real2Logical(DimensionPtr dimension, RealIndex realIndex);
+  Literal Real2Logical(DimensionPtr dimension, RealIndex realIndex) override;
 
   SavimeResult Real2Logical(DimensionPtr dimension, DimSpecPtr dimSpecs,
-                            DatasetPtr realIndexes, DatasetPtr &destinyDataset);
+                            DatasetPtr realIndexes, DatasetPtr &destinyDataset) override;
 
   SavimeResult IntersectDimensions(DimensionPtr dim1, DimensionPtr dim2,
-                                   DimensionPtr &destinyDim);
+                                   DimensionPtr &destinyDim) override;
 
   /*Copy*/
-  SavimeResult Copy(DatasetPtr originDataset, RealIndex lowerBound,
-                    RealIndex upperBound, RealIndex offsetInDestiny,
-                    savime_size_t spacingInDestiny, DatasetPtr destinyDataset);
+  SavimeResult Copy(DatasetPtr originDataset, SubTARPosition lowerBound,
+                    SubTARPosition upperBound, SubTARPosition offsetInDestiny,
+                    savime_size_t spacingInDestiny, DatasetPtr destinyDataset) override;
 
   SavimeResult Copy(DatasetPtr originDataset, Mapping mapping,
-                    DatasetPtr destinyDataset, int64_t &copied);
+                    DatasetPtr destinyDataset, int64_t &copied) override;
 
   SavimeResult Copy(DatasetPtr originDataset, DatasetPtr mapping,
-                    DatasetPtr destinyDataset, int64_t &copied);
+                    DatasetPtr destinyDataset, int64_t &copied) override;
 
   /*Filter*/
   SavimeResult Filter(DatasetPtr originDataset, DatasetPtr filterDataSet,
-                      DatasetPtr &destinyDataset);
+                      DatasetPtr &destinyDataset) override;
 
   /*Logical*/
   SavimeResult And(DatasetPtr operand1, DatasetPtr operand2,
-                   DatasetPtr &destinyDataset);
+                   DatasetPtr &destinyDataset) override;
 
   SavimeResult Or(DatasetPtr operand1, DatasetPtr operand2,
-                  DatasetPtr &destinyDataset);
+                  DatasetPtr &destinyDataset) override;
 
-  SavimeResult Not(DatasetPtr operand1, DatasetPtr &destinyDataset);
+  SavimeResult Not(DatasetPtr operand1, DatasetPtr &destinyDataset) override;
 
   /*Relational*/
-  SavimeResult Comparison(string op, DatasetPtr operand1, DatasetPtr operand2,
+  SavimeResult ComparisonStr(string op, DatasetPtr operand1, DatasetPtr operand2,
                           DatasetPtr &destinyDataset);
+
+  SavimeResult Comparison(string op, DatasetPtr operand1, DatasetPtr operand2,
+                          DatasetPtr &destinyDataset) override;
 
   SavimeResult ComparisonDim(string op, DimSpecPtr dimSpecs,
                              savime_size_t totalLength, DatasetPtr operand2,
-                             DatasetPtr &destinyDataset);
+                             DatasetPtr &destinyDataset) override;
+
+  SavimeResult ComparisonStr(string op, DatasetPtr operand1, Literal operand2,
+                          DatasetPtr &destinyDataset);
 
   SavimeResult Comparison(string op, DatasetPtr operand1, Literal operand2,
-                          DatasetPtr &destinyDataset);
+                          DatasetPtr &destinyDataset) override;
 
   SavimeResult ComparisonDim(string op, DimSpecPtr dimSpecs,
                              savime_size_t totalLength, Literal operand2,
-                             DatasetPtr &destinyDataset);
+                             DatasetPtr &destinyDataset) override;
 
   /*Subset*/
   SavimeResult SubsetDims(vector<DimSpecPtr> dimSpecs,
                           vector<RealIndex> lowerBounds,
                           vector<RealIndex> upperBounds,
-                          DatasetPtr &destinyDataset);
+                          DatasetPtr &destinyDataset) override;
 
   /*Apply*/
   SavimeResult Apply(string op, DatasetPtr operand1, DatasetPtr operand2,
-                     DatasetPtr &destinyDataset);
+                     DatasetPtr &destinyDataset) override;
 
   SavimeResult Apply(string op, DatasetPtr operand1, Literal operand2,
-                     DatasetPtr &destinyDataset);
+                     DatasetPtr &destinyDataset) override;
 
   /*Materialization*/
   SavimeResult MaterializeDim(DimSpecPtr dimSpecs, savime_size_t totalLength,
-                              DatasetPtr &destinyDataset);
+                              DatasetPtr &destinyDataset) override;
 
   SavimeResult PartiatMaterializeDim(DatasetPtr filter, DimSpecPtr dimSpecs,
                                      savime_size_t totalLength,
                                      DatasetPtr &destinyDataset,
-                                     DatasetPtr &destinyRealDataset);
+                                     DatasetPtr &destinyRealDataset) override;
 
   /*Stretch*/
   SavimeResult Stretch(DatasetPtr origin, savime_size_t entryCount,
                        savime_size_t recordsRepetitions,
                        savime_size_t datasetRepetitions,
-                       DatasetPtr &destinyDataset);
+                       DatasetPtr &destinyDataset) override;
 
   /*Match*/
   SavimeResult Match(DatasetPtr ds1, DatasetPtr ds2, DatasetPtr &ds1Mapping,
-                             DatasetPtr &ds2Mapping);
+                             DatasetPtr &ds2Mapping) override;
 
   /*MatchDim*/
   SavimeResult MatchDim(DimSpecPtr dim1, int64_t totalLen1, DimSpecPtr dim2,
                          int64_t totalLen2, DatasetPtr &ds1Mapping,
-                         DatasetPtr &ds2Mapping);
+                         DatasetPtr &ds2Mapping) override;
 
   /*Split*/
   SavimeResult Split(DatasetPtr origin, savime_size_t totalLength,
-                     savime_size_t parts, vector<DatasetPtr> &brokenDatasets);
+                     savime_size_t parts, vector<DatasetPtr> &brokenDatasets) override;
 
   /*FromBitMaskToIndex*/
-  void FromBitMaskToPosition(DatasetPtr &dataset, bool keepBitmask);
+  void FromBitMaskToPosition(DatasetPtr &dataset, bool keepBitmask) override;
 
   /*Utilities*/
-  SavimeResult RegisterDatasetExpasion(savime_size_t size);
+  SavimeResult RegisterDatasetExpasion(savime_size_t size) override;
 
-  SavimeResult RegisterDatasetTruncation(savime_size_t size);
+  SavimeResult RegisterDatasetTruncation(savime_size_t size) override;
 
-  void DisposeObject(MetadataObject *object);
+  void DisposeObject(MetadataObject *object) override;
 
-  string GetObjectInfo(MetadataObjectPtr object, string infoType);
+  string GetObjectInfo(MetadataObjectPtr object, string infoType) override;
 };
 
 

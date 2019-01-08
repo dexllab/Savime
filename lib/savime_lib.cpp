@@ -76,8 +76,8 @@ std::ifstream::pos_type get_file_size(const char *filename) {
 
 // UTIL FUNCTIONS
 int savime_connect(const char *unix_socket_address) {
-  struct sockaddr_in serv_addr;
-  struct sockaddr_un serv_addr_un;
+  struct sockaddr_in serv_addr{};
+  struct sockaddr_un serv_addr_un{};
   struct hostent *server;
 
   int sockfd = socket(AF_UNIX, SOCK_STREAM, 0);
@@ -102,8 +102,8 @@ int savime_connect(const char *unix_socket_address) {
 
 int savime_connect(int portno, const char *address) {
   // int sockfd, portno, n;
-  struct sockaddr_in serv_addr;
-  struct sockaddr_un serv_addr_un;
+  struct sockaddr_in serv_addr{};
+  struct sockaddr_un serv_addr_un{};
   struct hostent *server;
 
   int sockfd = socket(AF_INET, SOCK_STREAM, 0);

@@ -21,6 +21,7 @@
 #include <unordered_map>
 #include <thread>
 #include <mutex>
+#include <vector>
 #include <condition_variable>
 #include "../core/include/connection_manager.h"
 
@@ -33,16 +34,13 @@ class DefaultConnectionManager : public ConnectionManager {
 
   list<int32_t> _sockets_to_close;
   unordered_map<int, ConnectionListenerPtr> _listeners;
-  unordered_map<int32_t, list<int32_t>> _socket_listeners;
   unordered_map<int32_t, ConnectionListenerPtr> _socket_listeners_map;
-
   vector<int32_t> _sockets;
+  unordered_map<int32_t, list<int32_t>> _socket_listeners;
   shared_ptr<thread> _connections_thread;
   shared_ptr<thread> _messages_thread;
-  shared_ptr<thread> _rdma_thread;
   mutex _mutex;
   condition_variable _conditionVar;
-
   int32_t _unix_socket;
   int32_t _tcp_socket;
   int32_t _max_pending_connections;
@@ -61,15 +59,15 @@ class DefaultConnectionManager : public ConnectionManager {
 public:
   DefaultConnectionManager(ConfigurationManagerPtr configurationManager,
                            SystemLoggerPtr systemLogger);
-  SavimeResult Start();
-  SavimeResult AddConnectionListener(ConnectionListener *listener);
-  SavimeResult AddConnectionListener(ConnectionListener *listener, int socket);
-  SavimeResult RemoveConnectionListener(ConnectionListener *listener);
-  MessagePtr CreateMessage(ConnectionDetailsPtr connectionDetails);
-  SavimeResult Send(MessagePtr message);
-  SavimeResult Receive(MessagePtr message);
-  SavimeResult Close(ConnectionDetailsPtr connectionDetails);
-  SavimeResult Stop();
+  SavimeResult Start() override;
+  SavimeResult AddConnectionListener(ConnectionListener *listener) override;
+  SavimeResult AddConnectionListener(ConnectionListener *listener, int socket) override;
+  SavimeResult RemoveConnectionListener(ConnectionListener *listener) override;
+  MessagePtr CreateMessage(ConnectionDetailsPtr connectionDetails) override;
+  SavimeResult Send(MessagePtr message) override;
+  SavimeResult Receive(MessagePtr message) override;
+  SavimeResult Close(ConnectionDetailsPtr connectionDetails) override;
+  SavimeResult Stop() override;
 };
 
 

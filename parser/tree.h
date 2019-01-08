@@ -82,7 +82,8 @@ enum CompOpEnum {
   LESS_THAN,
   GREATER_THAN,
   LESS_EQ_THAN,
-  GREATER_EQ_THAN
+  GREATER_EQ_THAN,
+  LIKE_COMP
 };
 
 class ParseTreeNode {
@@ -609,6 +610,9 @@ public:
       break;
     case LESS_EQ_THAN:
       return std::string(_LEQ);
+      break;
+    case LIKE_COMP:
+      return std::string(_LIKE);
       break;
     }
 

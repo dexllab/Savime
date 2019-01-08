@@ -1,3 +1,5 @@
+#include <memory>
+
 /*
 *    This program is free software: you can redistribute it and/or modify
 *    it under the terms of the GNU General Public License as published by
@@ -24,16 +26,12 @@
 using namespace chrono;
 using namespace SavimeViz;
 
-
-//Processor processor = NULL;
-Mutex processorMutex;
-
 SystemLoggerPtr systemLogger;
 const char *invalid_param = "Invalid parameter for operator CATALYZE. Expected "
                             "CATALYZE(field_data_tar1, [geometry_tar], "
                             "[topology_tar], catalyst_script, output_path)";
 
-void waitAll(VizConfigPtr vizConfig) {
+void waitAll(const VizConfigPtr &vizConfig) {
   
   VizSync& sync = vizConfig->sync;
   sync.keepWorking = false;
@@ -43,17 +41,11 @@ void waitAll(VizConfigPtr vizConfig) {
   }
 }
 
-void AddTimeToVTK(vtkSmartPointer<vtkDataSet> ds, double time) {
-  auto t = vtkSmartPointer<vtkDoubleArray>::New();
-  t->SetName("TIME");
-  t->SetNumberOfTuples(1);
-  t->SetTuple1(0, time);
-  ds->GetFieldData()->AddArray(t);
-}
+
 
 // Validation and configuration
 //------------------------------------------------------------------------------
-bool isFieldDataTar(TARPtr tar) {
+bool isFieldDataTar(const TARPtr &tar) {
   auto type = tar->GetType();
   if (!type)
     return false;
@@ -62,7 +54,7 @@ bool isFieldDataTar(TARPtr tar) {
          type->name == UNSTRUCTURED_FIELD_DATA;
 }
 
-bool isGeometryTar(TARPtr tar) {
+bool isGeometryTar(const TARPtr &tar) {
   auto type = tar->GetType();
   if (!type)
     return false;
@@ -70,15 +62,15 @@ bool isGeometryTar(TARPtr tar) {
          type->name == CATERSIAN_GEO;
 }
 
-bool isTopologyTar(TARPtr tar) {
+bool isTopologyTar(const TARPtr &tar) {
   auto type = tar->GetType();
   if (!type)
     return false;
   return type->name == INCIDENCE_TOPOLOGY || type->name == ADJACENCY_TOPOLOGY;
 }
 
-void validateGeometryTar(TARPtr tar, VizConfigPtr vizConfig) {
-  for (auto dim : tar->GetDimensions()) {
+void validateGeometryTar(const TARPtr &tar, const VizConfigPtr &vizConfig) {
+  for (const auto &dim : tar->GetDimensions()) {
     auto roles = tar->GetRoles();
     if (roles.find(dim->GetName()) == roles.end())
       throw std::runtime_error("Unexpected dimension: " + dim->GetName() +
@@ -111,7 +103,7 @@ void validateGeometryTar(TARPtr tar, VizConfigPtr vizConfig) {
         "a LONG typed data element.");
   }
 
-  if (vizConfig->schema.spatialCoords != NULL) {
+  if (vizConfig->schema.spatialCoords != nullptr) {
     if (vizConfig->schema.spatialCoords->GetDataType().type() != DOUBLE)
       throw std::runtime_error(
           "Coords role for a Geometry TAR must be implemented by "
@@ -119,8 +111,8 @@ void validateGeometryTar(TARPtr tar, VizConfigPtr vizConfig) {
   }
 }
 
-void validateTopologyTar(TARPtr tar, VizConfigPtr vizConfig) {
-  for (auto dim : tar->GetDimensions()) {
+void validateTopologyTar(const TARPtr &tar, const VizConfigPtr &vizConfig) {
+  for (const auto &dim : tar->GetDimensions()) {
     auto roles = tar->GetRoles();
     if (roles.find(dim->GetName()) == roles.end())
       throw std::runtime_error("unexpected dimension: " + dim->GetName() +
@@ -156,12 +148,12 @@ void validateTopologyTar(TARPtr tar, VizConfigPtr vizConfig) {
   }
 }
 
-void validateFieldDataTar(TARPtr tar, VizConfigPtr vizConfig) {
-  for (auto dim : tar->GetDimensions()) {
+void validateFieldDataTar(const TARPtr &tar, const VizConfigPtr& vizConfig) {
+  for (const auto &dim : tar->GetDimensions()) {
     auto roles = tar->GetRoles();
-    if (roles.find(dim->GetName()) == roles.end())
-      throw std::runtime_error("unexpected dimension: " + dim->GetName() +
-                               " in TAR.");
+    //if (roles.find(dim->GetName()) == roles.end())
+    //  throw std::runtime_error("unexpected dimension: " + dim->GetName() +
+    //                           " in TAR.");
   }
 
   for (auto entry : tar->GetRoles()) {
@@ -182,7 +174,7 @@ void validateFieldDataTar(TARPtr tar, VizConfigPtr vizConfig) {
       vizConfig->schema.index = tar->GetDataElement(elementName);
   }
 
-  if (vizConfig->schema.index != NULL) {
+  if (vizConfig->schema.index != nullptr) {
     if (vizConfig->schema.index->GetDataType() != INT64) {
       throw std::runtime_error(
           "Index role for field data TAR must be implemented by "
@@ -198,17 +190,17 @@ void validateFieldDataTar(TARPtr tar, VizConfigPtr vizConfig) {
 }
 
 VizConfigPtr
-createVizConfiguration(OperationPtr operation,
-                       ConfigurationManagerPtr configurationManager,
-                       StorageManagerPtr storageManager) {
+createVizConfiguration(const OperationPtr &operation,
+                       const ConfigurationManagerPtr &configurationManager,
+                       const StorageManagerPtr &storageManager) {
 
-  VizConfigPtr vizConfig = VizConfigPtr(new VizConfiguration);
+  VizConfigPtr vizConfig = std::make_shared<VizConfiguration>();
   int32_t paramCount = 1;
   bool expectingOutdir = true;
   bool expectingGeo = true;
 
   auto firstParam = operation->GetParametersByName(OPERAND(0));
-  if (firstParam == NULL || firstParam->type != TAR_PARAM)
+  if (firstParam == nullptr || firstParam->type != TAR_PARAM)
     throw std::runtime_error(invalid_param);
 
   auto fieldTar = firstParam->tar;
@@ -223,7 +215,7 @@ createVizConfiguration(OperationPtr operation,
   
   while (true) {
     auto param = operation->GetParametersByName(OPERAND(paramCount++));
-    if (param == NULL || paramCount > 5)
+    if (param == nullptr || paramCount > 5)
       break;
 
     if (param->type == LITERAL_STRING_PARAM) {
@@ -270,7 +262,7 @@ createVizConfiguration(OperationPtr operation,
   }
 
   if (vizConfig->schema.fieldData->GetType()->name == UNSTRUCTURED_FIELD_DATA &&
-      vizConfig->schema.geometry == NULL) {
+      vizConfig->schema.geometry == nullptr) {
     throw std::runtime_error("Unstructured field data detected, but no "
                              "geometry TAR specified.");
   }
@@ -286,8 +278,8 @@ createVizConfiguration(OperationPtr operation,
 
 // Aux functions
 //------------------------------------------------------------------------------
-Mapping createMapping(VizConfigPtr vizConfig, StorageManagerPtr storageManager,
-                      SubtarPtr subtar, DatasetPtr filter) {
+Mapping createMapping(const VizConfigPtr& vizConfig, const StorageManagerPtr& storageManager,
+                      const SubtarPtr& subtar, const DatasetPtr& filter) {
 
 #define LOWER(X) X->GetLowerBound()
 #define UPPER(X) X->GetUpperBound()
@@ -295,11 +287,11 @@ Mapping createMapping(VizConfigPtr vizConfig, StorageManagerPtr storageManager,
   VizSchema &schema = vizConfig->schema;
 
   if (vizConfig->type != IMAGE && vizConfig->type != STRUCTURED)
-    return NULL;
+    return nullptr;
 
   DatasetPtr spatialDatasets[DIM3], aux[DIM3];
   int64_t totalLen = subtar->GetFilledLength();
-  bool is3D = schema.spatialDims[Z_DIM] != NULL;
+  bool is3D = schema.spatialDims[Z_DIM] != nullptr;
 
   string spatialDimNames[] = {schema.spatialDims[X_DIM]->GetName(),
                               schema.spatialDims[Y_DIM]->GetName(),
@@ -411,8 +403,8 @@ Mapping createMapping(VizConfigPtr vizConfig, StorageManagerPtr storageManager,
 
 // TODO[HERMANO]:Make this function more efficient
 unordered_map<string, DatasetPtr>
-sliceSubtars(DataElementPtr simDimension, DataElementPtr timeDimension,
-             StorageManagerPtr storageManager, SubtarPtr subtar,
+sliceSubtars(const DataElementPtr &simDimension, const DataElementPtr& timeDimension,
+             const StorageManagerPtr &storageManager, const SubtarPtr &subtar,
              int64_t simulation, int64_t time, DatasetPtr &filter) {
 
   unordered_map<string, DatasetPtr> datasets;
@@ -425,7 +417,7 @@ sliceSubtars(DataElementPtr simDimension, DataElementPtr timeDimension,
     DatasetPtr dataset = entry.second;
     DatasetPtr filteredDataset = dataset;
     DatasetPtr filterTime, filterSim;
-    double logicalTimeIndex, logicalSimIndex;
+    double logicalTimeIndex, logicalSimIndex = 0;
 
     if (hasManySims && hasManyTimeSteps) {
       simSpecs = subtar->GetDimensionSpecificationFor(simDimension->GetName());
@@ -482,11 +474,11 @@ sliceSubtars(DataElementPtr simDimension, DataElementPtr timeDimension,
 
 // Grids initialization
 //------------------------------------------------------------------------------
-void processGeometryForUnstructuredGrid(VizConfigPtr vizConfig,
-                                        StorageManagerPtr storageManager,
-                                        DefaultEnginePtr defaultEngine,
-                                        string geoSimName, string geoTimeName,
-                                        string indexElementName) {
+void processGeometryForUnstructuredGrid(const VizConfigPtr& vizConfig,
+                                        const StorageManagerPtr& storageManager,
+                                        const DefaultEnginePtr& defaultEngine,
+                                        const string& geoSimName, string& geoTimeName,
+                                        const string& indexElementName) {
 #define INVALID -1
 
   VizSchema &schema = vizConfig->schema;
@@ -496,7 +488,7 @@ void processGeometryForUnstructuredGrid(VizConfigPtr vizConfig,
   int64_t geoSubtarCount = 0, simulation = 0, timeStep = 0;
   int32_t components = 0;
   auto geoGeneretor = defaultEngine->GetGenerators()[geoTarName];
-  bool is3D = schema.spatialDims[Z_DIM] != NULL;
+  bool is3D = schema.spatialDims[Z_DIM] != nullptr;
 
   // Creating geometry
   while (true) {
@@ -505,12 +497,12 @@ void processGeometryForUnstructuredGrid(VizConfigPtr vizConfig,
     void *coordsFinalBuffer;
 
     auto subtar = geoGeneretor->GetSubtar(geoSubtarCount);
-    if (subtar == NULL)
+    if (subtar == nullptr)
       break;
     totalLen = subtar->GetFilledLength();
 
     DimSpecPtr simSpecs = subtar->GetDimensionSpecificationFor(geoSimName);
-    if (simSpecs != NULL) {
+    if (simSpecs != nullptr) {
       if (simSpecs->GetFilledLength() != 1)
         throw std::runtime_error("Invalid geometry TAR, a subTAR should "
                                  "not contain the geometry for more than "
@@ -519,7 +511,7 @@ void processGeometryForUnstructuredGrid(VizConfigPtr vizConfig,
     }
 
     DimSpecPtr timSpecs = subtar->GetDimensionSpecificationFor(geoTimeName);
-    if (timSpecs != NULL) {
+    if (timSpecs != nullptr) {
       if (timSpecs->GetFilledLength() != 1)
         throw std::runtime_error("Invalid geometry TAR, a subTAR should "
                                  " not contain the geometry for more than "
@@ -529,7 +521,7 @@ void processGeometryForUnstructuredGrid(VizConfigPtr vizConfig,
 
     DimSpecPtr dimSpecs =
         subtar->GetDimensionSpecificationFor(indexElementName);
-    if (dimSpecs != NULL) {
+    if (dimSpecs != nullptr) {
       storageManager->MaterializeDim(dimSpecs, totalLen, indexDataset);
     } else {
       indexDataset = subtar->GetDataSetFor(indexElementName);
@@ -537,7 +529,7 @@ void processGeometryForUnstructuredGrid(VizConfigPtr vizConfig,
 
     int64_t numberOfPoints = indexDataset->GetEntryCount();
 
-    if (schema.spatialCoords == NULL) {
+    if (schema.spatialCoords == nullptr) {
       string spatialDataElementNames[DIM3] = {
           schema.spatialDims[X_DIM]->GetName(),
           schema.spatialDims[Y_DIM]->GetName(),
@@ -547,7 +539,7 @@ void processGeometryForUnstructuredGrid(VizConfigPtr vizConfig,
         dimSpecs =
             subtar->GetDimensionSpecificationFor(spatialDataElementNames[i]);
 
-        if (dimSpecs != NULL) {
+        if (dimSpecs != nullptr) {
           bool wholeExtent = dimSpecs->GetFilledLength() ==
                              dimSpecs->GetDimension()->GetLength();
           if (!wholeExtent)
@@ -572,7 +564,7 @@ void processGeometryForUnstructuredGrid(VizConfigPtr vizConfig,
         spacings[X_DIM] = spacings[Y_DIM] = spacings[Z_DIM] = DIM3;
         interleavedCoord = storageManager->Create(DOUBLE, numberOfPoints * 3);
 
-        if (interleavedCoord == NULL)
+        if (interleavedCoord == nullptr)
           throw std::runtime_error(
               "Could not create dataset for storing interleaved coords.");
 
@@ -581,7 +573,7 @@ void processGeometryForUnstructuredGrid(VizConfigPtr vizConfig,
         spacings[X_DIM] = spacings[Y_DIM] = DIM2;
         interleavedCoord = storageManager->Create(DOUBLE, numberOfPoints * 2);
 
-        if (interleavedCoord == NULL)
+        if (interleavedCoord == nullptr)
           throw std::runtime_error(
               "Could not create dataset for storing interleaved coords.");
       }
@@ -610,7 +602,7 @@ void processGeometryForUnstructuredGrid(VizConfigPtr vizConfig,
         DatasetPtr paddedCoords =
             storageManager->Create(DOUBLE, paddedCoordsSize);
 
-        if (paddedCoords == NULL)
+        if (paddedCoords == nullptr)
           throw std::runtime_error(
               "Could not create dataset for padding 2D coords.");
 
@@ -688,10 +680,10 @@ void processGeometryForUnstructuredGrid(VizConfigPtr vizConfig,
   }
 }
 
-void processTopologyForUnstructuredGrid(VizConfigPtr vizConfig,
-                                        StorageManagerPtr storageManager,
-                                        DefaultEnginePtr defaultEngine,
-                                        string topSimName, string topTimeName) {
+void processTopologyForUnstructuredGrid(const VizConfigPtr& vizConfig,
+                                        const StorageManagerPtr& storageManager,
+                                        const DefaultEnginePtr& defaultEngine,
+                                        const string& topSimName, const string& topTimeName) {
 #define INVALID -1
 
   VizSchema &schema = vizConfig->schema;
@@ -705,11 +697,11 @@ void processTopologyForUnstructuredGrid(VizConfigPtr vizConfig,
   // Creating topology
   while (true) {
     auto subtar = topGeneretor->GetSubtar(topSubtarCount);
-    if (subtar == NULL)
+    if (subtar == nullptr)
       break;
 
     DimSpecPtr simSpecs = subtar->GetDimensionSpecificationFor(topSimName);
-    if (simSpecs != NULL) {
+    if (simSpecs != nullptr) {
       if (simSpecs->GetFilledLength() != 1)
         throw std::runtime_error("Invalid topology TAR, a subTAR should "
                                  "not contain the topology for more "
@@ -719,7 +711,7 @@ void processTopologyForUnstructuredGrid(VizConfigPtr vizConfig,
     }
 
     DimSpecPtr timSpecs = subtar->GetDimensionSpecificationFor(topTimeName);
-    if (timSpecs != NULL) {
+    if (timSpecs != nullptr) {
       if (timSpecs->GetFilledLength() != 1)
         throw std::runtime_error("Invalid topology TAR, a subTAR should "
                                  "not contain the topology for more "
@@ -730,7 +722,7 @@ void processTopologyForUnstructuredGrid(VizConfigPtr vizConfig,
     
     auto grid = vizConfig->getGrid(simulation, timeStep);
     auto map = vizConfig->getMapping(simulation, timeStep);
-    if (grid == NULL || map == NULL){
+    if (grid == nullptr || map == nullptr){
       topGeneretor->TestAndDisposeSubtar(topSubtarCount++);
       continue;
     }
@@ -824,22 +816,22 @@ void processTopologyForUnstructuredGrid(VizConfigPtr vizConfig,
   }
 }
 
-void initializeUnstructuredGrids(VizConfigPtr vizConfig,
-                                 StorageManagerPtr storageManager,
-                                 DefaultEnginePtr defaultEngine) {
+void initializeUnstructuredGrids(const VizConfigPtr& vizConfig,
+                                 const StorageManagerPtr& storageManager,
+                                 const DefaultEnginePtr& defaultEngine) {
 
   VizSchema &schema = vizConfig->schema;
-  string geoTimeName = "", geoSimName = "", topTimeName = "", topSimName = "";
+  string geoTimeName, geoSimName, topTimeName, topSimName;
 
   vizConfig->multiplicityType = SINGLE_GRID;
   vizConfig->type = UNSTRUCTURED;
 
-  if (schema.geoSimDimension != NULL) {
+  if (schema.geoSimDimension != nullptr) {
     geoSimName = schema.geoSimDimension->GetName();
     vizConfig->multiplicityType = SINGLE_TIME;
   }
 
-  if (schema.geoTimeDimension != NULL) {
+  if (schema.geoTimeDimension != nullptr) {
     geoTimeName = schema.geoTimeDimension->GetName();
     if (vizConfig->multiplicityType == SINGLE_GRID)
       vizConfig->multiplicityType = SINGLE_SIM;
@@ -847,11 +839,11 @@ void initializeUnstructuredGrids(VizConfigPtr vizConfig,
       vizConfig->multiplicityType = MULTIPLE;
   }
 
-  if (schema.topSimDimension != NULL) {
+  if (schema.topSimDimension != nullptr) {
     topSimName = schema.topSimDimension->GetName();
   }
 
-  if (schema.topTimeDimension != NULL) {
+  if (schema.topTimeDimension != nullptr) {
     topTimeName = schema.topTimeDimension->GetName();
   }
 
@@ -866,10 +858,10 @@ void initializeUnstructuredGrids(VizConfigPtr vizConfig,
                                      topSimName, topTimeName);
 }
 
-void initializeStructuredGrids(VizConfigPtr vizConfig,
-                               StorageManagerPtr storageManager,
+void initializeStructuredGrids(const VizConfigPtr& vizConfig,
+                               const StorageManagerPtr& storageManager,
                                DataElementPtr dimensions[DIM3],
-                               int64_t lens[DIM3], int64_t simulationsNumber,
+                               const int64_t lens[DIM3], int64_t simulationsNumber,
                                int64_t timeStepNumber) {
 
   VizData &data = vizConfig->data;
@@ -886,7 +878,7 @@ void initializeStructuredGrids(VizConfigPtr vizConfig,
   double spacings[DIM3];
   int32_t offsets[DIM3] = {0, 1, 2};
   double adjcency[DIM3] = {(double)(lenY * lenZ), (double)lenZ, 1};
-  double skew[DIM3] = {(double)(lenX * lenY * lenZ), (double)(lenY * lenZ),
+  double stride[DIM3] = {(double)(lenX * lenY * lenZ), (double)(lenY * lenZ),
                        (double)lenZ};
 
   if (zDim) {
@@ -908,7 +900,7 @@ void initializeStructuredGrids(VizConfigPtr vizConfig,
       auto dim = element->GetDimension();
       DimSpecPtr dimsSpecs =
           make_shared<DimensionSpecification>(UNSAVED_ID, dim,
-              0, dim->GetRealUpperBound(), skew[i], adjcency[i]);
+              0, dim->GetRealUpperBound(), stride[i], adjcency[i]);
 
       storageManager->MaterializeDim(dimsSpecs, totalLen, matDim);
       storageManager->Copy(matDim, 0, matDim->GetEntryCount() - 1, offsets[i],
@@ -934,8 +926,8 @@ void initializeStructuredGrids(VizConfigPtr vizConfig,
   vizConfig->type = STRUCTURED;
 }
 
-void initializeImageGrids(VizConfigPtr vizConfig,
-                          StorageManagerPtr storageManager, int64_t lens[DIM3],
+void initializeImageGrids(const VizConfigPtr& vizConfig,
+                          const StorageManagerPtr& storageManager, int64_t lens[DIM3],
                           double spacings[DIM3], int64_t simulationsNumber,
                           int64_t timeStepNumber) {
   VizData &data = vizConfig->data;
@@ -953,21 +945,21 @@ void initializeImageGrids(VizConfigPtr vizConfig,
   vizConfig->type = IMAGE;
 }
 
-void initializeGrids(VizConfigPtr vizConfig, StorageManagerPtr storageManager,
-                     DefaultEnginePtr defaultEngine) {
+void initializeGrids(const VizConfigPtr& vizConfig, const StorageManagerPtr& storageManager,
+                     const DefaultEnginePtr& defaultEngine) {
   VizSchema &schema = vizConfig->schema;
   TARPtr fieldData = schema.fieldData;
-  int32_t simulationsNumber = 1, timeStepNumber = 1;
+  int64_t simulationsNumber = 1, timeStepNumber = 1;
   validateFieldDataTar(fieldData, vizConfig);
 
   DataElementPtr simulation = schema.simDimension;
   DataElementPtr time = schema.timeDimension;
 
-  if ((simulation != NULL) &&
+  if ((simulation != nullptr) &&
       (simulation->GetType() == DIMENSION_SCHEMA_ELEMENT))
     simulationsNumber = simulation->GetDimension()->GetCurrentLength();
 
-  if ((time != NULL) && (time->GetType() == DIMENSION_SCHEMA_ELEMENT))
+  if ((time != nullptr) && (time->GetType() == DIMENSION_SCHEMA_ELEMENT))
     timeStepNumber = time->GetDimension()->GetCurrentLength();
 
   if (fieldData->GetType()->name == UNSTRUCTURED_FIELD_DATA) {
@@ -1225,8 +1217,8 @@ void processGridLoop(VizConfigPtr vizConfig, StorageManagerPtr storageManager) {
 }
 
 
-void processSubtar(VizConfigPtr vizConfig, SubtarPtr subtar,
-                   StorageManagerPtr storageManager) {
+void processSubtar(const VizConfigPtr& vizConfig, SubtarPtr subtar,
+                   const StorageManagerPtr& storageManager) {
   
   SavimeTime t1, t2;
   VizSchema &schema = vizConfig->schema;
@@ -1244,14 +1236,14 @@ void processSubtar(VizConfigPtr vizConfig, SubtarPtr subtar,
           "SubTARs must be implemented with ORDERED specifications.");
   }
 
-  if (schema.simDimension != NULL) {
+  if (schema.simDimension != nullptr) {
     auto simSpecs =
         subtar->GetDimensionSpecificationFor(schema.simDimension->GetName());
     simLower = simSpecs->GetLowerBound();
     simUpper = simSpecs->GetUpperBound();
   }
 
-  if (schema.timeDimension != NULL) {
+  if (schema.timeDimension != nullptr) {
     auto timeSpecs =
         subtar->GetDimensionSpecificationFor(schema.timeDimension->GetName());
     timeLower = timeSpecs->GetLowerBound();
@@ -1261,7 +1253,7 @@ void processSubtar(VizConfigPtr vizConfig, SubtarPtr subtar,
   unordered_map<string, DatasetPtr> datasets;
   bool manySims = simLower != simUpper;
   bool manyTimeSteps = timeLower != timeUpper;
-  Mapping mapping = NULL;
+  Mapping mapping = nullptr;
   DataElementPtr simDimension = schema.simDimension;
   DataElementPtr timeDimension = schema.timeDimension;
 
@@ -1271,10 +1263,10 @@ void processSubtar(VizConfigPtr vizConfig, SubtarPtr subtar,
       GET_T1_LOCAL();
       auto grid = vizConfig->getGrid(simulation, time);
       auto map = vizConfig->getMapping(simulation, time);
-      if(grid == NULL || map == NULL) continue;
+      if(grid == nullptr || map == nullptr) continue;
     
       int64_t filledCells = 0;
-      filter = NULL;
+      filter = nullptr;
       if (manySims && manyTimeSteps) {
         datasets = sliceSubtars(simDimension, timeDimension, storageManager,
                                 subtar, simulation, time, filter);
@@ -1290,7 +1282,7 @@ void processSubtar(VizConfigPtr vizConfig, SubtarPtr subtar,
       }
 
       if (vizConfig->type == IMAGE || vizConfig->type == STRUCTURED) {
-        if (mapping == NULL) {
+        if (mapping == nullptr) {
           mapping = createMapping(vizConfig, storageManager, subtar, filter);
         }
       } else if (vizConfig->type == UNSTRUCTURED) {
@@ -1320,7 +1312,7 @@ void processSubtar(VizConfigPtr vizConfig, SubtarPtr subtar,
         DatasetPtr dataset = entry.second;
  
         sync.dataMutex.lock();
-        if (data.data[simulation][time][attributeName] == NULL) {
+        if (data.data[simulation][time][attributeName] == nullptr) {
           sync.dataMutex.unlock();
           
           int64_t totalSize = vizConfig->getTotalCells(simulation, time);
@@ -1333,7 +1325,7 @@ void processSubtar(VizConfigPtr vizConfig, SubtarPtr subtar,
           
         }
 
-        if (mapping != NULL) {
+        if (mapping != nullptr) {
           
           sync.dataMutex.lock();
           auto gridDataset = data.data[simulation][time][attributeName];
@@ -1382,7 +1374,7 @@ void processSubtar(VizConfigPtr vizConfig, SubtarPtr subtar,
   }
 }
 
-void check(VizConfigPtr vizConfig) {
+void check(const VizConfigPtr &vizConfig) {
   VizData &data = vizConfig->data;
 
   for (auto entry1 : data.filledCells) {
@@ -1403,7 +1395,7 @@ void check(VizConfigPtr vizConfig) {
   }
 }
 
-void cleanUp(VizConfigPtr vizConfiguration) {
+void cleanUp(const VizConfigPtr &vizConfiguration) {
   for (DatasetHandlerPtr handler : vizConfiguration->data.handlersToClose) {
     handler->Close();
   }

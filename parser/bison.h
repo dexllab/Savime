@@ -58,38 +58,39 @@ extern int yydebug;
     DIV = 268,
     OR = 269,
     AND = 270,
-    LEFT_PAREN = 271,
-    RIGHT_PAREN = 272,
-    LEFT_ANGLE_BRACKETS = 273,
-    RIGHT_ANGLE_BRACKETS = 274,
-    DOUBLE_QUOTE = 275,
-    IS = 276,
-    DOUBLE_PIPE = 277,
-    RIGHT_ARROW = 278,
-    IDENTIFIER_BODY = 279,
-    TRUE = 280,
-    FALSE = 281,
-    UNKNOWN = 282,
-    B = 283,
-    BITS = 284,
-    X = 285,
-    HEX = 286,
-    BETWEEN = 287,
-    IN = 288,
-    EXACT_NUMBER = 289,
-    SIGNED_EXACT_NUMBER = 290,
-    APROX_NUMBER = 291,
-    SIGNED_APROX_NUMBER = 292,
-    STRING = 293,
-    QUOTE = 294,
-    EQ = 295,
-    NEQ = 296,
-    LE = 297,
-    GE = 298,
-    LEQ = 299,
-    GEQ = 300,
-    NEWLINE = 301,
-    NOT = 302
+    LIKE = 271,
+    LEFT_PAREN = 272,
+    RIGHT_PAREN = 273,
+    LEFT_ANGLE_BRACKETS = 274,
+    RIGHT_ANGLE_BRACKETS = 275,
+    DOUBLE_QUOTE = 276,
+    IS = 277,
+    DOUBLE_PIPE = 278,
+    RIGHT_ARROW = 279,
+    IDENTIFIER_BODY = 280,
+    TRUE = 281,
+    FALSE = 282,
+    UNKNOWN = 283,
+    B = 284,
+    BITS = 285,
+    X = 286,
+    HEX = 287,
+    BETWEEN = 288,
+    IN = 289,
+    EXACT_NUMBER = 290,
+    SIGNED_EXACT_NUMBER = 291,
+    APROX_NUMBER = 292,
+    SIGNED_APROX_NUMBER = 293,
+    STRING = 294,
+    QUOTE = 295,
+    EQ = 296,
+    NEQ = 297,
+    LE = 298,
+    GE = 299,
+    LEQ = 300,
+    GEQ = 301,
+    NEWLINE = 302,
+    NOT = 303
   };
 #endif
 
@@ -98,7 +99,7 @@ extern int yydebug;
 
 union YYSTYPE
 {
-#line 86 "/home/hermano/Dropbox/workspace/Savime/parser/grammar.y" /* yacc.c:1909  */
+#line 87 "./grammar.y" /* yacc.c:1909  */
 
 	float num;
 	char * value;
@@ -117,7 +118,7 @@ union YYSTYPE
 	std::shared_ptr<HexStringLiteral> * hexStringLiteral;
 	std::shared_ptr<CompOp> * compOp;
 
-#line 121 "bison.h" /* yacc.c:1909  */
+#line 122 "bison.h" /* yacc.c:1909  */
 };
 
 typedef union YYSTYPE YYSTYPE;

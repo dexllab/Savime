@@ -33,6 +33,8 @@
 #include <stdexcept>
 #include <mutex>
 #include <vector>
+#include <memory>
+#include <utility>
 #include <condition_variable>
 #include "default_connection_manager.h"
 #include "../core/include/savime.h"
@@ -44,14 +46,14 @@ using namespace std;
 
 DefaultConnectionManager::DefaultConnectionManager(
     ConfigurationManagerPtr configurationManager, SystemLoggerPtr systemLogger)
-    : ConnectionManager(configurationManager, systemLogger) {
+    : ConnectionManager(std::move(configurationManager), std::move(systemLogger)) {
   _listeners_id = 0;
 }
 
 SavimeResult DefaultConnectionManager::StartUnixMasterSocket() {
 
   int opt = true;
-  struct sockaddr_un serv_addr;
+  struct sockaddr_un serv_addr{};
   try {
     int serverId = _configurationManager->GetIntValue(SERVER_ID);
     std::string unixPath =
@@ -63,8 +65,7 @@ SavimeResult DefaultConnectionManager::StartUnixMasterSocket() {
                                std::string(strerror(errno)));
     }
 
-    // set master socket to allow multiple connections , this is just a good
-    // habit, it will work without this
+    // set master socket to allow multiple connections
     if (setsockopt(_unix_socket, SOL_SOCKET, SO_REUSEADDR, (char *)&opt,
                    sizeof(opt)) < 0 &&
         setsockopt(_unix_socket, SOL_SOCKET, SO_KEEPALIVE, (char *)&opt,
@@ -106,7 +107,7 @@ SavimeResult DefaultConnectionManager::StartUnixMasterSocket() {
 SavimeResult DefaultConnectionManager::StartTCPMasterSocket() {
 
   int opt = true, port;
-  struct sockaddr_in address;
+  struct sockaddr_in address{};
 
   try {
     int serverId = _configurationManager->GetIntValue(SERVER_ID);
@@ -134,7 +135,7 @@ SavimeResult DefaultConnectionManager::StartTCPMasterSocket() {
     // type of socket created
     address.sin_family = AF_INET;
     address.sin_addr.s_addr = INADDR_ANY;
-    address.sin_port = htons(port);
+    address.sin_port = htons(static_cast<uint16_t>(port));
 
     // bind the socket to localhost port
     if (bind(_tcp_socket, (struct sockaddr *)&address, sizeof(address)) < 0) {
@@ -156,9 +157,9 @@ SavimeResult DefaultConnectionManager::RunConnectionsLoop() {
     int new_socket, activity;
     int max_sd;
 
-    socklen_t *addrlen = (socklen_t *)malloc(sizeof(socklen_t));
+    auto * addrlen = (socklen_t *)malloc(sizeof(socklen_t));
     memset((char *)addrlen, 0, sizeof(socklen_t));
-    struct sockaddr_in *address = (sockaddr_in *)malloc(sizeof(sockaddr_in));
+    auto * address = (sockaddr_in *)malloc(sizeof(sockaddr_in));
     memset((char *)address, 0, sizeof(sockaddr_in));
     _max_pending_connections =
         _configurationManager->GetIntValue(MAX_CONNECTIONS);
@@ -196,7 +197,7 @@ SavimeResult DefaultConnectionManager::RunConnectionsLoop() {
       max_sd = _tcp_socket > _unix_socket ? _tcp_socket : _unix_socket;
 
       // wait indefinitely for an activity on one of the sockets
-      activity = select(max_sd + 1, &readfds, NULL, NULL, NULL);
+      activity = select(max_sd + 1, &readfds, nullptr, nullptr, nullptr);
 
       _mutex.lock();
       if ((activity < 0) && (errno != EINTR)) {
@@ -229,8 +230,7 @@ SavimeResult DefaultConnectionManager::RunConnectionsLoop() {
 
         _sockets.push_back(new_socket);
 
-        ConnectionDetailsPtr connDetails =
-            std::shared_ptr<ConnectionDetails>(new ConnectionDetails());
+        ConnectionDetailsPtr connDetails = make_shared<ConnectionDetails>();
         connDetails->socket = new_socket;
         connDetails->port = address->sin_port;
         connDetails->address = std::string(inet_ntoa(address->sin_addr));
@@ -279,7 +279,7 @@ SavimeResult DefaultConnectionManager::RunMessagesLoop() {
         _configurationManager->GetIntValue(MAX_CONNECTIONS);
 
     while (true) {
-      struct timeval tv;
+      struct timeval tv{};
       tv.tv_sec = 0;
       tv.tv_usec = 300;
 
@@ -289,7 +289,7 @@ SavimeResult DefaultConnectionManager::RunMessagesLoop() {
       // clear the socket set
       FD_ZERO(&readfds);
 
-      if (_sockets.size() == 0)
+      if (_sockets.empty())
         _conditionVar.wait(locker);
 
       _mutex.lock();
@@ -301,7 +301,7 @@ SavimeResult DefaultConnectionManager::RunMessagesLoop() {
       _mutex.unlock();
 
       // wait for an activity on one of the sockets
-      activity = select(max_sd + 1, &readfds, NULL, NULL, &tv);
+      activity = select(max_sd + 1, &readfds, nullptr, nullptr, &tv);
 
       _mutex.lock();
       if ((activity < 0) && (errno != EINTR)) {
@@ -316,8 +316,7 @@ SavimeResult DefaultConnectionManager::RunMessagesLoop() {
           int bytes_available;
           ioctl(_sockets[i], FIONREAD, &bytes_available);
 
-          ConnectionDetailsPtr connDetails =
-              std::shared_ptr<ConnectionDetails>(new ConnectionDetails());
+          ConnectionDetailsPtr connDetails = make_shared<ConnectionDetails>();
           connDetails->socket = _sockets[i];
 
           for (auto entry : _listeners) {
@@ -342,7 +341,7 @@ SavimeResult DefaultConnectionManager::RunMessagesLoop() {
         }
       }
 
-      while (_sockets_to_close.size() > 0) {
+      while (!_sockets_to_close.empty()) {
         close(_sockets_to_close.front());
         _sockets_to_close.pop_front();
       }
@@ -350,6 +349,7 @@ SavimeResult DefaultConnectionManager::RunMessagesLoop() {
     }
 
     return SAVIME_SUCCESS;
+
   } catch (std::runtime_error &e) {
     _systemLogger->LogEvent(this->_moduleName,
                             std::string("Error: ") + e.what());
@@ -376,10 +376,8 @@ void DefaultConnectionManager::removeConnection(int socket) {
 }
 
 SavimeResult DefaultConnectionManager::Start() {
-  _connections_thread = std::shared_ptr<std::thread>(
-      new std::thread(&DefaultConnectionManager::RunConnectionsLoop, this));
-  _messages_thread = std::shared_ptr<std::thread>(
-      new std::thread(&DefaultConnectionManager::RunMessagesLoop, this));
+  _connections_thread = std::make_shared<std::thread>(&DefaultConnectionManager::RunConnectionsLoop, this);
+  _messages_thread = std::make_shared<std::thread>(&DefaultConnectionManager::RunMessagesLoop, this);
   return SAVIME_SUCCESS;
 }
 
@@ -418,8 +416,8 @@ DefaultConnectionManager::AddConnectionListener(ConnectionListener *listener,
 SavimeResult DefaultConnectionManager::RemoveConnectionListener(
     ConnectionListener *listener) {
   _mutex.lock();
-  _listeners.erase(listener->GetListenerId());
-  _socket_listeners_map.erase(listener->GetListenerId());
+  _listeners.erase(static_cast<const int &>(listener->GetListenerId()));
+  _socket_listeners_map.erase(static_cast<const int &>(listener->GetListenerId()));
 
   for (auto entry : _socket_listeners)
     entry.second.remove(listener->GetListenerId());
@@ -432,7 +430,6 @@ SavimeResult DefaultConnectionManager::SplicedCopy(int file, int socket,
                                                    size_t size,
                                                    int64_t *transferred) {
   loff_t output_offset = 0;
-  off_t len;
   size_t total_transferred = 0;
   int transferred_bits;
   int pipe_descriptors[2];
@@ -451,15 +448,14 @@ SavimeResult DefaultConnectionManager::SplicedCopy(int file, int socket,
 
       while (partial_transfer < buffer_size) {
         size_t to_transfer = buffer_size - partial_transfer;
-        transferred_bits = splice(socket, NULL, pipe_descriptors[1], NULL,
-                                  to_transfer, SPLICE_F_MOVE | SPLICE_F_MORE);
+        transferred_bits = static_cast<int>(splice(socket, nullptr, pipe_descriptors[1], nullptr,
+                                                   to_transfer, SPLICE_F_MOVE | SPLICE_F_MORE));
         if (transferred_bits < 0) {
           throw std::runtime_error("Problem during splice operation: " +
                                    std::string(strerror(errno)));
         }
 
         partial_transfer += transferred_bits;
-        // printf("s1 %zd %zd \n", to_transfer, partial_transfer);
       }
 
       partial_transfer = 0;
@@ -467,25 +463,24 @@ SavimeResult DefaultConnectionManager::SplicedCopy(int file, int socket,
       while (partial_transfer < buffer_size) {
         size_t to_transfer = buffer_size - partial_transfer;
         transferred_bits =
-            splice(pipe_descriptors[0], NULL, file, &output_offset, to_transfer,
-                   SPLICE_F_MOVE | SPLICE_F_MORE);
+          static_cast<int>(splice(pipe_descriptors[0], nullptr, file, &output_offset, to_transfer,
+                             SPLICE_F_MOVE | SPLICE_F_MORE));
         if (transferred_bits < 0) {
           throw std::runtime_error("Problem during splice operation: " +
                                    std::string(strerror(errno)));
         }
         partial_transfer += transferred_bits;
-        // printf("s2 %zd %zd \n", to_transfer, partial_transfer);
       }
 
       total_transferred += buffer_size;
-      // printf("s3 %zd \n", total_transferred);
     }
 
     *transferred = total_transferred;
     close(pipe_descriptors[0]);
     close(pipe_descriptors[1]);
     return SAVIME_SUCCESS;
-  } catch (std::runtime_error e) {
+
+  } catch (std::runtime_error& e) {
     close(pipe_descriptors[0]);
     close(pipe_descriptors[1]);
     _systemLogger->LogEvent(this->_moduleName,
@@ -496,7 +491,7 @@ SavimeResult DefaultConnectionManager::SplicedCopy(int file, int socket,
 
 MessagePtr DefaultConnectionManager::CreateMessage(
     ConnectionDetailsPtr connectionDetails) {
-  MessagePtr message = std::shared_ptr<Message>(new Message());
+  MessagePtr message = std::make_shared<Message>();
   message->connection_details = connectionDetails;
   return message;
 }
@@ -507,7 +502,7 @@ SavimeResult DefaultConnectionManager::Send(MessagePtr messageHandle) {
     if (!messageHandle->payload->is_in_file) {
       while (data_send > 0 && total_data_send < messageHandle->payload->size) {
         off64_t to_read = messageHandle->payload->size - total_data_send;
-        int size = to_read > _2GB ? _2GB : to_read;
+        auto size = static_cast<size_t>(to_read > _2GB ? _2GB : to_read);
 
         data_send =
             send(messageHandle->connection_details->socket,
@@ -528,7 +523,7 @@ SavimeResult DefaultConnectionManager::Send(MessagePtr messageHandle) {
         data_send = sendfile64(
             messageHandle->connection_details->socket,
             messageHandle->payload->file_descriptor, (off64_t *)&offset,
-            (messageHandle->payload->size - total_data_send));
+            static_cast<size_t>(messageHandle->payload->size - total_data_send));
 
         if (data_send < 0) {
           throw std::runtime_error("Problem while sending data file: " +
@@ -552,7 +547,7 @@ SavimeResult DefaultConnectionManager::Receive(MessagePtr messageHandle) {
   try {
     if (!messageHandle->payload->is_in_file) {
       while (data_read > 0 && total_data_read < messageHandle->payload->size) {
-        size_t to_read = messageHandle->payload->size - total_data_read;
+        auto to_read = static_cast<size_t>(messageHandle->payload->size - total_data_read);
         size_t size = to_read > _2GB ? _2GB : to_read;
 
         data_read = read(messageHandle->connection_details->socket,
@@ -573,7 +568,7 @@ SavimeResult DefaultConnectionManager::Receive(MessagePtr messageHandle) {
     } else {
       return SplicedCopy(messageHandle->payload->file_descriptor,
                          messageHandle->connection_details->socket,
-                         messageHandle->payload->size,
+                         static_cast<size_t>(messageHandle->payload->size),
                          &messageHandle->payload->size);
     }
 

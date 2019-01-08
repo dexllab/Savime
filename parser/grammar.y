@@ -50,6 +50,7 @@ extern int yylex \
 %token DIV
 %token OR
 %token AND
+%token LIKE
 %token LEFT_PAREN;
 %token RIGHT_PAREN;
 %token LEFT_ANGLE_BRACKETS;
@@ -124,7 +125,7 @@ extern int yylex \
 
 //Operations Precedence
 %left AND OR NOT
-%nonassoc EQ NEQ LE GE LEQ GEQ
+%nonassoc EQ NEQ LE GE LEQ GEQ LIKE
 %left PLUS_SIGN MINUS_SIGN 
 %nonassoc SIGNED_EXACT_NUMBER
 %left ASTERISK SOLIDUS MODULUS
@@ -174,6 +175,7 @@ identifier_chain  {$$ = new ValueExpressionPtr (); *$$ = PARSE(*$1, ValueExpress
 | value_expression GE value_expression {$$ = new ValueExpressionPtr (new ComparisonPredicate(*$1, std::shared_ptr<CompOp>(new CompOp(GREATER_THAN)), *$3)); delete $1; delete $3;}
 | value_expression LEQ value_expression {$$ = new ValueExpressionPtr (new ComparisonPredicate(*$1, std::shared_ptr<CompOp>(new CompOp(LESS_EQ_THAN)), *$3)); delete $1; delete $3;}
 | value_expression GEQ value_expression {$$ = new ValueExpressionPtr (new ComparisonPredicate(*$1, std::shared_ptr<CompOp>(new CompOp(GREATER_EQ_THAN)), *$3)); delete $1; delete $3;}
+| value_expression LIKE value_expression {$$ = new ValueExpressionPtr (new ComparisonPredicate(*$1, std::shared_ptr<CompOp>(new CompOp(LIKE_COMP)), *$3)); delete $1; delete $3;}
 | NOT value_expression {$$ = new ValueExpressionPtr (new BooleanValueExpression(*$2)); delete $2;}
 | value_expression OR value_expression {$$ = new ValueExpressionPtr (new LogicalConjunction(*$1, *$3)); delete $1; delete $3;}
 | value_expression AND value_expression {$$ = new ValueExpressionPtr (new LogicalDisjunction(*$1, *$3)); delete $1; delete $3;}

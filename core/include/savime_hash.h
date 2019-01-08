@@ -23,6 +23,7 @@
 
 #ifdef TBB_SUPPORT
 #include <tbb/concurrent_unordered_map.h>
+#include <tbb/concurrent_hash_map.h>
 #endif
 
 typedef std::shared_ptr<std::map<uint64_t, vector<int64_t>>>
@@ -33,8 +34,8 @@ public:
   vector<int64_t> multipliers;
  
   virtual inline void calculateMultipliers(vector<DimensionPtr> dimensions) {
-    int32_t numDims = dimensions.size();
-    for (int32_t i = 0; i < numDims; i++) {
+    auto numDims = static_cast<uint32_t>(dimensions.size());
+    for (uint32_t i = 0; i < numDims; i++) {
       multipliers.push_back(1);
       for (int32_t j = i + 1; j < numDims; j++) {
         int64_t preamble = multipliers[i];
@@ -43,7 +44,7 @@ public:
     }
 
     if (numDims == 0) {
-      multipliers.push_back(1.0);
+      multipliers.push_back(1);
     }
   }
 
@@ -61,7 +62,7 @@ public:
   SavimeIndexesHashPtr indexesMap;
   std::map<uint64_t, T> map;
 
-  SavimeHashMap(vector<DimensionPtr> dimensions) {
+  SavimeHashMap(const vector<DimensionPtr> &dimensions) {
     indexesMap =  make_shared<std::map<uint64_t, vector<int64_t>>>();
     calculateMultipliers(dimensions);
   }

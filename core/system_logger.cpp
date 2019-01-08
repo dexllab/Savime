@@ -1,3 +1,5 @@
+#include <utility>
+
 /*
 *    This program is free software: you can redistribute it and/or modify
 *    it under the terms of the GNU General Public License as published by
@@ -41,11 +43,11 @@ const char *signame[] = {"INVALID", "SIGHUP", "SIGINT", "SIGQUIT", "SIGILL",
                    "SIGTERM", "SIGSTKFLT", "SIGCHLD", "SIGCONT", "SIGSTOP",
                    "SIGTSTP", "SIGTTIN", "SIGTTOU", "SIGURG", "SIGXCPU",
                    "SIGXFSZ", "SIGVTALRM", "SIGPROF", "SIGWINCH", "SIGPOLL",
-                   "SIGPWR", "SIGSYS", NULL};
+                   "SIGPWR", "SIGSYS", nullptr};
 
 DefaultSystemLogger::DefaultSystemLogger(
     ConfigurationManagerPtr configurationManager) {
-  _configurationManager = configurationManager;
+  _configurationManager = std::move(configurationManager);
   signal(SIGSEGV, SystemLoggerHandler);
   signal(SIGHUP, SystemLoggerHandler);
   signal(SIGINT, SystemLoggerHandler);
@@ -73,7 +75,7 @@ string DefaultSystemLogger::GatherStackTrace() {
   char *funcname = (char *) malloc(funcnamesize);
 
   for (int i = 1; i < addrlen; i++) {
-    char *begin_name = 0, *begin_offset = 0, *end_offset = 0;
+    char *begin_name = nullptr, *begin_offset = nullptr, *end_offset = nullptr;
 
     for (char *p = symbollist[i]; *p; ++p) {
       if (*p == '(')
@@ -131,7 +133,7 @@ void DefaultSystemLogger::SystemLoggerHandler(int sig) {
 }
 
 void DefaultSystemLogger::WriteLog(std::string module, std::string message) {
-  time_t t = time(NULL);
+  time_t t = time(nullptr);
   struct tm tm = *localtime(&t);
   printf("%02d-%02d-%02d %02d:%02d:%02d [%s]: %s\n",
          tm.tm_year + 1900,

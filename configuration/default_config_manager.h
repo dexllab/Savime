@@ -33,17 +33,17 @@ class DefaultConfigurationManager : public ConfigurationManager
 public:
     
   DefaultConfigurationManager();
-  bool GetBooleanValue(string key);
-  void  SetBooleanValue(string key, bool value);
-  string GetStringValue(string key);
-  void  SetStringValue(string key, string value);
-  int32_t  GetIntValue(string key);
-  void  SetIntValue(string key, int32_t value) ;
-  int64_t GetLongValue(string key);
-  void SetLongValue(string key, int64_t);
-  double GetDoubleValue(string key);
-  void  SetDoubleValue(string key, double value);
-  void LoadConfigFile(string file);
+  bool GetBooleanValue(string key) override;
+  void  SetBooleanValue(string key, bool value) override;
+  string GetStringValue(string key) override;
+  void  SetStringValue(string key, string value) override;
+  int32_t  GetIntValue(string key) override;
+  void  SetIntValue(string key, int32_t value) override;
+  int64_t GetLongValue(string key) override;
+  void SetLongValue(string key, int64_t) override;
+  double GetDoubleValue(string key) override;
+  void  SetDoubleValue(string key, double value) override;
+  void LoadConfigFile(string file) override;
 };
 
 #endif /* DEFAULT_CONFIG_MANAGER_H */

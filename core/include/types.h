@@ -35,6 +35,7 @@ typedef int64_t RealIndex;
 typedef struct {RealIndex inf; RealIndex sup;} IndexPair;
 typedef uint64_t savime_size_t;
 
+#define INVALID_SUBTAR_POSITION -1
 #define INVALID_REAL_INDEX -1
 #define INVALID_EXACT_REAL_INDEX -1
 #define BELOW_OFFBOUNDS_REAL_INDEX -2
@@ -393,14 +394,14 @@ inline EnumDataType STR2TYPE(const char *type) {
 inline EnumDataType STR2TYPEV(const char *type, int32_t &size) {
   string sType(type);
   transform(sType.begin(), sType.end(), sType.begin(), ::tolower);
-  auto splittedType = split(string(type), ':');
+  auto splitType = split(string(type), ':');
 
-  if (splittedType.size() == 1) {
+  if (splitType.size() == 1) {
     size = 1;
     return STR2TYPE(type);
-  } else if (splittedType.size() == 2) {
-    size = strtol(splittedType[1].c_str(), NULL, 10);
-    return STR2TYPE(splittedType[0].c_str());
+  } else if (splitType.size() == 2) {
+    size = static_cast<int32_t>(strtol(splitType[1].c_str(), nullptr, 10));
+    return STR2TYPE(splitType[0].c_str());
   }
 
   return NO_TYPE;
@@ -431,6 +432,11 @@ struct Literal {
     type = DataType(DOUBLE);
   }
 
+  Literal(string s) {
+    str = s;
+    type = DataType(CHAR);
+  }
+
   void Simplify(double d) {
     if (d == ((int32_t)d)) {
       int32 = ((int32_t)d);
@@ -439,7 +445,7 @@ struct Literal {
       int64 = ((int64_t)d);
       type = INT64;
     } else if (d == ((float)d)) {
-      flt == ((float)d);
+      flt = ((float)d);
       type = FLOAT;
     } else {
       dbl = d;
@@ -490,7 +496,7 @@ struct Literal {
     return false;
   }
 };
-typedef Literal Literal;
+//typedef Literal Literal;
 
 #ifdef FULL_TYPE_SUPPORT
 #define GET_LITERAL(X, T, Z)                                                   \

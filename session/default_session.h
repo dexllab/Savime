@@ -47,7 +47,7 @@ class DefaultSession : public Session,
   ParserPtr _parser;
   OptimizerPtr _optimizer;
   MetadataManagerPtr _metadaManager;
-  ServerState _serverState;
+  ServerState _serverState = WAIT_CONN;
 
   int GetNextQueryId();
   int GetNextClientId();

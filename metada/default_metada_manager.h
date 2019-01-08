@@ -40,31 +40,31 @@ class DefaultMetadataManager : public MetadataManager,
 public:
   DefaultMetadataManager(ConfigurationManagerPtr configurationManager,
                          SystemLoggerPtr systemLogger);
-  SavimeResult SaveTARS(TARSPtr tars);
-  TARSPtr GetTARS(int32_t id);
-  SavimeResult RemoveTARS(TARSPtr tars);
-  SavimeResult SaveTAR(TARSPtr tars, TARPtr tar);
-  TARPtr GetTARByName(TARSPtr tars, std::string tarName);
-  list<TARPtr> GetTARs(TARSPtr tars);
-  SavimeResult RemoveTar(TARSPtr tars, TARPtr tar);
-  SavimeResult SaveSubtar(TARPtr tar, SubtarPtr subtar);
-  list<SubtarPtr> GetSubtars(std::string tarName);
-  list<SubtarPtr> GetSubtars(TARPtr tar);
-  SavimeResult RemoveSubtar(TARPtr tar, SubtarPtr subtar);
-  SavimeResult SaveType(TARSPtr tars, TypePtr type);
+  SavimeResult SaveTARS(TARSPtr tars) override;
+  TARSPtr GetTARS(int32_t id) override;
+  SavimeResult RemoveTARS(TARSPtr tars) override;
+  SavimeResult SaveTAR(TARSPtr tars, TARPtr tar) override;
+  TARPtr GetTARByName(TARSPtr tars, std::string tarName) override;
+  list<TARPtr> GetTARs(TARSPtr tars) override;
+  SavimeResult RemoveTar(TARSPtr tars, TARPtr tar) override;
+  SavimeResult SaveSubtar(TARPtr tar, SubtarPtr subtar) override;
+  list<SubtarPtr> GetSubtars(std::string tarName) override;
+  list<SubtarPtr> GetSubtars(TARPtr tar) override;
+  SavimeResult RemoveSubtar(TARPtr tar, SubtarPtr subtar) override;
+  SavimeResult SaveType(TARSPtr tars, TypePtr type) override;
   TypePtr GetType(int32_t typeId);
-  list<TypePtr> GetTypes(TARSPtr tars);
-  TypePtr GetTypeByName(TARSPtr tars, string typeName);
-  SavimeResult RemoveType(TARSPtr tars, TypePtr type);
-  SavimeResult SaveDataSet(TARSPtr tars, DatasetPtr dataset);
+  list<TypePtr> GetTypes(TARSPtr tars) override;
+  TypePtr GetTypeByName(TARSPtr tars, string typeName) override;
+  SavimeResult RemoveType(TARSPtr tars, TypePtr type) override;
+  SavimeResult SaveDataSet(TARSPtr tars, DatasetPtr dataset) override;
   DatasetPtr GetDataSet(int32_t id);
-  DatasetPtr GetDataSetByName(string dsName);
-  SavimeResult RemoveDataSet(TARSPtr tars, DatasetPtr dataset);
-  bool ValidateIdentifier(string identifier, string objectType);
-  void RegisterQuery(string query);
-  list<string> GetQueries();
-  void DisposeObject(MetadataObject *object);
-  string GetObjectInfo(MetadataObjectPtr object, string infoType);
+  DatasetPtr GetDataSetByName(string dsName) override;
+  SavimeResult RemoveDataSet(TARSPtr tars, DatasetPtr dataset) override;
+  bool ValidateIdentifier(string identifier, string objectType) override;
+  void RegisterQuery(string query) override;
+  list<string> GetQueries() override;
+  void DisposeObject(MetadataObject *object) override;
+  string GetObjectInfo(MetadataObjectPtr object, string infoType) override;
 };
 
 #endif /* DEFAULT_CATALOG_MANAGER_H */

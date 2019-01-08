@@ -1,3 +1,25 @@
+#include <memory>
+
+#include <memory>
+
+#include <utility>
+
+#include <memory>
+
+#include <memory>
+
+#include <utility>
+
+#include <utility>
+
+#include <utility>
+
+#include <utility>
+
+#include <utility>
+
+#include <utility>
+
 /*
 *    This program is free software: you can redistribute it and/or modify
 *    it under the terms of the GNU General Public License as published by
@@ -31,8 +53,8 @@ using namespace std;
 //------------------------------------------------------------------------------
 // Declarations
 
-const char *dimTypeNames[] = {"explicit", "implicit", "spaced"};
-const char *specsTypeNames[] = {"ordered", "partial", "total", "morton"};
+//const char *dimTypeNames[] = {"explicit", "implicit", "spaced"};
+//const char *specsTypeNames[] = {"ordered", "partial", "total", "morton"};
 
 std::mutex TAR::_mutex;
 std::vector<int64_t> TAR::_intersectingSubtarsIndexes;
@@ -58,7 +80,7 @@ SpecsType STR2SPECTYPE(const char *type) {
   case 't':
     return TOTAL;
   default:
-    NO_SPEC_TYPE;
+    return NO_SPEC_TYPE;
   }
 }
 
@@ -78,14 +100,14 @@ void Dataset::Define(int64_t id, string name, string file, DataType type) {
   if (!EXIST_FILE(file))
     throw runtime_error("Attempt to create a dataset with non-existing file.");
 
-  auto fileSize = FILE_SIZE(file.c_str());
+  auto fileSize = FILE_SIZE(file);
   if (fileSize <= 0)
     throw runtime_error("Attempt to create a dataset with empty file.");
 
   if (type.type() == NO_TYPE)
     throw runtime_error("Attempt to create a dataset with invalid type.");
 
-  savime_size_t remainder = fileSize % type.getSize();
+  auto remainder = static_cast<savime_size_t>(fileSize % type.getSize());
   if (remainder != 0)
     throw runtime_error("Attempt to create a dataset with invalid file size.");
 
@@ -98,9 +120,19 @@ void Dataset::Define(int64_t id, string name, string file, DataType type) {
     throw std::runtime_error("Attempt to create a dataset with invalid size.");
 }
 
-Dataset::Dataset(int64_t id, string name, string file, DataType type) {
-  Define(id, name, file, type);
+Dataset::Dataset(int64_t id, string name, savime_size_t size, DataType type) {
+  this->_dsId = id;
+  this->_name = std::move(name);
+  this->_location = "";
+  this->_type = type;
+  this->_length =  size;
+  this->_entry_count = (savime_size_t)(size/type.getSize());
 }
+
+Dataset::Dataset(int64_t id, string name, string file, DataType type) {
+  Define(id, std::move(name), std::move(file), type);
+}
+
 
 Dataset::Dataset(savime_size_t bitmaskSize) {
   this->_dsId = UNSAVED_ID;
@@ -116,6 +148,7 @@ Dataset::Dataset(savime_size_t bitmaskSize) {
   this->_length = bitmaskSize;
   this->_entry_count = bitmaskSize;
   this->_type = NO_TYPE;
+  this->_has_indexes = false;
 }
 
 Dataset::Dataset(BitsetPtr bitMask) {
@@ -131,6 +164,7 @@ Dataset::Dataset(BitsetPtr bitMask) {
   this->_length = bitMask->size();
   this->_entry_count = bitMask->size();
   this->_type = NO_TYPE;
+  this->_has_indexes = false;
 }
 
 void Dataset::InflateBitMask() {
@@ -156,11 +190,11 @@ void Dataset::Resize(savime_size_t size) {
 }
 
 void Dataset::Redefine(int64_t id, string name, string file, DataType type) {
-  Define(id, name, file, type);
+  Define(id, std::move(name), std::move(file), type);
 }
 
 Dataset::~Dataset() {
-  for (auto listener : _listeners)
+  for (const auto &listener : _listeners)
     listener->DisposeObject((MetadataObject *)this);
 }
 
@@ -291,7 +325,7 @@ void Dimension::AlterName(string name) {
 }
 
 Dimension::~Dimension() {
-  for (auto listener : _listeners)
+  for (const auto &listener : _listeners)
     listener->DisposeObject((MetadataObject *)this);
 }
 
@@ -315,14 +349,14 @@ Attribute::Attribute(int32_t id, string name, DataType type) {
 }
 
 Attribute::~Attribute() {
-  for (auto listener : _listeners)
+  for (const auto &listener : _listeners)
     listener->DisposeObject((MetadataObject *)this);
 }
 
 //------------------------------------------------------------------------------
 // TARS member functions
 TARS::~TARS() {
-  for (auto listener : _listeners)
+  for (const auto &listener : _listeners)
     listener->DisposeObject((MetadataObject *)this);
 }
 
@@ -395,14 +429,14 @@ bool DataElement::IsNumeric() {
 }
 
 DataElement::~DataElement() {
-  for (auto listener : _listeners)
+  for (const auto &listener : _listeners)
     listener->DisposeObject((MetadataObjectPtr)this);
 }
 //------------------------------------------------------------------------------
 // DimensionSpecification members implementations
 DimensionSpecification::DimensionSpecification(
   int32_t id, DimensionPtr dimension, RealIndex lowerBound,
-  RealIndex upperBound, savime_size_t skew, savime_size_t adjacency) {
+  RealIndex upperBound, savime_size_t stride, savime_size_t adjacency) {
 
   _id = id;
   if (dimension == nullptr)
@@ -412,19 +446,21 @@ DimensionSpecification::DimensionSpecification(
 
   if (lowerBound < 0 || lowerBound > upperBound)
     throw runtime_error(
-      "Attempt to create a dimension specification with invalid bounds.");
+      "Attempt to create a dimension specification with invalid bounds " +
+      std::to_string(lowerBound)+" "+std::to_string(upperBound));
 
   if (lowerBound > _dimension->GetRealUpperBound() ||
     upperBound > _dimension->GetRealUpperBound())
     throw runtime_error(
-      "Attempt to create a dimension specification with invalid bounds.");
+      "Attempt to create a dimension specification with invalid bounds. " +
+          std::to_string(lowerBound)+" "+std::to_string(upperBound));
   _lower_bound = lowerBound;
   _upper_bound = upperBound;
 
-  if (skew < 1)
+  if (stride < 1)
     throw runtime_error(
-      "Attempt to create a dimension specification with invalid skew value.");
-  _skew = skew;
+      "Attempt to create a dimension specification with invalid stride value.");
+  _stride = stride;
 
   if (adjacency < 1)
     throw runtime_error("Attempt to create a dimension specification with "
@@ -437,7 +473,7 @@ DimensionSpecification::DimensionSpecification(
 
 DimensionSpecification::DimensionSpecification(
   int32_t id, DimensionPtr dimension, DatasetPtr dataset,
-  RealIndex lowerBound, RealIndex upperBound, savime_size_t skew,
+  RealIndex lowerBound, RealIndex upperBound, savime_size_t stride,
   savime_size_t adjacency) {
   _id = id;
   if (dimension == nullptr)
@@ -461,10 +497,10 @@ DimensionSpecification::DimensionSpecification(
     throw runtime_error("Attempt to create a dimension specification with a "
                         "dataset too large for the specified boundaries.");
 
-  if (skew < 1)
+  if (stride < 1)
     throw runtime_error(
-      "Attempt to create a dimension specification with invalid skew value.");
-  _skew = skew;
+      "Attempt to create a dimension specification with invalid stride value.");
+  _stride = stride;
 
   if (adjacency < 1)
     throw runtime_error("Attempt to create a dimension specification with "
@@ -523,11 +559,11 @@ void DimensionSpecification::AlterDimension(DimensionPtr dimension) {
       "Attempt to create a dimension specification with invalid bounds.");
 }
 
-void DimensionSpecification::AlterSkew(savime_size_t skew) {
-  if (skew < 1)
+void DimensionSpecification::AlterStride(savime_size_t stride) {
+  if (stride < 1)
     throw runtime_error(
-      "Attempt to create a dimension specification with invalid skew value.");
-  _skew = skew;
+      "Attempt to create a dimension specification with invalid stride value.");
+  _stride = stride;
 }
 
 void DimensionSpecification::AlterAdjacency(savime_size_t adj) {
@@ -560,7 +596,7 @@ void DimensionSpecification::AlterBoundaries(RealIndex lowerBound,
 }
 
 void DimensionSpecification::AlterDataset(DatasetPtr dataset) {
-  if (_type != ORDERED && dataset == NULL) {
+  if (_type != ORDERED && dataset == nullptr) {
     throw runtime_error("Attempt to set invalida dataset to non ordered "
                         "dimension specification.");
   }
@@ -570,12 +606,12 @@ void DimensionSpecification::AlterDataset(DatasetPtr dataset) {
 std::shared_ptr<DimensionSpecification> DimensionSpecification::Clone() {
   if (_type == ORDERED)
     return make_shared<DimensionSpecification>(
-      UNSAVED_ID, _dimension, _lower_bound, _upper_bound, _skew, _adjacency);
+      UNSAVED_ID, _dimension, _lower_bound, _upper_bound, _stride, _adjacency);
 
   if (_type == PARTIAL)
     return make_shared<DimensionSpecification>(UNSAVED_ID, _dimension, _dataset,
                                                _lower_bound, _upper_bound,
-                                               _skew, _adjacency);
+                                               _stride, _adjacency);
 
   if (_type == TOTAL)
     return make_shared<DimensionSpecification>(UNSAVED_ID, _dimension, _dataset,
@@ -588,7 +624,7 @@ int32_t Subtar::GetId() { return _id; }
 
 void Subtar::SetId(int32_t id) { _id = id; }
 
-void Subtar::SetTAR(TARPtr tar) { _tar = tar; }
+void Subtar::SetTAR(TARPtr tar) { _tar = std::move(tar); }
 
 TARPtr Subtar::GetTAR() { return _tar; }
 
@@ -654,9 +690,11 @@ void Subtar::AddDataSet(string dataElementName, DatasetPtr dataset) {
 
   if (_tar != nullptr) {
     auto dataElement = _tar->GetDataElement(dataElementName);
-    if (dataElement == nullptr || dataElement->GetAttribute() == nullptr)
-      throw runtime_error("Attempt to add a dataset in a subTAR with no "
-                          "matching attribute in TAR.");
+
+    if (dataElementName.compare(0, 4, DEFAULT_TEMP_MEMBER) != 0)
+      if (dataElement == nullptr || dataElement->GetAttribute() == nullptr)
+        throw runtime_error("Attempt to add a dataset in a subTAR with no "
+                            "matching attribute in TAR.");
   }
 
   _dataSets[dataElementName] = dataset;
@@ -664,7 +702,7 @@ void Subtar::AddDataSet(string dataElementName, DatasetPtr dataset) {
 
 void Subtar::CreateBoundingBox(int64_t min[], int64_t max[], int32_t n) {
   int32_t i = 0;
-  for (auto dimension : _tar->GetDimensions()) {
+  for (const auto &dimension : _tar->GetDimensions()) {
     auto dimSpec = _dimSpecs[dimension->GetName()];
     min[i] = dimSpec->GetLowerBound();
     max[i] = dimSpec->GetUpperBound();
@@ -681,12 +719,12 @@ DimSpecPtr Subtar::GetDimensionSpecificationFor(string name) {
 }
 
 DatasetPtr Subtar::GetDataSetFor(string name) {
-  auto splittedName = split(name, INDEX_SEPARATOR);
+  auto splitName = split(name, INDEX_SEPARATOR);
 
-  if (_dataSets.find(splittedName[0]) == _dataSets.end())
+  if (_dataSets.find(splitName[0]) == _dataSets.end())
     return nullptr;
 
-  DatasetPtr dsOriginal = _dataSets[splittedName[0]];
+  DatasetPtr dsOriginal = _dataSets[splitName[0]];
 
   if (dsOriginal->GetType().isVector()) {
 
@@ -695,10 +733,11 @@ DatasetPtr Subtar::GetDataSetFor(string name) {
      * serves only for index selecting.*/
 
     auto newType = dsOriginal->GetType();
-    if (splittedName.size() > 1) {
-      int32_t selected = strtol(splittedName[1].c_str(), NULL, 10);
+    if (splitName.size() > 1) {
+      int32_t selected = static_cast<int32_t>(strtol(splitName[1].c_str(), nullptr, 10));
       if (selected < newType.vectorLength()) {
-        newType = DataType(newType.type(), newType.vectorLength(), selected);
+        newType = DataType(newType.type(), static_cast<uint32_t>(newType.vectorLength()),
+                           static_cast<uint32_t>(selected));
       }
     }
 
@@ -720,9 +759,16 @@ void Subtar::RemoveTempDataElements() {
     if (entry.first.compare(0, 4, DEFAULT_TEMP_MEMBER) == 0) {
       toRemove.push_back(entry.first);
     }
+    auto found1 = entry.first.find(string(LEFT_DATAELEMENT_PREFIX)+_UNDERSCORE+"aux");
+    auto found2 = entry.first.find(string(RIGHT_DATAELEMENT_PREFIX)+_UNDERSCORE+"aux");
+
+    if(found1 != std::string::npos
+        || found2 != std::string::npos ){
+      toRemove.push_back(entry.first);
+    }
   }
 
-  for (auto dataElement : toRemove) {
+  for (const auto &dataElement : toRemove) {
     _dataSets.erase(dataElement);
   }
   toRemove.clear();
@@ -733,7 +779,7 @@ void Subtar::RemoveTempDataElements() {
     }
   }
 
-  for (auto dataElement : toRemove) {
+  for (const auto &dataElement : toRemove) {
     _dimSpecs.erase(dataElement);
   }
 }
@@ -742,7 +788,7 @@ bool Subtar::IntersectsWith(SubtarPtr subtar) {
   if (_tar == nullptr)
     return false;
 
-  for (auto dimension : _tar->GetDimensions()) {
+  for (const auto &dimension : _tar->GetDimensions()) {
     auto dimSpec1 = _dimSpecs[dimension->GetName()];
     auto dimSpec2 = subtar->GetDimensionSpecificationFor(dimension->GetName());
 
@@ -770,7 +816,7 @@ string Subtar::toString() {
     lower << std::setprecision(6) << entry.second->GetLowerBound();
     upper << std::setprecision(6) << entry.second->GetUpperBound();
 
-    text = text + "[" + entry.first + "]" + lower.str() + _COLON + upper.str() +
+    text += "[" + entry.first + "]" + lower.str() + _COLON + upper.str() +
       " ";
   }
 
@@ -779,13 +825,13 @@ string Subtar::toString() {
 }
 
 Subtar::~Subtar() {
-  for (auto listener : _listeners)
+  for (const auto &listener : _listeners)
     listener->DisposeObject((MetadataObjectPtr)this);
 }
 
 //------------------------------------------------------------------------------
 // TAR member functions
-bool TAR::validateTARName(string name) { return validadeIdentifier(name); }
+bool TAR::validateTARName(string name) { return validadeIdentifier(std::move(name)); }
 
 bool TAR::validateSchemaElementName(string name) {
   if (!validadeIdentifier(name))
@@ -797,7 +843,7 @@ bool TAR::validateSchemaElementName(string name) {
   return true;
 }
 
-void TAR::validadeSubtar(SubtarPtr subtar) {
+void TAR::validateSubtar(SubtarPtr subtar) {
 
   if (_subtars.size() >= MAX_NUM_SUBTARS_IN_TAR) {
     throw runtime_error(
@@ -830,7 +876,7 @@ TAR::TAR(int32_t id, string name, TypePtr type) {
   _id = id;
   _name = name;
   _subtarsIndex = nullptr;
-  _type = type;
+  _type = std::move(type);
 }
 
 void TAR::SetRole(std::string dataElementName, RolePtr role) {
@@ -853,7 +899,7 @@ map<std::string, RolePtr> &TAR::GetRoles() { return _roles; }
 list<DimensionPtr> TAR::GetDimensions() {
   list<DimensionPtr> dims;
 
-  for (auto elem : _elements) {
+  for (const auto &elem : _elements) {
     if (elem->GetType() == DIMENSION_SCHEMA_ELEMENT) {
       dims.push_back(elem->GetDimension());
     }
@@ -865,7 +911,7 @@ list<DimensionPtr> TAR::GetDimensions() {
 std::list<AttributePtr> TAR::GetAttributes() {
   std::list<AttributePtr> attribs;
 
-  for (auto elem : _elements) {
+  for (const auto &elem : _elements) {
     if (elem->GetType() == ATTRIBUTE_SCHEMA_ELEMENT) {
       attribs.push_back(elem->GetAttribute());
     }
@@ -878,6 +924,10 @@ void TAR::AddDimension(std::string name, DataType type, double lowerBound,
                        double upperBound, int64_t current_upper_bound) {
   if (!validateSchemaElementName(name))
     throw runtime_error("Attempt to add dimension with invalid name in TAR.");
+
+  if(GetDataElement(name) != nullptr)
+    throw runtime_error("Attempt to add dimension with name matching another "
+                        "data element.");
 
   if (!_subtars.empty())
     throw runtime_error("Attempt to add dimension in filled TAR.");
@@ -900,6 +950,10 @@ void TAR::AddDimension(string name, DataType type, double lowerBound,
 
   if (!validateSchemaElementName(name))
     throw runtime_error("Attempt to add dimension with invalid name in TAR.");
+
+  if(GetDataElement(name) != nullptr)
+    throw runtime_error("Attempt to add dimension with name matching another "
+                        "data element.");
 
   if (!_subtars.empty())
     throw runtime_error("Attempt to add dimension in filled TAR.");
@@ -924,6 +978,10 @@ void TAR::AddDimension(string name, DataType type, double lowerBound,
   if (!validateSchemaElementName(name))
     throw runtime_error("Attempt to add dimension with invalid name in TAR.");
 
+  if(GetDataElement(name) != nullptr)
+    throw runtime_error("Attempt to add dimension with name matching another "
+                        "data element.");
+
   if (!_subtars.empty())
     throw runtime_error("Attempt to add dimension in filled TAR.");
 
@@ -932,7 +990,7 @@ void TAR::AddDimension(string name, DataType type, double lowerBound,
 
   DimensionPtr dimension = make_shared<Dimension>(UNSAVED_ID, name, dataset);
   dimension->CurrentUpperBound() = current_upper_bound;
-  DataElementPtr dataElement = DataElementPtr(new DataElement(dimension));
+  DataElementPtr dataElement = std::make_shared<DataElement>(dimension);
   _elements.push_back(dataElement);
 }
 
@@ -955,6 +1013,10 @@ void TAR::AddAttribute(string name, DataType type) {
   if (!validateSchemaElementName(name))
     throw runtime_error("Attempt to add attribute with invalid name in TAR.");
 
+  if(GetDataElement(name) != nullptr)
+    throw runtime_error("Attempt to add attribute with name matching another "
+                        "data element.");
+
   if (!_subtars.empty())
     throw runtime_error("Attempt to add attribute in filled TAR.");
 
@@ -962,7 +1024,7 @@ void TAR::AddAttribute(string name, DataType type) {
     throw runtime_error("Attempt to add extra attribute in a complete TAR.");
 
   AttributePtr attribute = make_shared<Attribute>(UNSAVED_ID, name, type);
-  DataElementPtr dataElement = DataElementPtr(new DataElement(attribute));
+  DataElementPtr dataElement = std::make_shared<DataElement>(attribute);
   _elements.push_back(dataElement);
 }
 
@@ -971,13 +1033,13 @@ void TAR::AddAttribute(AttributePtr attribute) {
 }
 
 void TAR::AddSubtar(SubtarPtr subtar) {
-  validadeSubtar(subtar);
+  validateSubtar(subtar);
 
-  int32_t dimensionsNo = GetDimensions().size();
+  int32_t dimensionsNo = static_cast<int32_t>(GetDimensions().size());
   int64_t min[dimensionsNo], max[dimensionsNo];
 
   if (_subtarsIndex == nullptr) {
-    _subtarsIndex = SubtarsIndex(new RTree<int64_t, int64_t>(dimensionsNo));
+    _subtarsIndex = std::make_shared<RTree<int64_t, int64_t>>(dimensionsNo);
   }
 
   auto intersectionSubtars = GetIntersectingSubtars(subtar);
@@ -1024,18 +1086,14 @@ void TAR::AlterTAR(int32_t newId, string newName) {
 }
 
 void TAR::AlterType(TypePtr type) {
-  _type = type;
+  _type = std::move(type);
   _roles.clear();
 }
-
-int32_t TAR::GetTypeId() { return _idType; }
-
-void TAR::SetTypeId(int32_t idType) { _idType = idType; }
 
 vector<SubtarPtr> &TAR::GetSubtars() { return _subtars; }
 
 vector<SubtarPtr> TAR::GetIntersectingSubtars(SubtarPtr subtar) {
-  int32_t dimensionsNo = GetDimensions().size();
+  int32_t dimensionsNo = static_cast<int32_t>(GetDimensions().size());
   int64_t min[dimensionsNo], max[dimensionsNo];
   vector<SubtarPtr> intersectingSubtars;
 
@@ -1055,16 +1113,14 @@ vector<SubtarPtr> TAR::GetIntersectingSubtars(SubtarPtr subtar) {
   return intersectingSubtars;
 }
 
-vector<int32_t> &TAR::GetIdSubtars() { return _idSubtars; }
-
 bool TAR::HasDataElement(std::string name) {
   int32_t selected = 0;
-  auto splittedName = split(name, INDEX_SEPARATOR);
-  name = splittedName[0];
+  auto splitName = split(name, INDEX_SEPARATOR);
+  name = splitName[0];
 
-  if (splittedName.size() > 1) {
-    selected = strtol(splittedName[1].c_str(), nullptr, 10);
-  } else if (splittedName.size() > 2) {
+  if (splitName.size() > 1) {
+    selected = static_cast<int32_t>(strtol(splitName[1].c_str(), nullptr, 10));
+  } else if (splitName.size() > 2) {
     return false;
   }
 
@@ -1084,13 +1140,13 @@ bool TAR::HasDataElement(std::string name) {
 }
 
 DataElementPtr TAR::GetDataElement(string name) {
-  auto splittedName = split(name, INDEX_SEPARATOR);
-  name = splittedName[0];
+  auto splitName = split(name, INDEX_SEPARATOR);
+  name = splitName[0];
 
   for (auto &dataElement : _elements) {
-    if (!dataElement->GetName().compare(splittedName[0].c_str())) {
-      if (splittedName.size() > 1) {
-        int32_t selected = strtol(splittedName[1].c_str(), nullptr, 10);
+    if (dataElement->GetName() == splitName[0]) {
+      if (splitName.size() > 1) {
+        auto selected = static_cast<int32_t>(strtol(splitName[1].c_str(), nullptr, 10));
 
         if (dataElement->GetDataType().isVector())
           if (selected < dataElement->GetDataType().vectorLength()) {
@@ -1100,11 +1156,11 @@ DataElementPtr TAR::GetDataElement(string name) {
             auto attId = originalAttrib->GetId();
             auto type =
               DataType(originalAttrib->GetType().type(),
-                       originalAttrib->GetType().vectorLength(), selected);
+                       static_cast<uint32_t>(originalAttrib->GetType().vectorLength()), static_cast<uint32_t>(selected));
 
             AttributePtr att = make_shared<Attribute>(attId, attName, type);
 
-            DataElementPtr cloneDE = DataElementPtr(new DataElement(att));
+            DataElementPtr cloneDE = std::make_shared<DataElement>(att);
             return cloneDE;
           } else {
             return nullptr;
@@ -1119,8 +1175,8 @@ DataElementPtr TAR::GetDataElement(string name) {
 std::list<DataElementPtr> &TAR::GetDataElements() { return _elements; }
 
 void TAR::RemoveDataElement(std::string name) {
-  for (auto dataElement : _elements) {
-    if (!dataElement->GetName().compare(name)) {
+  for (const auto &dataElement : _elements) {
+    if (dataElement->GetName() == name) {
       _elements.remove(dataElement);
       return;
     }
@@ -1159,29 +1215,43 @@ std::string TAR::toString() {
 
     switch (dataElement->GetType()) {
     case DIMENSION_SCHEMA_ELEMENT: {
-      std::stringstream lower, upper, spacing, rlower, rupper, current;
+      std::stringstream name, dim_type, data_type, lower, upper, spacing,
+          rlower, rupper, current;
+
+      name << dataElement->GetDimension()->GetName();
+      dim_type << (dataElement->GetDimension()->GetDimensionType() == EXPLICIT
+                   ? "exp"
+                   : "imp");
+      data_type << dataElement->GetDimension()->GetType().toString();
       lower << std::setprecision(6)
             << dataElement->GetDimension()->GetLowerBound();
       upper << std::setprecision(6)
             << dataElement->GetDimension()->GetUpperBound();
       spacing << std::setprecision(6)
               << dataElement->GetDimension()->GetSpacing();
-      rlower << std::setprecision(6) << 0;
       rupper << std::setprecision(6)
              << dataElement->GetDimension()->GetRealUpperBound();
       current << std::setprecision(6)
               << dataElement->GetDimension()->CurrentUpperBound();
 
-      dimensions += "    " + dataElement->GetDimension()->GetName() + "[" +
-        dataElement->GetDimension()->GetType().toString() +
-        "]   from " + rlower.str() + "(" + lower.str() + ") to " +
-        current.str() + " of " + rupper.str() + "(" + upper.str() +
-        ") with spacing " + spacing.str() + "\n";
+      if (!dimensions.empty()) {
+        dimensions += string(_COMMA) + string(_SPACE);
+      }
+
+      dimensions += name.str() + _COLON + dim_type.str() + _COLON +
+          data_type.str() + _LEFT_PAREN + lower.str() + _COMMA +
+          upper.str() + _DIVISION + rupper.str() + _DIVISION +
+          current.str() + _COMMA + spacing.str() + _RIGHT_PAREN;
       break;
     }
     case ATTRIBUTE_SCHEMA_ELEMENT: {
-      attributes = "    " + dataElement->GetAttribute()->GetName() + "[" +
-        dataElement->GetAttribute()->GetType().toString() + "]\n";
+
+      if (!attributes.empty()) {
+        attributes += string(_COMMA) + string(_SPACE);
+      }
+
+      attributes += dataElement->GetAttribute()->GetName() + _COLON +
+          dataElement->GetAttribute()->GetType().toString();
       break;
     }
     }
@@ -1190,19 +1260,30 @@ std::string TAR::toString() {
   if (_type != nullptr)
     typeName = _type->name;
 
-  return _name + "[" + typeName + "]" + "\n  Dimensions:\n" + dimensions +
-    "\n  Attributes:\n" + attributes;
+  return _name + _LEFT_SQUARE_BRACKETS + typeName + _RIGHT_SQUARE_BRACKETS +
+      +_LEFT_ANGLE_BRACKETS + dimensions + _RIGHT_ANGLE_BRACKETS +
+      +_LEFT_SQUARE_BRACKETS + attributes + _RIGHT_SQUARE_BRACKETS;
 }
 
 void TAR::RemoveTempDataElements() {
   std::list<DataElementPtr> toRemove;
 
   for (auto &dataElement : _elements) {
-    if (dataElement->GetName().compare(0, 4, DEFAULT_TEMP_MEMBER) == 0)
+
+    auto name = dataElement->GetName();
+    if (name.compare(0, 4, DEFAULT_TEMP_MEMBER) == 0)
       toRemove.push_back(dataElement);
+
+    auto found1 = name.find(string(LEFT_DATAELEMENT_PREFIX)+_UNDERSCORE+"aux");
+    auto found2 = name.find(string(RIGHT_DATAELEMENT_PREFIX)+_UNDERSCORE+"aux");
+
+    if(found1 != std::string::npos
+       || found2 != std::string::npos ){
+      toRemove.push_back(dataElement);
+    }
   }
 
-  for (auto dataElement : toRemove) {
+  for (const auto &dataElement : toRemove) {
     _elements.remove(dataElement);
   }
 }
@@ -1214,7 +1295,7 @@ void TAR::RecalculatesRealBoundaries() {
 bool TAR::CheckMaxSpan() {
   auto dimensions = GetDimensions();
   savime_size_t spannedLen = dimensions.empty() ? 0 : 1;
-  for (auto dim : dimensions) {
+  for (const auto &dim : dimensions) {
     auto beforeMultiplying = spannedLen;
     spannedLen *= dim->GetCurrentLength();
 
@@ -1228,7 +1309,7 @@ bool TAR::CheckMaxSpan() {
 savime_size_t TAR::GetSpannedTARLen() {
   auto dimensions = GetDimensions();
   savime_size_t spannedLen = dimensions.empty() ? 0 : 1;
-  for (auto dim : dimensions) {
+  for (const auto &dim : dimensions) {
     spannedLen *= dim->GetCurrentLength();
   }
   return spannedLen;
@@ -1237,7 +1318,7 @@ savime_size_t TAR::GetSpannedTARLen() {
 savime_size_t TAR::GetFilledTARLen() {
   auto subtars = GetSubtars();
   savime_size_t filledLen = 0;
-  for (auto subtar : subtars) {
+  for (const auto &subtar : subtars) {
     filledLen += subtar->GetFilledLength();
   }
   return filledLen;
@@ -1246,14 +1327,14 @@ savime_size_t TAR::GetFilledTARLen() {
 savime_size_t TAR::GetTotalTARLen() {
   auto dimensions = GetDimensions();
   savime_size_t totalLen = dimensions.empty() ? 0 : 1;
-  for (auto dim : dimensions) {
+  for (const auto &dim : dimensions) {
     totalLen *= dim->GetLength();
   }
   return totalLen;
 }
 
 TARPtr TAR::Clone(bool copyId, bool copySubtars, bool dimensionsOnly) {
-  TARPtr clonedTAR = TARPtr(new TAR(0, "", nullptr));
+  TARPtr clonedTAR = std::make_shared<TAR>(0, "", nullptr);
 
   if (copyId) {
     clonedTAR->AlterTAR(_id, _name);
@@ -1269,7 +1350,7 @@ TARPtr TAR::Clone(bool copyId, bool copySubtars, bool dimensionsOnly) {
   }
 
   if (copySubtars) {
-    for (auto subtar : _subtars) {
+    for (const auto &subtar : _subtars) {
       clonedTAR->AddSubtar(subtar);
     }
   }
@@ -1278,6 +1359,6 @@ TARPtr TAR::Clone(bool copyId, bool copySubtars, bool dimensionsOnly) {
 }
 
 TAR::~TAR() {
-  for (auto listener : _listeners)
+  for (const auto &listener : _listeners)
     listener->DisposeObject((MetadataObject *)this);
 }

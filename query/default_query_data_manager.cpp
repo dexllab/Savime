@@ -64,9 +64,8 @@ std::string DefaultQueryDataManager::GetQueryText() { return _query; }
 std::list<std::string> DefaultQueryDataManager::GetParamsList() {
   std::list<std::string> params;
 
-  for (std::map<std::string, int>::iterator iter = _blockFiles.begin();
-       iter != _blockFiles.end(); ++iter) {
-    params.push_back(iter->first);
+  for (auto &_blockFile : _blockFiles) {
+    params.push_back(_blockFile.first);
   }
 
   return params;
@@ -120,10 +119,9 @@ SavimeResult DefaultQueryDataManager::SetQueryPlan(QueryPlanPtr queryPlan) {
 QueryPlanPtr DefaultQueryDataManager::GetQueryPlan() { return _queryPlan; }
 
 SavimeResult DefaultQueryDataManager::Release() {
-  _file = 0;
   _blockFiles.clear();
   _paths.clear();
-  _queryPlan = NULL;
+  _queryPlan = nullptr;
   _query = "";
   _error = "";
   _responseText = "";

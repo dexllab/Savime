@@ -31,7 +31,7 @@ using namespace std;
 using namespace chrono;
 
 //------------------------------------------------------------------------------
-// TIME MEASUREMENTES MACROS
+// TIME MEASUREMENTS MACROS
 #define GET_T1() auto t1 = high_resolution_clock::now()
 #define GET_T2() auto t2 = high_resolution_clock::now()
 #define GET_T1_LOCAL() t1 = high_resolution_clock::now()
@@ -40,11 +40,11 @@ using namespace chrono;
 typedef std::chrono::time_point<std::chrono::high_resolution_clock> SavimeTime;
 
 //------------------------------------------------------------------------------
-// COMPARSION MACRO
+// COMPARISON MACRO
 #define IN_RANGE(X, Y, Z) ((X >= Y) && (X <= Z))
 
 //------------------------------------------------------------------------------
-// EXECPTIONS
+// EXCEPTIONS
 #define OMP_EXCEPTION_ENV() std::mutex ___ex_mtx;\
                             vector<std::string> ___omp_temp_exceptions;\
 
@@ -52,7 +52,7 @@ typedef std::chrono::time_point<std::chrono::high_resolution_clock> SavimeTime;
 
 #define CATCH() } catch(std::exception& e) { \
                  ___ex_mtx.lock();\
-                 ___omp_temp_exceptions.push_back(e.what());\
+                 ___omp_temp_exceptions.emplace_back(e.what());\
                  ___ex_mtx.unlock();\
                 }
 
@@ -63,13 +63,15 @@ typedef std::chrono::time_point<std::chrono::high_resolution_clock> SavimeTime;
 
 //------------------------------------------------------------------------------
 // FILES FUNCTIONS
-inline std::ifstream::pos_type FILE_SIZE(const char *filename) {
-  std::ifstream in(filename, std::ifstream::ate | std::ifstream::binary);
+#define MOCK_FILE_PREFIX "/mock/"
+
+inline std::ifstream::pos_type FILE_SIZE(const std::string& name) {
+  std::ifstream in(name.c_str(), std::ifstream::ate | std::ifstream::binary);
   return in.tellg();
 }
 
 inline bool EXIST_FILE(const std::string &name) {
-  struct stat buffer;
+  struct stat buffer{};
   return (stat(name.c_str(), &buffer) == 0);
 }
 
@@ -185,6 +187,53 @@ inline std::string &trim_delimiters(std::string &str) {
   return remove_str(remove_str(str, '"'), '\'');
 }
 
+inline bool like(const std::string &str, const std::string &pattern) {
+
+  bool startWildCard = pattern.at(0) == _LIKE_WILDCARD;
+  bool endWildCard = pattern.at(pattern.size()-1) == _LIKE_WILDCARD;
+
+  if(startWildCard && endWildCard) {
+    string subpattern = pattern.substr(1, pattern.size()-2);
+    return str.find(subpattern) != std::string::npos;
+  } else if(startWildCard) {
+    string subpattern = pattern.substr(1, pattern.size()-1);
+    return std::equal(str.begin() + str.size() - subpattern.size(),
+                      str.end(), subpattern.begin());
+  } else if(endWildCard) {
+    string subpattern = pattern.substr(0, pattern.size()-1);
+    return !str.compare(0, subpattern.length(), subpattern);
+  } else {
+    return str == pattern;
+  }
+}
+
+inline bool replace(std::string& str, const std::string& from,
+                    const std::string& to) {
+  size_t start_pos = str.find(from);
+  if(start_pos == std::string::npos)
+    return false;
+  str.replace(start_pos, from.length(), to);
+  return true;
+}
+
+inline std::string replaceAll(std::string const &original,
+                              std::string const &from, std::string const &to) {
+  std::string results;
+  std::string::const_iterator end = original.end();
+  std::string::const_iterator current = original.begin();
+  std::string::const_iterator next =
+      std::search(current, end, from.begin(), from.end());
+  while (next != end) {
+    results.append(current, next);
+    results.append(to);
+    current = next + from.size();
+    next = std::search(current, end, from.begin(), from.end());
+  }
+  results.append(current, next);
+  return results;
+}
+
+
 ////MISC FUNCTIONS
 //------------------------------------------------------------------------------
 // Function original source:
@@ -264,34 +313,34 @@ inline void fast_division(int64_t max, int64_t div, int64_t &mul,
 #define SET_THREADS(WKLD, MIN, THREADS)                                        \
   int64_t startPositionPerCore[THREADS];                                       \
   int64_t finalPositionPerCore[THREADS];                                       \
-  SetWorkloadPerThread(WKLD, MIN, startPositionPerCore, finalPositionPerCore,  \
-                       THREADS);
+  THREADS = SetWorkloadPerThread(WKLD, MIN, startPositionPerCore,              \
+                                 finalPositionPerCore, THREADS);
 
 #define RESET_THREADS(WKLD, MIN, THREADS)                                      \
-  SetWorkloadPerThread(WKLD, MIN, startPositionPerCore, finalPositionPerCore,  \
-                       THREADS);
+  THREADS = SetWorkloadPerThread(WKLD, MIN, startPositionPerCore,              \
+                                 finalPositionPerCore, THREADS);
 
 #define SET_THREADS_ALIGNED(WKLD, MIN, THREADS, ALIGN)                         \
   int64_t startPositionPerCore[THREADS];                                       \
   int64_t finalPositionPerCore[THREADS];                                       \
-  SetWorkloadPerThread(WKLD, MIN, startPositionPerCore, finalPositionPerCore,  \
-                       THREADS, ALIGN);
+  THREADS = SetWorkloadPerThread(WKLD, MIN, startPositionPerCore,              \
+                                 finalPositionPerCore, THREADS, ALIGN); 
 
 
 #define THREAD_FIRST() startPositionPerCore[omp_get_thread_num()]
 #define THREAD_LAST() finalPositionPerCore[omp_get_thread_num()]
 
 
-inline int SetWorkloadPerThread(int64_t workloadSize, int32_t minWorkPerThread,
+inline int SetWorkloadPerThread(int64_t workloadSize, int64_t minWorkPerThread,
                                 int64_t startPositionPerCore[],
                                 int64_t finalPositionPerCore[],
                                 int32_t numThreads) {
 
-  int32_t numMinChunks = workloadSize / minWorkPerThread;
+  int64_t numMinChunks = workloadSize / minWorkPerThread;
   if(numMinChunks == 0) 
     numThreads = 1;
   else if(numMinChunks <= numThreads)
-    numThreads = numMinChunks;
+    numThreads = static_cast<int32_t>(numMinChunks);
 
   for (int64_t i = 0; i < numThreads; i++){
     startPositionPerCore[i] = -1;
@@ -322,11 +371,11 @@ inline int SetWorkloadPerThread(int64_t workloadSize, int32_t minWorkPerThread,
                                 int64_t finalPositionPerCore[],
                                 int32_t numThreads, int32_t alignment) {
 
-  int32_t numMinChunks = workloadSize / minWorkPerThread;
+  int64_t numMinChunks = workloadSize / minWorkPerThread;
   if(numMinChunks == 0) 
     numThreads = 1;
   else if(numMinChunks <= numThreads)
-    numThreads = numMinChunks;
+    numThreads = static_cast<int32_t>(numMinChunks);
 
   for (int64_t i = 0; i < numThreads; i++){
     startPositionPerCore[i] = -1;

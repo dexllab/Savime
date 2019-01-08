@@ -178,30 +178,31 @@ void DefaultConfigurationManager::LoadConfigFile(string file) {
     line = trim(line);
     if (line.at(0) == '#')
       continue;
-    auto splittedLine = split(line, ' ');
-    if (splittedLine.size() != 3)
+    auto splitLine = split(line, ' ');
+    if (splitLine.size() != 3)
       continue;
 
     string key, svalue, type;
-    key = trim(splittedLine[0]);
+    key = trim(splitLine[0]);
     key.erase(std::remove(key.begin(), key.end(), '"'), key.end());
-    type = trim(splittedLine[1]);
-    svalue = trim(splittedLine[2]);
+    type = trim(splitLine[1]);
+    svalue = trim(splitLine[2]);
     svalue.erase(std::remove(svalue.begin(), svalue.end(), '"'), svalue.end());
 
     if (type == "s" || type == "S") {
       SetStringValue(key, svalue);
     } else if (type == "i" || type == "I") {
-      int32_t val = strtol(svalue.c_str(), NULL, 10);
+      int32_t val = (int32_t) strtol(svalue.c_str(), nullptr, 10);
       SetIntValue(key, val);
     } else if (type == "l" || type == "L") {
-      int64_t val = atoll(svalue.c_str());
+      //int64_t val = atoll(svalue.c_str());
+      int64_t val = strtoll(svalue.c_str(), nullptr, 10);
       SetLongValue(key, val);
     } else if (type == "b" || type == "B") {
-      bool val = strtol(svalue.c_str(), NULL, 10);
+      bool val = (bool)strtol(svalue.c_str(), nullptr, 10);
       SetBooleanValue(key, val);
     } else if (type == "d" || type == "D") {
-      double val = strtod(svalue.c_str(), NULL);
+      double val = strtod(svalue.c_str(), nullptr);
       SetDoubleValue(key, val);
     } else {
       continue;

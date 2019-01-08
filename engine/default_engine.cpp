@@ -1,3 +1,5 @@
+#include <memory>
+
 /*
 *    This program is free software: you can redistribute it and/or modify
 *    it under the terms of the GNU General Public License as published by
@@ -38,13 +40,9 @@ const string _DEFAULT_ENGINE_ERROR_MSG = "Error during query execution, "
 using namespace std;
 using namespace std::chrono;
 
-OperatorFunction operatorFunctions[] = {
-  create_tars, create_tar, create_type,  create_dataset, drop_tars,
-  drop_tar,    drop_type,  drop_dataset, load_subtar,    save,
-  show,        scan,       select,       filter,         subset,
-  logical,     comparison, arithmetic,   cross_join,     equijoin,
-  dimjoin,     slice,      aggregate,    split,          user_defined};
 
+//----------------------------------------------------------------------------------------------------------------------
+//TarGenerator members definitions
 SubtarPtr TARGenerator::GetSubtar(SubTARIndex subtarIndex) {
   try {
     if (_tar == nullptr) {
@@ -56,12 +54,19 @@ SubtarPtr TARGenerator::GetSubtar(SubTARIndex subtarIndex) {
         _mutex.unlock();
         return subtarController->subtar;
       }
-      _mutex.unlock();
-      _producer(subtarIndex, _operation, _configurationManager,
-                _queryDataManager, _metadataManager, _storageManager, _engine);
 
-      _mutex.lock();
+      if(subtarIndex < _lastSubtarId || _lastSubtarId == NONSET) {
+        _mutex.unlock();
+        _producer->GenerateSubtar(subtarIndex);
+        _mutex.lock();
+      }
+
       if (_subtarMap.find(subtarIndex) == _subtarMap.end()) {
+
+        if(_lastSubtarId == NONSET || _lastSubtarId > subtarIndex){
+          _lastSubtarId = subtarIndex;
+        }
+
         _mutex.unlock();
         return nullptr;
       } else {
@@ -82,17 +87,22 @@ SubtarPtr TARGenerator::GetSubtar(SubTARIndex subtarIndex) {
       }
     }
   } catch (std::exception &e) {
-    throw std::runtime_error("Error in operation " + _operation->toString() +
+    throw std::runtime_error("Error in operation " + _producer->toString() +
       +_COLON + _NEWLINE + e.what());
   }
 }
 
 void TARGenerator::AddSubtar(SubTARIndex subtarIndex, SubtarPtr subtar) {
-  SubtarControlerPtr controler = SubtarControlerPtr(new SubtarControler);
+  SubtarControlerPtr controler = std::make_shared<SubtarControler>();
   controler->accessCount = _maxAccesses;
   controler->subtar = subtar;
   _mutex.lock();
   _subtarMap[subtarIndex] = controler;
+  if(subtar == nullptr){
+    if(_lastSubtarId == NONSET || _lastSubtarId > subtarIndex){
+      _lastSubtarId = subtarIndex;
+    }
+  }
   _mutex.unlock();
 }
 
@@ -106,8 +116,8 @@ void TARGenerator::TestAndDisposeSubtar(SubTARIndex subtarIndex) {
   _mutex.unlock();
 }
 
-int32_t TARGenerator::GetSubtarsIndexMap(SubTARIndex index) {
-  int32_t subtarIndex = -1;
+SubTARIndex TARGenerator::GetSubtarsIndexMap(SubTARIndex index) {
+  SubTARIndex subtarIndex = -1;
   _mutex.lock();
   if (_subtarIndexMap[DEFAULT_MAP].find(index) !=
     _subtarIndexMap[DEFAULT_MAP].end())
@@ -122,9 +132,9 @@ void TARGenerator::SetSubtarsIndexMap(SubTARIndex index, SubTARIndex value) {
   _mutex.unlock();
 }
 
-int32_t TARGenerator::GetSubtarsIndexMap(SubTARIndex mapIndex,
+SubTARIndex TARGenerator::GetSubtarsIndexMap(SubTARIndex mapIndex,
                                          SubTARIndex index) {
-  int32_t subtarIndex = -1;
+  SubTARIndex subtarIndex = -1;
   _mutex.lock();
   if (_subtarIndexMap[mapIndex].find(index) != _subtarIndexMap[mapIndex].end())
     subtarIndex = _subtarIndexMap[mapIndex][index];
@@ -161,7 +171,122 @@ void TARGenerator::SetMaxAccesses(int32_t maxAccesses) {
   _maxAccesses = maxAccesses;
   _mutex.unlock();
 }
+//----------------------------------------------------------------------------------------------------------------------
+//EngineOperatorFactory definitions
+EngineOperatorPtr EngineOperatorFactory::Make(OperationPtr operation) {
 
+  auto opcode = operation->GetOperation();
+
+  switch (opcode) {
+    case TAL_CREATE_TARS:
+      return make_shared<CreateTARS>(operation, _configurationManager,
+                                     _queryDataManager, _metadataManager,
+                                     _storageManager, _engine);
+    case TAL_CREATE_TAR:
+      return make_shared<CreateTAR>(operation, _configurationManager,
+                                    _queryDataManager, _metadataManager,
+                                    _storageManager, _engine);
+    case TAL_CREATE_TYPE:
+      return make_shared<CreateType>(operation, _configurationManager,
+                                     _queryDataManager, _metadataManager,
+                                     _storageManager, _engine);
+    case TAL_CREATE_DATASET:
+      return make_shared<CreateDataset>(operation, _configurationManager,
+                                        _queryDataManager, _metadataManager,
+                                        _storageManager, _engine);
+    case TAL_DROP_TARS:
+      return make_shared<DropTARS>(operation, _configurationManager,
+                                   _queryDataManager, _metadataManager,
+                                   _storageManager, _engine);
+    case TAL_DROP_TAR:
+      return make_shared<DropTAR>(operation, _configurationManager,
+                                  _queryDataManager, _metadataManager,
+                                  _storageManager, _engine);
+    case TAL_DROP_TYPE:
+      return make_shared<DropType>(operation, _configurationManager,
+                                   _queryDataManager, _metadataManager,
+                                   _storageManager, _engine);
+    case TAL_DROP_DATASET:
+      return make_shared<DropDataset>(operation, _configurationManager,
+                                      _queryDataManager, _metadataManager,
+                                      _storageManager, _engine);
+    case TAL_LOAD_SUBTAR:
+      return make_shared<LoadSubtar>(operation, _configurationManager,
+                                     _queryDataManager, _metadataManager,
+                                     _storageManager, _engine);
+
+    case TAL_DELETE: throw  runtime_error("Unsupported Operation.");
+
+    case TAL_SAVE:
+      return make_shared<Save>(operation, _configurationManager,
+                               _queryDataManager, _metadataManager,
+                               _storageManager, _engine);
+    case TAL_SHOW:
+      return make_shared<Show>(operation, _configurationManager,
+                               _queryDataManager, _metadataManager,
+                               _storageManager, _engine);
+    case TAL_SCAN:
+      return make_shared<Scan>(operation, _configurationManager,
+                               _queryDataManager, _metadataManager,
+                               _storageManager, _engine);
+    case TAL_SELECT:
+      return make_shared<Select>(operation, _configurationManager,
+                                 _queryDataManager, _metadataManager,
+                                 _storageManager, _engine);
+    case TAL_FILTER:
+      return make_shared<Filter>(operation, _configurationManager,
+                                 _queryDataManager, _metadataManager,
+                                 _storageManager, _engine);
+    case TAL_SUBSET:
+      return make_shared<Subset>(operation, _configurationManager,
+                                 _queryDataManager, _metadataManager,
+                                 _storageManager, _engine);
+    case TAL_LOGICAL:
+      return make_shared<Logical>(operation, _configurationManager,
+                                  _queryDataManager, _metadataManager,
+                                  _storageManager, _engine);
+    case TAL_COMPARISON:
+      return make_shared<Comparison>(operation, _configurationManager,
+                                     _queryDataManager, _metadataManager,
+                                     _storageManager, _engine);
+    case TAL_ARITHMETIC:
+      return make_shared<Arithmetic>(operation, _configurationManager,
+                                     _queryDataManager, _metadataManager,
+                                     _storageManager, _engine);
+    case TAL_CROSS:
+      return make_shared<CrossJoin>(operation, _configurationManager,
+                                    _queryDataManager, _metadataManager,
+                                    _storageManager, _engine);
+
+    case TAL_EQUIJOIN: throw  runtime_error("Unsupported Operation.");
+
+    case TAL_DIMJOIN:
+      return make_shared<DimJoin>(operation, _configurationManager,
+                                  _queryDataManager, _metadataManager,
+                                  _storageManager, _engine);
+
+    case TAL_SLICE: throw  runtime_error("Unsupported Operation.");
+
+    case TAL_ATT2DIM: throw  runtime_error("Unsupported Operation.");
+
+    case TAL_AGGREGATE:
+      return make_shared<Aggregate>(operation, _configurationManager,
+                                    _queryDataManager, _metadataManager,
+                                    _storageManager, _engine);
+
+    case  TAL_TRANSLATE : throw  runtime_error("Unsupported Operation.");
+
+    case TAL_USER_DEFINED:
+      return make_shared<UserDefined>(operation, _configurationManager,
+                                      _queryDataManager, _metadataManager,
+                                      _storageManager, _engine);
+      ;
+  }
+
+  return nullptr;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 // DefaultEngine members definition
 void DefaultEngine::SetMetadaManager(MetadataManagerPtr metadataManager) {
   _metadataManager = metadataManager;
@@ -225,7 +350,7 @@ void DefaultEngine::DispatchBlocks() {
 
         if (fileDescriptor < 0) {
           _systemLogger->LogEvent("Engine Dispatcher",
-                                  "Could not send block." +
+                                  "Could not send block. " +
                                     std::string(strerror(errno)));
 
           _blocksToDispatch.clear();
@@ -275,7 +400,7 @@ void DefaultEngine::SendResultingTAR(EngineListener *caller, TARPtr tar) {
 
     if (subtar == nullptr)
       break;
-    int64_t totalLength = subtar->GetFilledLength();
+    auto totalLength = subtar->GetFilledLength();
     subtar->RemoveTempDataElements();
 
     if (_sendResult == SAVIME_FAILURE) {
@@ -318,12 +443,15 @@ unordered_map<std::string, TARGeneratorPtr> &DefaultEngine::GetGenerators() {
   return _generators;
 }
 
-SavimeResult DefaultEngine::run(QueryDataManagerPtr queryDataManager,
+SavimeResult DefaultEngine::Run(QueryDataManagerPtr queryDataManager,
                                 EngineListenerPtr caller) {
   try {
     SavimeTime t1, t2;
-    GET_T1_LOCAL();
 
+    EngineOperatorFactoryPtr operatorsFactory = make_shared<EngineOperatorFactory>(_configurationManager,
+                                                queryDataManager,  _metadataManager, _storageManager, _this);
+
+    GET_T1_LOCAL();
     _mutex.unlock();
     _dispatchMutex.unlock();
 
@@ -332,8 +460,8 @@ SavimeResult DefaultEngine::run(QueryDataManagerPtr queryDataManager,
       if (_thread)
         _thread->detach();
       _runningDispatcher = true;
-      _thread = std::shared_ptr<std::thread>(
-        new std::thread(&DefaultEngine::DispatchBlocks, thisPtr));
+      _thread = std::make_shared<std::thread>(
+        &DefaultEngine::DispatchBlocks, thisPtr);
     }
 
     _systemLogger->LogEvent(this->_moduleName,
@@ -346,10 +474,12 @@ SavimeResult DefaultEngine::run(QueryDataManagerPtr queryDataManager,
 
     // Checking if is a DDL query
     if (queryDataManager->GetQueryPlan()->GetType() == DDL) {
-      for (auto operation : queryDataManager->GetQueryPlan()->GetOperations()) {
-        int result = operatorFunctions[operation->GetOperation()](
-          0, operation, _configurationManager, queryDataManager,
-          _metadataManager, _storageManager, _this);
+      for (const auto &operation : queryDataManager->GetQueryPlan()->GetOperations()) {
+        //int result = operatorFunctions[operation->GetOperation()](
+        //  0, operation, _configurationManager, queryDataManager,
+        //  _metadataManager, _storageManager, _this);
+        EngineOperatorPtr op = operatorsFactory->Make(operation);
+        SavimeResult result = op->Run();
 
         if (result != SAVIME_SUCCESS) {
           queryDataManager->SetErrorResponseText(
@@ -364,7 +494,7 @@ SavimeResult DefaultEngine::run(QueryDataManagerPtr queryDataManager,
       /*
        * Operations in the query plan are evaluated from top to bottom
        */
-      for (auto operation : queryDataManager->GetQueryPlan()->GetOperations()) {
+      for (const auto &operation : queryDataManager->GetQueryPlan()->GetOperations()) {
         auto resultingTAR = operation->GetResultingTAR();
 
         /*
@@ -373,12 +503,8 @@ SavimeResult DefaultEngine::run(QueryDataManagerPtr queryDataManager,
          * subsequent operations.
          */
         if (resultingTAR != nullptr) {
-          TARGeneratorPtr generator = TARGeneratorPtr(new TARGenerator(
-            (OperatorFunction)operatorFunctions[operation->GetOperation()],
-            operation, _configurationManager, queryDataManager,
-            _metadataManager, _storageManager, _this));
 
-          // Set max accesses to subtar to 0, meaning subtars
+          TARGeneratorPtr generator = make_shared<TARGenerator>();
           generator->SetMaxAccesses(0);
           _generators[resultingTAR->GetName()] = generator;
         }
@@ -398,12 +524,10 @@ SavimeResult DefaultEngine::run(QueryDataManagerPtr queryDataManager,
              * Check if a generator for the specified TAR has already been
              * created.
              * If not, since it is a top down search, the TAR must be a savime
-             * stored TAR
-             * instead of one created on demand by the query
+             * stored TAR instead of one created on demand by the query
              */
             if (_generators.find(param->tar->GetName()) == _generators.end()) {
-              TARGeneratorPtr generator =
-                TARGeneratorPtr(new TARGenerator(param->tar));
+              TARGeneratorPtr generator = make_shared<TARGenerator>(param->tar);
               _generators[param->tar->GetName()] = generator;
             }
               /*
@@ -413,9 +537,19 @@ SavimeResult DefaultEngine::run(QueryDataManagerPtr queryDataManager,
                */
             else {
               auto generator = _generators[param->tar->GetName()];
-              generator->SetMaxAccesses(generator->getMaxAccesses() + 1);
+              if(operation->GetOperation() != TAL_LOGICAL)
+                generator->SetMaxAccesses(generator->getMaxAccesses() + 1);
             }
           }
+        }
+      }
+
+      /*Creating producers*/
+      for (const auto &operation : queryDataManager->GetQueryPlan()->GetOperations()) {
+        auto resultingTAR = operation->GetResultingTAR();
+        if (resultingTAR != nullptr) {
+          EngineOperatorPtr op = operatorsFactory->Make(operation);
+          _generators[resultingTAR->GetName()]->SetProducer(op);
         }
       }
     }
@@ -425,16 +559,18 @@ SavimeResult DefaultEngine::run(QueryDataManagerPtr queryDataManager,
       caller->NotifyTextResponse(lastOp->GetResultingTAR()->toSmallString());
       SendResultingTAR(caller, lastOp->GetResultingTAR());
     } else if (queryDataManager->GetQueryPlan()->GetType() == DML) {
+
       auto operation = queryDataManager->GetQueryPlan()->GetOperations().back();
-      int result = operatorFunctions[operation->GetOperation()](
-        0, operation, _configurationManager, queryDataManager,
-        _metadataManager, _storageManager, _this);
+      EngineOperatorPtr op = operatorsFactory->Make(operation);
+      int result = op->GenerateSubtar(0);
+
       if (result != SAVIME_SUCCESS) {
         queryDataManager->SetErrorResponseText(
           "Error during operation execution: " +
             queryDataManager->GetErrorResponse());
         throw std::runtime_error(queryDataManager->GetErrorResponse());
       }
+
       caller->NotifyTextResponse("Query executed successfully");
     } else {
       if (queryDataManager->GetQueryResponseText().empty())

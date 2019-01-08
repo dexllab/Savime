@@ -21,8 +21,8 @@
 
 inline void create_bounds(RealIndex &lowerBound, RealIndex &upperBound,
                           std::string sLowerBound, std::string sUpperBound,
-                          DimensionPtr dimension,
-                          StorageManagerPtr storageManager) {
+                          const DimensionPtr &dimension,
+                          const StorageManagerPtr &storageManager) {
 
   Literal index;
   index.type = DOUBLE;
@@ -30,7 +30,7 @@ inline void create_bounds(RealIndex &lowerBound, RealIndex &upperBound,
   if (sLowerBound.c_str()[0] == _LOGICAL_INDEX_SPECIFIER_MARK) {
     sLowerBound = sLowerBound.replace(0, 1, "");
 
-    double val = strtod(sLowerBound.c_str(), NULL);
+    double val = strtod(sLowerBound.c_str(), nullptr);
     index.dbl = val;
     lowerBound = storageManager->Logical2Real(dimension, index);
 
@@ -38,12 +38,13 @@ inline void create_bounds(RealIndex &lowerBound, RealIndex &upperBound,
       throw std::runtime_error("Invalid logical index: " + sLowerBound);
 
   } else {
-    lowerBound = atoll(sLowerBound.c_str());
+    //lowerBound = atoll(sLowerBound.c_str());
+    lowerBound = strtoll(sLowerBound.c_str(), nullptr, 10);
   }
 
   if (sUpperBound.c_str()[0] == _LOGICAL_INDEX_SPECIFIER_MARK) {
     sUpperBound = sUpperBound.replace(0, 1, "");
-    double val = strtod(sUpperBound.c_str(), NULL);
+    double val = strtod(sUpperBound.c_str(), nullptr);
     index.dbl = val;
     upperBound = storageManager->Logical2Real(dimension, index);
 
@@ -51,7 +52,8 @@ inline void create_bounds(RealIndex &lowerBound, RealIndex &upperBound,
       throw std::runtime_error("Invalid logical index: " + sUpperBound);
 
   } else {
-    upperBound = atoll(sUpperBound.c_str());
+    //upperBound = atoll(sUpperBound.c_str());
+    upperBound = strtoll(sUpperBound.c_str(), nullptr, 10);
   }
 }
 
@@ -94,9 +96,9 @@ inline void create_bounds(RealIndex &lowerBound, RealIndex &upperBound,
  * loading command call.
  */
 inline std::list<DimSpecPtr>
-create_dimensionsSpecs(std::string dimSpecsStringBlock, TARPtr tar,
-                       MetadataManagerPtr metadataManager,
-                       StorageManagerPtr storageManager) {
+create_dimensionsSpecs(const std::string &dimSpecsStringBlock, const TARPtr &tar,
+                       const MetadataManagerPtr& metadataManager,
+                       const StorageManagerPtr& storageManager) {
   bool hasTotalDim = false;
   bool hasNonTotalDim = false;
   std::string dimensionName;
@@ -105,7 +107,7 @@ create_dimensionsSpecs(std::string dimSpecsStringBlock, TARPtr tar,
   std::vector<std::string> dimSpecsBlocks =
     split(dimSpecsStringBlock, _PIPE[0]);
 
-  for (std::string dimSpecsString : dimSpecsBlocks) {
+  for (const std::string &dimSpecsString : dimSpecsBlocks) {
     std::vector<std::string> params = split(dimSpecsString, ',');
     DimSpecPtr dimensionSpecification = nullptr;
     DatasetPtr dataset;
@@ -180,11 +182,11 @@ create_dimensionsSpecs(std::string dimSpecsStringBlock, TARPtr tar,
   }
 
   std::map<std::string, std::string> dimensionsInTar;
-  for (auto d : tar->GetDimensions()) {
+  for (const auto &d : tar->GetDimensions()) {
     dimensionsInTar[d->GetName()] = d->GetName();
   }
 
-  for (auto spec : dimensionsSpecs) {
+  for (const auto &spec : dimensionsSpecs) {
     if (dimensionsInTar.find(spec->GetDimension()->GetName()) !=
       dimensionsInTar.end()) {
       dimensionsInTar.erase(spec->GetDimension()->GetName());
@@ -195,42 +197,21 @@ create_dimensionsSpecs(std::string dimSpecsStringBlock, TARPtr tar,
     }
   }
 
-  if (dimensionsInTar.size() > 0) {
+  if (!dimensionsInTar.empty()) {
     throw std::runtime_error(
       "Insufficient specification definition, there are dimensions in " +
         tar->GetName() + " without definition.");
   }
 
-  for (auto spec : dimensionsSpecs) {
+  for (const auto &spec : dimensionsSpecs) {
     totalLen *= spec->GetFilledLength();
   }
 
-  for (auto spec : dimensionsSpecs) {
-    bool isPosterior = false;
-    savime_size_t skew = 1;
-    savime_size_t adjacency = 1;
-
-    for (auto innerSpec : dimensionsSpecs) {
-      if (isPosterior)
-        adjacency *= innerSpec->GetFilledLength();
-
-      if (!spec->GetDimension()->GetName().compare(
-        innerSpec->GetDimension()->GetName())) {
-        isPosterior = true;
-      }
-
-      if (isPosterior)
-        skew *= innerSpec->GetFilledLength();
-    }
-
-    spec->AlterAdjacency(adjacency);
-    spec->AlterSkew(skew);
-  }
-
+  ADJUST_SPECS(dimensionsSpecs);
   return dimensionsSpecs;
 }
 
-inline int validate_subtar_size(SubtarPtr subtar) {
+inline int validate_subtar_size(const SubtarPtr &subtar) {
   int64_t totalLength = subtar->GetFilledLength();
 
   for (auto entry : subtar->GetDimSpecs()) {
@@ -243,8 +224,8 @@ inline int validate_subtar_size(SubtarPtr subtar) {
   }
 }
 
-inline int validate_dimensionSpecs(DimSpecPtr dimSpec,
-                                   StorageManagerPtr storageManager) {
+inline int validate_dimensionSpecs(const DimSpecPtr &dimSpec,
+                                   const StorageManagerPtr &storageManager) {
   auto ds = dimSpec->GetDataset();
   auto dimension = dimSpec->GetDimension();
 
@@ -314,7 +295,7 @@ inline int validate_dimensionSpecs(DimSpecPtr dimSpec,
   }
 }
 
-inline void updateCurrentUpperBounds(TARPtr tar, SubtarPtr subtar) {
+inline void updateCurrentUpperBounds(const TARPtr &tar, const SubtarPtr &subtar) {
   for (auto entry : subtar->GetDimSpecs()) {
     DimensionPtr dim = tar->GetDataElement(entry.first)->GetDimension();
     DimSpecPtr dimSpecs = entry.second;

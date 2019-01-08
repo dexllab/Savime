@@ -20,7 +20,7 @@
 #include "../core/include/abstract_storage_manager.h"
 #include "aggregate_config.h"
 
-    struct IsNull {
+struct IsNull {
   bool operator()(const AggregateBufferPtr &aggBuffer) {
     return aggBuffer == nullptr;
   }
@@ -44,8 +44,8 @@ template <class T> class AggregateEngine : public AbstractAggregateEngine {
   AggregateConfigurationPtr _aggConfig;
   AggregateFunctionPtr _function;
   int64_t _subtarLen;
-  int64_t _numCores;
-  int64_t _minWork;
+  int32_t _numCores;
+  int32_t _minWork;
 
 public:
   AggregateEngine(AggregateConfigurationPtr aggConfig,
@@ -54,11 +54,11 @@ public:
     _aggConfig = aggConfig;
     _function = function;
     _subtarLen = subtarLen;
-    _numCores = numCores;
-    _minWork = minWork;
+    _numCores = static_cast<int32_t>(numCores);
+    _minWork = static_cast<int32_t>(minWork);
   }
 
-  void CalcAvg(SavimeBufferPtr<T> buffer,
+  inline void CalcAvg(SavimeBufferPtr<T> buffer,
                vector<AggregateBufferPtr> outputBuffers,
                vector<AggregateBufferPtr> outputAuxBuffers, int64_t subtarLen) {
 
@@ -77,7 +77,7 @@ public:
     }
   }
 
-  void ReduceAvg(AggregateBufferPtr buffer, AggregateBufferPtr auxBuffer,
+  inline void ReduceAvg(const AggregateBufferPtr &buffer, const AggregateBufferPtr &auxBuffer,
                  vector<AggregateBufferPtr> outputBuffers,
                  vector<AggregateBufferPtr> outputAuxBuffers,
                  int64_t bufferSize) {
@@ -108,6 +108,7 @@ public:
       SET_THREADS_ALIGNED(bufferSize, _minWork, _numCores,
                           EXPECTED_BITS_PER_BLOCK);
 
+
 #pragma omp parallel
       for (SubTARPosition i = THREAD_FIRST(); i < THREAD_LAST(); ++i) {
         double positionSum = 0;
@@ -126,7 +127,7 @@ public:
     }
   }
 
-  void FinalizeAvg(AggregateBufferPtr buffer, AggregateBufferPtr auxBuffer,
+  inline void FinalizeAvg(const AggregateBufferPtr &buffer, const AggregateBufferPtr &auxBuffer,
                    int64_t bufferSize) {
 
     if (_aggConfig->mode == HASHED) {
@@ -152,7 +153,7 @@ public:
     }
   }
 
-  void CalcSum(SavimeBufferPtr<T> buffer,
+  inline void CalcSum(SavimeBufferPtr<T> buffer,
                vector<AggregateBufferPtr> outputBuffers, int64_t subtarLen) {
 
     SET_THREADS_ALIGNED(subtarLen, _minWork, _numCores,
@@ -167,7 +168,7 @@ public:
     }
   }
 
-  void ReduceSum(AggregateBufferPtr buffer,
+  inline void ReduceSum(const AggregateBufferPtr &buffer,
                  vector<AggregateBufferPtr> outputBuffers, int64_t bufferSize) {
 
     if (_aggConfig->mode == HASHED) {
@@ -198,7 +199,7 @@ public:
     }
   }
 
-  void CalcMin(SavimeBufferPtr<T> buffer,
+  inline void CalcMin(SavimeBufferPtr<T> buffer,
                vector<AggregateBufferPtr> outputBuffers, int64_t subtarLen) {
 
     SET_THREADS_ALIGNED(subtarLen, _minWork, _numCores,
@@ -225,7 +226,7 @@ public:
     }
   }
 
-  void ReduceMin(AggregateBufferPtr buffer,
+  inline void ReduceMin(const AggregateBufferPtr &buffer,
                  vector<AggregateBufferPtr> outputBuffers, int64_t bufferSize) {
 
     if (_aggConfig->mode == HASHED) {
@@ -263,7 +264,7 @@ public:
     }
   }
 
-  void CalcMax(SavimeBufferPtr<T> buffer,
+  inline void CalcMax(SavimeBufferPtr<T> buffer,
                vector<AggregateBufferPtr> outputBuffers, int64_t subtarLen) {
 
     SET_THREADS_ALIGNED(subtarLen, _minWork, _numCores,
@@ -291,7 +292,7 @@ public:
     }
   }
 
-  void ReduceMax(AggregateBufferPtr buffer,
+  inline void ReduceMax(const AggregateBufferPtr &buffer,
                  vector<AggregateBufferPtr> outputBuffers, int64_t bufferSize) {
 
     if (_aggConfig->mode == HASHED) {
@@ -329,7 +330,7 @@ public:
     }
   }
 
-  void CalcCount(SavimeBufferPtr<T> buffer,
+  inline void CalcCount(SavimeBufferPtr<T> buffer,
                  vector<AggregateBufferPtr> outputBuffers, int64_t subtarLen) {
 
     SET_THREADS_ALIGNED(subtarLen, _minWork, _numCores,
@@ -344,7 +345,7 @@ public:
     }
   }
 
-  void ReduceCount(AggregateBufferPtr buffer,
+  inline void ReduceCount(const AggregateBufferPtr &buffer,
                    vector<AggregateBufferPtr> outputBuffers,
                    int64_t bufferSize) {
 
@@ -379,7 +380,7 @@ public:
   }
 
   void Run(AggregateBufferPtr outputBuffer, AggregateBufferPtr auxOutputBuffer,
-           int64_t size) {
+           int64_t size) override {
 
     /*Creating buffers*/
     vector<AggregateBufferPtr> partialBuffers(_numCores);
@@ -426,20 +427,20 @@ public:
       }
     }
 
-    if (!_function->function.compare(AVG_FUNCTION)) {
+    if (_function->function == (AVG_FUNCTION)) {
       CalcAvg(inputData, partialBuffers, partialAuxBuffers, _subtarLen);
       ReduceAvg(outputBuffer, auxOutputBuffer, partialBuffers,
                 partialAuxBuffers, size);
-    } else if (!_function->function.compare(SUM_FUNCTION)) {
+    } else if (_function->function == (SUM_FUNCTION)) {
       CalcSum(inputData, partialBuffers, _subtarLen);
       ReduceSum(outputBuffer, partialBuffers, size);
-    } else if (!_function->function.compare(MIN_FUNCTION)) {
+    } else if (_function->function == (MIN_FUNCTION)) {
       CalcMin(inputData, partialBuffers, _subtarLen);
       ReduceMin(outputBuffer, partialBuffers, size);
-    } else if (!_function->function.compare(MAX_FUNCTION)) {
+    } else if (_function->function == (MAX_FUNCTION)) {
       CalcMax(inputData, partialBuffers, _subtarLen);
       ReduceMax(outputBuffer, partialBuffers, size);
-    } else if (!_function->function.compare(COUNT_FUNCTION)) {
+    } else if (_function->function == (COUNT_FUNCTION)) {
       CalcCount(inputData, partialBuffers, _subtarLen);
       ReduceCount(outputBuffer, partialBuffers, size);
     }
@@ -447,7 +448,7 @@ public:
 
   void Reduce(AggregateBufferPtr aggBuffer, AggregateBufferPtr aggAuxBuffer,
               vector<AggregateBufferPtr> outputBuffers,
-              vector<AggregateBufferPtr> outputAuxBuffers, int64_t size) {
+              vector<AggregateBufferPtr> outputAuxBuffers, int64_t size) override {
 
     outputBuffers.erase(
         std::remove_if(outputBuffers.begin(), outputBuffers.end(), IsNull()),
@@ -456,31 +457,31 @@ public:
                                           outputAuxBuffers.end(), IsNull()),
                            outputAuxBuffers.end());
     
-    if (outputBuffers.size() == 0)
+    if (outputBuffers.empty())
       return;
 
-    if (!_function->function.compare(AVG_FUNCTION)) {
+    if (_function->function == (AVG_FUNCTION)) {
       ReduceAvg(aggBuffer, aggAuxBuffer, outputBuffers, outputAuxBuffers, size);
-    } else if (!_function->function.compare(SUM_FUNCTION)) {
+    } else if (_function->function == (SUM_FUNCTION)) {
       ReduceSum(aggBuffer, outputBuffers, size);
-    } else if (!_function->function.compare(MIN_FUNCTION)) {
+    } else if (_function->function == (MIN_FUNCTION)) {
       ReduceMin(aggBuffer, outputBuffers, size);
-    } else if (!_function->function.compare(MAX_FUNCTION)) {
+    } else if (_function->function == (MAX_FUNCTION)) {
       ReduceMax(aggBuffer, outputBuffers, size);
-    } else if (!_function->function.compare(COUNT_FUNCTION)) {
+    } else if (_function->function == (COUNT_FUNCTION)) {
       ReduceCount(aggBuffer, outputBuffers, size);
     }
   }
 
   void Finalize(AggregateBufferPtr buffer, AggregateBufferPtr auxBuffer,
-                int64_t bufferSize) {
-    if (!_function->function.compare(AVG_FUNCTION)) {
+                int64_t bufferSize) override {
+    if (_function->function == (AVG_FUNCTION)) {
       FinalizeAvg(buffer, auxBuffer, bufferSize);
     }
   }
 };
 
-AbstractAggregateEnginePtr buildAggregateEngine(
+inline AbstractAggregateEnginePtr buildAggregateEngine(
     AggregateConfigurationPtr aggConfig, AggregateFunctionPtr func,
     DataType type, int64_t subtarLen, int64_t numCores, int64_t workPerThread) {
 

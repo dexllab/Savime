@@ -1,3 +1,9 @@
+#include <memory>
+
+#include <memory>
+
+#include <memory>
+
 /*
 *    This program is free software: you can redistribute it and/or modify
 *    it under the terms of the GNU General Public License as published by
@@ -35,7 +41,7 @@ void SchemaBuilder::SetResultingType(TARPtr inputTAR, TARPtr resultingTAR) {
           auto role = entry.second;
 
           // if the role implementeting for the data element is found
-          if (!role->name.compare(roleImplementation.second->name)) {
+          if (role->name == (roleImplementation.second->name)) {
             // if is mandatory, then resulting TAR can't be of the same type
             if (role->is_mandatory) {
               resultMaintainsType = false;
@@ -77,8 +83,8 @@ TARPtr SchemaBuilder::InferSchemaForScanOp(OperationPtr operation) {
 }
 
 TARPtr SchemaBuilder::InferSchemaForSelectOp(OperationPtr operation) {
-  TARPtr resultingTAR = TARPtr(new TAR(0, "", nullptr));
-  TARPtr inputTAR = operation->GetParameters().front()->tar;
+  TARPtr resultingTAR = std::make_shared<TAR>(0, "", nullptr);
+  TARPtr inputTAR = operation->GetParametersByName(PARAM(TAL_SELECT, _INPUT_TAR))->tar;
   std::map<std::string, DataElementPtr> inputDimensions;
   double totalTARSize = 1;
 
@@ -92,7 +98,7 @@ TARPtr SchemaBuilder::InferSchemaForSelectOp(OperationPtr operation) {
 
   // Checking if all dimensions are specified as parameters for select
   for (auto &param : operation->GetParameters()) {
-    if (param->type == LITERAL_STRING_PARAM) {
+    if (param->type == IDENTIFIER_PARAM) {
       if (inputDimensions.find(param->literal_str) != inputDimensions.end()) {
         inputDimensions.erase(param->literal_str);
       }
@@ -103,10 +109,10 @@ TARPtr SchemaBuilder::InferSchemaForSelectOp(OperationPtr operation) {
   if (operation->GetParameters().size() == 1) {
     resultingTAR = inputTAR->Clone(false, false, false);
   }
-  // If map is empty, then all dimensions are presented in the parameters
-  else if (inputDimensions.size() == 0) {
+    // If map is empty, then all dimensions are presented in the parameters
+  else if (inputDimensions.empty()) {
     for (auto &param : operation->GetParameters()) {
-      if (param->type == LITERAL_STRING_PARAM) {
+      if (param->type == IDENTIFIER_PARAM) {
         DataElementPtr dataElement =
             inputTAR->GetDataElement(param->literal_str);
 
@@ -121,15 +127,20 @@ TARPtr SchemaBuilder::InferSchemaForSelectOp(OperationPtr operation) {
       }
     }
   } else // Otherwise, dimensions have been dropped, they all become variables
-         // plus a synthetic dim
+    // plus a synthetic dim
   {
     DataType type(INT64, 1);
     resultingTAR->AddDimension(DEFAULT_SYNTHETIC_DIMENSION, type, 1,
-                               totalTARSize, totalTARSize-1);
+                               totalTARSize, totalTARSize - 1);
+
     for (auto &param : operation->GetParameters()) {
-      if (param->type == LITERAL_STRING_PARAM) {
+      if (param->type == IDENTIFIER_PARAM) {
         DataElementPtr dataElement =
             inputTAR->GetDataElement(param->literal_str);
+
+        //if the ID dim has been projected, overwrite it
+        if(dataElement->GetName() == DEFAULT_SYNTHETIC_DIMENSION)
+          continue;
 
         switch (dataElement->GetType()) {
         case DIMENSION_SCHEMA_ELEMENT:
@@ -162,12 +173,17 @@ TARPtr SchemaBuilder::InferSchemaForSubsetOp(OperationPtr operation) {
   int64_t numberOfDimensions = (operation->GetParameters().size() - 1) / 3;
 
   for (int64_t i = 0; i < numberOfDimensions; i++) {
-    auto param = operation->GetParametersByName(DIM(i));
+    auto param =
+        operation->GetParametersByName(PARAM(TAL_SUBSET, _DIMENSION, i));
     auto dataElement = resultingTAR->GetDataElement(param->literal_str);
     auto dim = dataElement->GetDimension();
     double newLowerBound, newUpperBound;
-    double lb = operation->GetParametersByName(LB(i))->literal_dbl;
-    double ub = operation->GetParametersByName(UP(i))->literal_dbl;
+    double lb =
+        operation->GetParametersByName(PARAM(TAL_SUBSET, _LOWER_BOUND, i))
+                 ->literal_dbl;
+    double ub =
+        operation->GetParametersByName(PARAM(TAL_SUBSET, _UPPER_BOUND, i))
+                 ->literal_dbl;
     double preamble = lb - dim->GetLowerBound();
     double rem = fmod(preamble, dim->GetSpacing());
 
@@ -184,14 +200,10 @@ TARPtr SchemaBuilder::InferSchemaForSubsetOp(OperationPtr operation) {
     else
       newUpperBound = ub;
 
-    if(newUpperBound >= newLowerBound) {
-      DimensionPtr newDim =
-          make_shared<Dimension>(UNSAVED_ID,
-                                 dim->GetName(),
-                                 dim->GetType(),
-                                 newLowerBound,
-                                 newUpperBound,
-                                 dim->GetSpacing());
+    if (newUpperBound >= newLowerBound) {
+      DimensionPtr newDim = make_shared<Dimension>(
+          UNSAVED_ID, dim->GetName(), dim->GetType(), newLowerBound,
+          newUpperBound, dim->GetSpacing());
       newDim->CurrentUpperBound() = dim->CurrentUpperBound();
 
       if (newDim->CurrentUpperBound() > newDim->GetRealUpperBound()) {
@@ -201,7 +213,7 @@ TARPtr SchemaBuilder::InferSchemaForSubsetOp(OperationPtr operation) {
       resultingTAR->RemoveDataElement(dataElement->GetName());
       resultingTAR->AddDimension(newDim);
     } else {
-      operation->AddParam(EMPTY_SUBSET, true);
+      operation->AddParam(PARAM(TAL_SUBSET, _EMPTY_SUBSET), true);
     }
   }
 
@@ -210,21 +222,25 @@ TARPtr SchemaBuilder::InferSchemaForSubsetOp(OperationPtr operation) {
 }
 
 TARPtr SchemaBuilder::InferSchemaForLogicalOp(OperationPtr operation) {
-  ParameterPtr inputTARParam = operation->GetParametersByName(INPUT_TAR);
+  ParameterPtr inputTARParam =
+      operation->GetParametersByName(PARAM(TAL_LOGICAL, _INPUT_TAR));
   assert(inputTARParam);
   TARPtr resultingTAR = inputTARParam->tar->Clone(false, false, true);
   assert(inputTARParam);
-  resultingTAR->AddAttribute(DEFAULT_MASK_ATTRIBUTE, DataType(SUBTAR_POSITION, 1));
+  resultingTAR->AddAttribute(DEFAULT_MASK_ATTRIBUTE,
+                             DataType(SUBTAR_POSITION, 1));
   resultingTAR->AddAttribute(DEFAULT_OFFSET_ATTRIBUTE, DataType(REAL_INDEX, 1));
   return resultingTAR;
 }
 
 TARPtr SchemaBuilder::InferSchemaForComparisonOp(OperationPtr operation) {
-  ParameterPtr inputTARParam = operation->GetParametersByName(INPUT_TAR);
+  ParameterPtr inputTARParam =
+      operation->GetParametersByName(PARAM(TAL_COMPARISON, _INPUT_TAR));
   assert(inputTARParam);
   TARPtr resultingTAR = inputTARParam->tar->Clone(false, false, true);
   assert(inputTARParam);
-  resultingTAR->AddAttribute(DEFAULT_MASK_ATTRIBUTE, DataType(SUBTAR_POSITION, 1));
+  resultingTAR->AddAttribute(DEFAULT_MASK_ATTRIBUTE,
+                             DataType(SUBTAR_POSITION, 1));
   resultingTAR->AddAttribute(DEFAULT_OFFSET_ATTRIBUTE, DataType(REAL_INDEX, 1));
   return resultingTAR;
 }
@@ -232,41 +248,52 @@ TARPtr SchemaBuilder::InferSchemaForComparisonOp(OperationPtr operation) {
 TARPtr SchemaBuilder::InferSchemaForArithmeticOp(OperationPtr operation) {
   DataType newMemberType;
 
-  ParameterPtr inputTARParam = operation->GetParametersByName(INPUT_TAR);
+  ParameterPtr inputTARParam =
+      operation->GetParametersByName(PARAM(TAL_ARITHMETIC, _INPUT_TAR));
   assert(inputTARParam);
   TARPtr resultingTAR = inputTARParam->tar->Clone(false, false, false);
   assert(inputTARParam);
 
-  const char *op = operation->GetParametersByName(OP)->literal_str.c_str();
-  ParameterPtr operand0 = operation->GetParametersByName(OPERAND(0));
-  ParameterPtr operand1 = operation->GetParametersByName(OPERAND(1));
+  const char *op =
+      operation->GetParametersByName(PARAM(TAL_ARITHMETIC, _OPERATOR))
+               ->literal_str.c_str();
+  ParameterPtr operand0 =
+      operation->GetParametersByName(PARAM(TAL_ARITHMETIC, _OPERAND, 0));
+  ParameterPtr operand1 =
+      operation->GetParametersByName(PARAM(TAL_ARITHMETIC, _OPERAND, 1));
   DataType t1, t2;
 
   if (operand1 == nullptr) {
-    operand1 = ParameterPtr(new Parameter("dummy", (double)0));
+    operand1 = std::make_shared<Parameter>("dummy", (double)0);
   }
 
   if (operand0->type == LITERAL_DOUBLE_PARAM) {
     Literal literal;
     literal.Simplify(operand0->literal_dbl);
     t1 = literal.type;
-  } else if (operand0->type == LITERAL_STRING_PARAM) {
+  } else if (operand0->type == IDENTIFIER_PARAM) {
     t1 = inputTARParam->tar->GetDataElement(operand0->literal_str)
-             ->GetDataType();
+                      ->GetDataType();
   }
 
   if (operand1->type == LITERAL_DOUBLE_PARAM) {
     Literal literal;
     literal.Simplify(operand1->literal_dbl);
     t2 = literal.type;
-  } else if (operand1->type == LITERAL_STRING_PARAM) {
+  } else if (operand1->type == IDENTIFIER_PARAM) {
     t2 = inputTARParam->tar->GetDataElement(operand1->literal_str)
-             ->GetDataType();
+                      ->GetDataType();
   }
 
-  newMemberType = SelectType(t1, t2, op);
+  if(string(op) != _EQ) {
+    newMemberType = SelectType(t1, t2, op);
+  } else {
+    newMemberType = t1;
+    resultingTAR->RemoveDataElement(operand0->literal_str);
+  }
 
-  ParameterPtr newMemberParam = operation->GetParametersByName(NEW_MEMBER);
+  ParameterPtr newMemberParam =
+      operation->GetParametersByName(PARAM(TAL_ARITHMETIC, _NEW_MEMBER));
   if (newMemberParam) {
     resultingTAR->AddAttribute(newMemberParam.get()->literal_str,
                                newMemberType);
@@ -284,22 +311,18 @@ TARPtr SchemaBuilder::InferSchemaForCrossOp(OperationPtr operation) {
   TARPtr leftTARParam = operation->GetParameters().front()->tar;
   TARPtr rightTARParam = operation->GetParameters().back()->tar;
   TARPtr tars[] = {leftTARParam, rightTARParam};
-  TARPtr resultingTAR = TARPtr(new TAR(0, "", nullptr));
+  TARPtr resultingTAR = std::make_shared<TAR>(0, "", nullptr);
 
   for (int32_t i = NUM_TARS_FOR_JOIN - 1; i >= 0; i--) {
-    for (auto dim : tars[i]->GetDimensions()) {
+    for (const auto &dim : tars[i]->GetDimensions()) {
 
       DimensionPtr newDim;
-      if(dim->GetDimensionType() == IMPLICIT) {
-        newDim = make_shared<Dimension>(UNSAVED_ID,
-                                        prefix[i] + dim->GetName(),
-                                        dim->GetType(),
-                                        dim->GetLowerBound(),
-                                        dim->GetUpperBound(),
-                                        dim->GetSpacing());
+      if (dim->GetDimensionType() == IMPLICIT) {
+        newDim = make_shared<Dimension>(
+            UNSAVED_ID, prefix[i] + dim->GetName(), dim->GetType(),
+            dim->GetLowerBound(), dim->GetUpperBound(), dim->GetSpacing());
       } else {
-        newDim = make_shared<Dimension>(UNSAVED_ID,
-                                        prefix[i] + dim->GetName(),
+        newDim = make_shared<Dimension>(UNSAVED_ID, prefix[i] + dim->GetName(),
                                         dim->GetDataset());
       }
 
@@ -307,22 +330,22 @@ TARPtr SchemaBuilder::InferSchemaForCrossOp(OperationPtr operation) {
       resultingTAR->AddDimension(newDim);
     }
 
-    for (auto att : tars[i]->GetAttributes()) {
-      AttributePtr _att = make_shared<Attribute>(att->GetId(),
-                                                 prefix[i] + att->GetName(),
-                                                 att->GetType());
+    for (const auto &att : tars[i]->GetAttributes()) {
+      AttributePtr _att = make_shared<Attribute>(
+          att->GetId(), prefix[i] + att->GetName(), att->GetType());
       resultingTAR->AddAttribute(_att);
     }
   }
 
-  if(leftTARParam->GetType()) {
+  if (leftTARParam->GetType()) {
     resultingTAR->AlterType(leftTARParam->GetType());
     for (auto entry : leftTARParam->GetRoles()) {
-      resultingTAR->SetRole(LEFT_DATAELEMENT_PREFIX+entry.first, entry.second);
+      resultingTAR->SetRole(LEFT_DATAELEMENT_PREFIX + entry.first,
+                            entry.second);
     }
   }
 
-  if(resultingTAR->CheckMaxSpan()){
+  if (resultingTAR->CheckMaxSpan()) {
     throw runtime_error("Resulting TAR spans a region larger than allowed.");
   }
 
@@ -333,23 +356,28 @@ TARPtr SchemaBuilder::InferSchemaForDimJoinOp(OperationPtr operation) {
 
   const char *prefix[] = {LEFT_DATAELEMENT_PREFIX, RIGHT_DATAELEMENT_PREFIX};
   int32_t count = 0;
-  TARPtr leftTARParam = operation->GetParametersByName(OPERAND(0))->tar;
-  TARPtr rightTARParam = operation->GetParametersByName(OPERAND(1))->tar;
+
+  TARPtr leftTARParam =
+      operation->GetParametersByName(PARAM(TAL_DIMJOIN, _OPERAND, 0))->tar;
+  TARPtr rightTARParam =
+      operation->GetParametersByName(PARAM(TAL_DIMJOIN, _OPERAND, 1))->tar;
   TARPtr tars[] = {leftTARParam, rightTARParam};
-  TARPtr resultingTAR = TARPtr(new TAR(0, "", nullptr));
+  TARPtr resultingTAR = std::make_shared<TAR>(0, "", nullptr);
 
   map<string, string> leftDims, rightDims;
 
   while (true) {
-    auto param1 = operation->GetParametersByName(DIM(count++));
-    auto param2 = operation->GetParametersByName(DIM(count++));
+    auto param1 =
+        operation->GetParametersByName(PARAM(TAL_DIMJOIN, _DIMENSION, count++));
+    auto param2 =
+        operation->GetParametersByName(PARAM(TAL_DIMJOIN, _DIMENSION, count++));
     if (param1 == nullptr)
       break;
     leftDims[param1->literal_str] = param2->literal_str;
     rightDims[param2->literal_str] = param1->literal_str;
   }
 
-  for (auto dim : leftTARParam->GetDimensions()) {
+  for (const auto &dim : leftTARParam->GetDimensions()) {
     if (leftDims.find(dim->GetName()) == leftDims.end()) {
       resultingTAR->AddDimension(dim);
       DimensionPtr _dim =
@@ -369,12 +397,12 @@ TARPtr SchemaBuilder::InferSchemaForDimJoinOp(OperationPtr operation) {
       resultingTAR->AddDimension(newDim);
 
       /*Intersection is empty if returned dataset is null.*/
-      if(newDim->GetDataset() == nullptr)
-        operation->AddParam(NO_INTERSECTION_JOIN, true);
+      if (newDim->GetDataset() == nullptr)
+        operation->AddParam(PARAM(TAL_DIMJOIN, _NO_INTERSECTION_JOIN), true);
     }
   }
 
-  for (auto dim : rightTARParam->GetDimensions()) {
+  for (const auto &dim : rightTARParam->GetDimensions()) {
     if (rightDims.find(dim->GetName()) == rightDims.end()) {
       resultingTAR->AddDimension(dim);
       DimensionPtr _dim =
@@ -385,25 +413,23 @@ TARPtr SchemaBuilder::InferSchemaForDimJoinOp(OperationPtr operation) {
 
   for (int32_t i = NUM_TARS_FOR_JOIN - 1; i >= 0; i--) {
 
-    for (auto att : tars[i]->GetAttributes()) {
-      //resultingTAR->AddAttribute(att);
-
-      AttributePtr _att = make_shared<Attribute>(att->GetId(),
-                                                 prefix[i] + att->GetName(),
-                                                 att->GetType());
+    for (const auto &att : tars[i]->GetAttributes()) {
+      AttributePtr _att = make_shared<Attribute>(
+          att->GetId(), prefix[i] + att->GetName(), att->GetType());
 
       resultingTAR->AddAttribute(_att);
     }
   }
 
-  if(leftTARParam->GetType()) {
+  if (leftTARParam->GetType()) {
     resultingTAR->AlterType(leftTARParam->GetType());
     for (auto entry : leftTARParam->GetRoles()) {
-      resultingTAR->SetRole(LEFT_DATAELEMENT_PREFIX+entry.first, entry.second);
+      resultingTAR->SetRole(LEFT_DATAELEMENT_PREFIX + entry.first,
+                            entry.second);
     }
   }
 
-  if(resultingTAR->CheckMaxSpan()){
+  if (resultingTAR->CheckMaxSpan()) {
     throw runtime_error("Resulting TAR spans a region larger than allowed.");
   }
 
@@ -411,26 +437,30 @@ TARPtr SchemaBuilder::InferSchemaForDimJoinOp(OperationPtr operation) {
 }
 
 TARPtr SchemaBuilder::InferSchemaForAggregationOp(OperationPtr operation) {
-  ParameterPtr inputTARParam = operation->GetParametersByName(INPUT_TAR);
+
+  ParameterPtr inputTARParam =
+      operation->GetParametersByName(PARAM(TAL_AGGREGATE, _INPUT_TAR));
   TARPtr inputTAR = inputTARParam->tar;
-  TARPtr resultingTAR = TARPtr(new TAR(0, "", nullptr));
+  TARPtr resultingTAR = std::make_shared<TAR>(0, "", nullptr);
   int32_t countOp = 2, dims = 0;
 
   while (true) {
-    auto param = operation->GetParametersByName(DIM(dims++));
+    auto param = operation->GetParametersByName(
+        PARAM(TAL_AGGREGATE, _DIMENSION, dims++));
     if (param == nullptr)
       break;
     auto dataElement = inputTAR->GetDataElement(param->literal_str);
     resultingTAR->AddDimension(dataElement->GetDimension());
   }
 
-  if (resultingTAR->GetDataElements().size() == 0) {
-    resultingTAR->AddDimension(SYNTHETIC_DIMENSION, DataType(INT32, 1),
-                               0, 0, 0);
+  if (resultingTAR->GetDataElements().empty()) {
+    resultingTAR->AddDimension(DEFAULT_SYNTHETIC_DIMENSION,
+                               DataType(INT32, 1), 0, 0, 0);
   }
 
   while (true) {
-    auto param = operation->GetParametersByName(OPERAND(countOp));
+    auto param =
+        operation->GetParametersByName(PARAM(TAL_AGGREGATE, _OPERAND, countOp));
     if (param == nullptr)
       break;
     resultingTAR->AddAttribute(param->literal_str, DataType(DOUBLE, 1));
@@ -454,7 +484,7 @@ TARPtr SchemaBuilder::InferSchemaForUserDefined(OperationPtr operation) {
 
   // Get schema infer string
   std::string inferSchemaString = _configurationManager->GetStringValue(
-      OPERATOR_SCHEMA_INFER_STRING(operatorName.c_str()));
+      OPERATOR_SCHEMA_INFER_STRING(operatorName));
   throw std::runtime_error(
       "Infer schema for user defined functions not implemented yet.");
 
@@ -462,7 +492,7 @@ TARPtr SchemaBuilder::InferSchemaForUserDefined(OperationPtr operation) {
 }
 
 TARPtr SchemaBuilder::InferSchema(OperationPtr operation) {
-  
+
   if (operation->GetOperation() == TAL_SCAN) {
     return InferSchemaForScanOp(operation);
   } else if (operation->GetOperation() == TAL_SELECT) {
@@ -483,7 +513,7 @@ TARPtr SchemaBuilder::InferSchema(OperationPtr operation) {
     return InferSchemaForDimJoinOp(operation);
   } else if (operation->GetOperation() == TAL_AGGREGATE) {
     return InferSchemaForAggregationOp(operation);
-  } else if (operation->GetOperation() == TAL_SPLIT) {
+  } else if (operation->GetOperation() == TAL_UNION) {
     return InferSchemaForSplitOp(operation);
   } else if (operation->GetOperation() == TAL_USER_DEFINED) {
     return InferSchemaForUserDefined(operation);

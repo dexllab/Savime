@@ -52,9 +52,10 @@ public:
 
   virtual bool CheckSorted(DatasetPtr dataset) = 0;
 
-  virtual SavimeResult Copy(DatasetPtr originDataset, int64_t lowerBound,
-                            int64_t upperBound, int64_t offsetInDestiny,
-                            int64_t spacingInDestiny,
+  virtual SavimeResult Copy(DatasetPtr originDataset, SubTARPosition lowerBound,
+                            SubTARPosition upperBound,
+                            SubTARPosition offsetInDestiny,
+                            savime_size_t spacingInDestiny,
                             DatasetPtr destinyDataset) = 0;
 
   virtual SavimeResult Copy(DatasetPtr originDataset, Mapping mapping,
@@ -176,13 +177,9 @@ inline shared_ptr<SavimeBuffer<T>> BUILD_VECTOR(void *buffer, DataType type) {
     ptr;
 
   if (type.isVector()) {
-    //ptr = new VectorBuffer<T>((T *)buffer, type);
-    ptr =
-      std::make_shared<VectorBuffer<T>>((T *) buffer, type);
+    ptr = std::make_shared<VectorBuffer<T>>((T *) buffer, type);
   } else {
-    //ptr = new SavimeBuffer<T>((T *)buffer, type);
-    ptr =
-      std::make_shared<SavimeBuffer<T>>((T *) buffer, type);
+    ptr = std::make_shared<SavimeBuffer<T>>((T *) buffer, type);
   }
 
   return ptr;

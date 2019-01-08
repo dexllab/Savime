@@ -1,3 +1,5 @@
+#include <utility>
+
 #ifndef OPTIMIZER_H
 #define OPTIMIZER_H
 /*! \file */
@@ -16,14 +18,12 @@ public:
   * @param configurationManager is a reference to the standard SystemLogger.
   */
   Optimizer(ConfigurationManagerPtr configurationManager,
-            SystemLoggerPtr systemLogger)
-      : SavimeModule("Optimizer", configurationManager, systemLogger) {}
+            SystemLoggerPtr systemLogger, MetadataManagerPtr metadataManager)
+      : SavimeModule("Optimizer", std::move(configurationManager), systemLogger) {
 
-  /**
-  * Sets the instance MetadataManager reference.
-  * @param metadaManager is a reference to the standard system MetadataManager.
-  */
-  virtual void SetMetadaManager(MetadataManagerPtr metadaManager) = 0;
+  }
+
+  virtual void SetParser(ParserPtr parser) = 0;
 
   /**
   * Optimizes a query plan.

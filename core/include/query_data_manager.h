@@ -1,3 +1,5 @@
+#include <utility>
+
 #ifndef QUERY_DATA_MANAGER_H
 #define QUERY_DATA_MANAGER_H
 /*! \file */
@@ -5,11 +7,35 @@
 #include "metadata.h"
 #include "savime.h"
 
+#define DEFAULT_TEMP_MEMBER "_aux"
+#define DEFAULT_SYNTHETIC_DIMENSION "ID"
+#define DEFAULT_MASK_ATTRIBUTE "mask"
+#define DEFAULT_OFFSET_ATTRIBUTE "offset"
+#define NUM_TARS_FOR_JOIN 2
+#define LEFT_DATAELEMENT_PREFIX "left_"
+#define RIGHT_DATAELEMENT_PREFIX "right_"
+#define INPUT_TAR "input_tar"
+#define OPERATOR_NAME "operator_name"
+#define NEW_MEMBER "new_member"
+#define AUX_TAR "aux_tar"
+#define OP "op"
+#define LITERAL "literal"
+#define IDENTIFIER "identifier"
+#define COMMAND "command_str"
+#define NO_INTERSECTION_JOIN "no_intersection_join"
+#define EMPTY_SUBSET "empty_subset"
+#define OPERAND(x) "operand"+std::to_string(x)
+#define DIM(x) "dim"+std::to_string(x)
+#define LB(x) "lb"+std::to_string(x)
+#define UP(x) "up"+std::to_string(x)
+#define LITERAL_FILLER_MARK string("___LITERAL___")
+
 #define _CREATE_TARS "create_tars"
 #define _CREATE_TAR "create_tar"
 #define _CREATE_TYPE "create_type"
 #define _CREATE_DATASET "create_dataset"
 #define _LOAD_SUBTAR "load_subtar"
+#define _DELETE "delete"
 #define _DROP_TARS "drop_tars"
 #define _DROP_TAR "drop_tar"
 #define _DROP_TYPE "drop_type"
@@ -28,18 +54,11 @@
 #define _EQUIJOIN "equijoin"
 #define _DIMJOIN "dimjoin"
 #define _SLICE "slice"
+#define _UNION "union"
+#define _ATT2DIM "att2dim"
+#define _TRANSLATE "translate"
 #define _AGGREGATE "aggregate"
 #define _SPLIT "split"
-
-#define _TAL "tal"
-#define _TAL_CREATE "tal_create"
-#define _TAL_LOAD "tal_load"
-#define _TAL_FILTER "tal_filter"
-#define _TAL_MAT_DIM "tal_matdim"
-#define _TAL_MAT_PART_DIM "tal_matpartdim"
-#define _TAL_LOGICAL "tal_logical"
-#define _TAL_COMPARISON "tal_comparison"
-#define _TAL_ARITHMETIC "tal_arithmetic"
 
 using namespace std;
 
@@ -59,7 +78,8 @@ enum OperationCode {
   TAL_DROP_DATASET,   /*!<DML operation that removes a Dataset. */
   TAL_LOAD_SUBTAR, /*!<DML operation that creates a Subtar and attaches Datasets
                       to it. */
-  TAL_SAVE,      /*!<DML operation saves a logical backup. */
+  TAL_DELETE,      /*!<DML operation that removes all Subtars intersecting a n-dimensional slice.*/
+  TAL_SAVE,        /*!<DML operation saves a logical backup. */
   TAL_SHOW,        /*!<DML operation that lists TARs and Subtars. */
   TAL_SCAN,        /*!<DDL operation to allow fully TAR retrieval as is. */
   TAL_SELECT, /*!<DDL operation that projects dimensions and attributes from the
@@ -77,42 +97,34 @@ enum OperationCode {
                    two other TARS. */
   TAL_EQUIJOIN, /*!<DDL operation that creates a cartersin product of two TARs
                    and them filters the result.*/
-  TAL_DIMJOIN,  /*!<DDL operation that creates a TAR intersecting cells with
+  TAL_DIMJOIN,  /*!<DDL operation that creates a TAR intersecting cells with_NEW_MEMBER
                    matching indexes for a set of paierd dimensions. */
   TAL_SLICE,    /*!<DDL operation that removes creates a TAR by slicing. */
+
+  TAL_ATT2DIM ,  /*!DDL that transform an attribute into a dimension.*/
+
   TAL_AGGREGATE, /*!<DDL operation that calculate aggregation functions with
                     TARS. */
-  TAL_SPLIT, /*!<DDL operation that splits a subtars into smaller subtars. */
+  TAL_UNION, /*!<DDL operation that merges equivalent TARs. */
+
+  TAL_TRANSLATE, /*!<DDL operation that shifts dimension indexes according to an offset. */
+
   TAL_USER_DEFINED /*!<DDL operation code for UDFs. */
 };
 
-/**Enum with codes for Savime External Operations. */
-enum SavimeOperator {
-  CREATE_TARS,
-  CREATE_TAR,
-  CREATE_TYPE,
-  CREATE_DATASET,
-  LOAD_SUBTAR,
-  DROP_TARS,
-  DROP_TYPE,
-  DROP_DATASET,
-  SHOW,
-  SELECT,
-  WHERE,
-  SUBSET,
-  DERIVE,
-  CROSS_PRODUCT,
-  EQUIJOIN,
-  DIMJOIN,
-  SLICE,
-  AGGREGATE,
-  BREAK,
-  USER_DEFINED
+enum TALParameter {
+  _INPUT_TAR, _OPERAND, _OPERATOR, _LOWER_BOUND, _UPPER_BOUND,
+  _DIMENSION, _IDENTIFIER, _LITERAL, _COMMAND, _AUX_TAR, _NEW_MEMBER,
+  _EMPTY_SUBSET, _NO_INTERSECTION_JOIN
 };
+
+string PARAM(OperationCode operation, TALParameter parameterType, int32_t index = -1);
+
 
 /**Enum with codes for Operation Parameters Types. */
 enum ParameterType {
   TAR_PARAM,
+  IDENTIFIER_PARAM,
   LITERAL_FLOAT_PARAM,
   LITERAL_DOUBLE_PARAM,
   LITERAL_INT_PARAM,
@@ -150,6 +162,15 @@ public:
   * @param param is a TAR reference.
   */
   Parameter(string paramName, TARPtr param);
+
+  /**
+  * Creates a parameter containing an identifier reference or a literal string.
+  * @param paramName is a string with the parameter name.
+  * @param param is a string with the literal name or the identifier name.
+  * @param isIdentifier is a flag determining whether it is a literal string
+  * or identifier parameter.
+  */
+  Parameter(string paramName, string param, bool isIdentifier);
 
   /**
   * Creates a parameter containing a string reference.
@@ -222,13 +243,13 @@ public:
   * Constructor.
   * @param type is the type of operation.
   */
-  Operation(OperationCode type);
+  explicit Operation(OperationCode type);
 
   /**
   * Gets operation parameters.
   * @return A list with references for all parameters of the operation.
   */
-  list<ParameterPtr> GetParameters();
+  list<ParameterPtr>& GetParameters();
 
   /**
   * Gets a parameter with a given name.
@@ -265,8 +286,15 @@ public:
   TARPtr GetResultingTAR();
 
   /**
+  * Add a new identifier parameter to the operation.
+  * @param paramName is a string containing the name.
+  * @param identifier is a string containing the name of the identifier.
+  */
+  void AddIdentifierParam(string paramName, string identifier);
+
+  /**
   * Add a new parameter to the operation.
-  * @param paramName is a string containing the name .
+  * @param paramName is a string containing the name.
   * @param paramData is TAR reference to be added as a parameter.
   */
   void AddParam(string paramName, TARPtr paramData);
@@ -313,6 +341,13 @@ public:
   */
   void AddParam(string paramName, string paramData);
 
+
+  /**
+  * Add a new parameter to the operation.
+  * @param parameter is the parameter to be added;
+  */
+  void AddParam(ParameterPtr parameter);
+
   /**
   * Sets the operations name.
   * @param name is a string with the name to be set.
@@ -334,7 +369,7 @@ public:
   /**
   * Destructor.
   */
-  ~Operation();
+  //~Operation();
 };
 typedef std::shared_ptr<Operation> OperationPtr;
 
@@ -379,6 +414,17 @@ public:
   QueryType GetType();
 
   /**
+  * Sorts the operations by the resulting TAR name.
+  */
+  void SortOperations();
+
+  /**
+   *Creates a string representation of the query plan.
+   * @return a string representation of the query plan.
+   */
+   string toString();
+
+  /**
    *Destructor
    */
   ~QueryPlan();
@@ -397,7 +443,7 @@ public:
   */
   QueryDataManager(ConfigurationManagerPtr configurationManager,
                    SystemLoggerPtr systemLogger)
-      : SavimeModule("Query Data Manager", configurationManager, systemLogger) {
+      : SavimeModule("Query Data Manager", std::move(configurationManager), systemLogger) {
   }
 
   /**

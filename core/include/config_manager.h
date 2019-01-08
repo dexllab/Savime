@@ -13,11 +13,7 @@
 #define SERVER_UNIX_PATH(x) "server" + std::to_string(x) + "_unix_path"
 #define RDMA_ADDRESS(x) "rdma" + std::to_string(x) + "_address"
 #define RDMA_PORT(x) "rdma" + std::to_string(x) + "_port"
-#define CATALOG_ADDRESS "catalog_address"
-#define CATALOG_PORT "catalog_port"
-#define CATALOG_USER "catalog_user"
-#define CATALOG_PASWORD "catalog_password"
-#define CATALOG_DB "catalog_db"
+
 #define LOG_FILE "log_file"
 #define LOG_TRACE_FILE "log_trace_file"
 #define HUGE_TBL_THRESHOLD "huge_tbl_threshold"
@@ -25,7 +21,7 @@
 #define SUBDIRS_NUM "subdirs_num"
 #define SHM_STORAGE_DIR "shm_storage_dir"
 #define SEC_STORAGE_DIR "sec_storage_dir"
-#define LOG_DIR "log_dir"
+
 #define DAEMON_MODE "daemon_mode"
 #define MAX_CONNECTIONS "max_pending_connections"
 #define MAX_TFX_BUFFER_SIZE "max_buffer_size"
@@ -33,7 +29,7 @@
 #define MAX_THREADS "max_num_threads"
 #define MAX_PARA_SUBTARS "max_subtars_processed_in_parallel"
 #define MAX_THREADS_ENGINE "max_num_threads_engine"
-#define DATA_GRID_CGF_FILE "data_grid_path"
+
 #define DEFAULT_TARS "default_tars"
 #define WORK_PER_THREAD "work_per_thread"
 #define ITERATOR_MODE_ENABLED "iterator_mode"

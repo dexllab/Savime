@@ -1,3 +1,5 @@
+#include <utility>
+
 /*
 *    This program is free software: you can redistribute it and/or modify
 *    it under the terms of the GNU General Public License as published by
@@ -39,26 +41,26 @@ struct AggregateFunction {
   string attribName;
 
   AggregateFunction(string f, string p, string a) {
-    function = f;
-    paramName = p;
-    attribName = a;
+    function = std::move(f);
+    paramName = std::move(p);
+    attribName = std::move(a);
   }
 
   double GetStartValue() {
-    if (!function.compare(AVG_FUNCTION)) {
+    if (function == AVG_FUNCTION) {
       return 0.0;
-    } else if (!function.compare(SUM_FUNCTION)) {
+    } else if (function == SUM_FUNCTION) {
       return 0.0;
-    } else if (!function.compare(MIN_FUNCTION)) {
+    } else if (function == MIN_FUNCTION) {
       return std::numeric_limits<double>::max();
-    } else if (!function.compare(MAX_FUNCTION)) {
+    } else if (function == MAX_FUNCTION) {
       return std::numeric_limits<double>::min();
-    } else if (!function.compare(COUNT_FUNCTION)) {
+    } else if (function == COUNT_FUNCTION) {
       return 0.0;
     }
   }
 
-  bool RequiresAuxDataset() { return !function.compare(AVG_FUNCTION); }
+  bool RequiresAuxDataset() { return function == AVG_FUNCTION; }
 };
 typedef shared_ptr<AggregateFunction> AggregateFunctionPtr;
 
@@ -68,7 +70,7 @@ struct AggregateConfiguration {
 public:
   vector<int64_t> multipliers;
   vector<int64_t> adj;
-  vector<int64_t> skew;
+  vector<int64_t> stride;
   vector<DimensionPtr> dimensions;
   vector<AggregateFunctionPtr> functions;
   unordered_map<string, DatasetPtr> datasets;
@@ -82,16 +84,16 @@ public:
   AggregationMode mode;
 
   void Configure() {
-    int32_t numDims = dimensions.size();
+    auto numDims = dimensions.size();
 
     if (numDims == 0) {
       // dimensions.push_back(SINGLE_DIMENSION);
-      multipliers.push_back(0.0);
-      skew.push_back(1.0);
-      adj.push_back(1.0);
+      multipliers.push_back(0);
+      stride.push_back(1);
+      adj.push_back(1);
     } else {
       multipliers.resize(numDims);
-      skew.resize(numDims);
+      stride.resize(numDims);
       adj.resize(numDims);
     }
 
@@ -99,14 +101,14 @@ public:
       auto dimName = dimensions[i]->GetName();
 
       multipliers[name2index[dimName]] = 1;
-      skew[name2index[dimName]] = dimensions[i]->GetCurrentLength();
+      stride[name2index[dimName]] = dimensions[i]->GetCurrentLength();
       adj[name2index[dimName]] = 1;
 
       for (int32_t j = i + 1; j < numDims; j++) {
         int64_t preamble = multipliers[name2index[dimName]];
         multipliers[name2index[dimName]] =
             preamble * dimensions[j]->GetCurrentLength();
-        skew[name2index[dimName]] *= dimensions[j]->GetCurrentLength();
+        stride[name2index[dimName]] *= dimensions[j]->GetCurrentLength();
         adj[name2index[dimName]] *= dimensions[j]->GetCurrentLength();
       }
     }
@@ -121,7 +123,7 @@ public:
       totalLen *= dim->GetCurrentLength();
       /*Checking overflow*/
       if (totalLen < beforeMultiplication) {
-        throw runtime_error("Impossible to run aggregate operator. Input TAR "
+        throw runtime_error("Impossible to Run aggregate operator. Input TAR "
                             "grouping dimensions are too long.");
       }
     }
@@ -133,7 +135,7 @@ public:
                                           int64_t pos) {
 
     if (positionHandlersBuffers.size() == 0 && mode == BUFFERED)
-      return 0.0;
+      return 0;
 
     vector<SubTARPosition> indexes(positionHandlersBuffers.size());
 
@@ -148,7 +150,7 @@ public:
         make_shared<AggregateConfiguration>();
     cloned->multipliers = multipliers;
     cloned->adj = adj;
-    cloned->skew = skew;
+    cloned->stride = stride;
     cloned->dimensions = dimensions;
     cloned->functions = functions;
     cloned->datasets = datasets;
@@ -184,7 +186,7 @@ inline AggregateConfigurationPtr createConfiguration(TARPtr inputTAR,
   }
   
   /*Mapping for full aggregations.*/
-  aggConfig->name2index[SINGLE_DIMENSION] = 0;
+  aggConfig->name2index[DEFAULT_SYNTHETIC_DIMENSION] = 0;
 
   /*Get functions*/
   int32_t opCount = 0;
@@ -228,7 +230,7 @@ inline void setSavimeDatasets(AggregateConfigurationPtr aggConfig,
 
     for (auto func : aggConfig->functions) {
 
-      DatasetPtr aggregateDs = storageManager->Create(DOUBLE, totalLen);
+      DatasetPtr aggregateDs = storageManager->Create(DOUBLE, static_cast<savime_size_t>(totalLen));
       if (aggregateDs == nullptr)
         throw std::runtime_error("Could not create dataset.");
 
@@ -247,7 +249,7 @@ inline void setSavimeDatasets(AggregateConfigurationPtr aggConfig,
       }
 
       if (func->RequiresAuxDataset()) {
-        DatasetPtr aggregateDsAux = storageManager->Create(DOUBLE, totalLen);
+        DatasetPtr aggregateDsAux = storageManager->Create(DOUBLE, static_cast<savime_size_t>(totalLen));
         if (aggregateDsAux == nullptr)
           throw std::runtime_error("Could not create dataset.");
 
@@ -332,7 +334,7 @@ inline void createLogicalIndexesBuffer(AggregateConfigurationPtr aggConfig,
                                        StorageManagerPtr storageManager,
                                        SubtarPtr subtar) {
 
-  int64_t subtarLen = subtar->GetFilledLength();
+  auto subtarLen = subtar->GetFilledLength();
   aggConfig->positionHandlers.resize(aggConfig->dimensions.size());
   aggConfig->positionHandlersBuffers.resize(aggConfig->dimensions.size());
 
@@ -360,7 +362,7 @@ inline void createLogicalIndexesBuffer(AggregateConfigurationPtr aggConfig,
 inline void setInputBuffers(AggregateConfigurationPtr aggConfig,
                             StorageManagerPtr storageManager,
                             SubtarPtr subtar) {
-  int64_t subtarLen = subtar->GetFilledLength();
+  auto subtarLen = subtar->GetFilledLength();
 
   aggConfig->inputHandlers.clear();
   for (auto func : aggConfig->functions) {

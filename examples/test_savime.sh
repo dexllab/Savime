@@ -2,7 +2,8 @@
 
 #create datasets
 savimec 'create_dataset("base:double", "@'$(pwd)'/base");'
-savimec 'create_dataset("dsexplict:float", "@'$(pwd)'/dsexplicit");'
+#savimec 'create_dataset("dsexplict:float", "@'$(pwd)'/dsexplicit");'
+savimec 'create_dataset("dsexplict:float", literal(1.5, 3.2, 4.7, 7.9, 13.1));'
 savimec 'create_dataset("dspart1:int", "2:2:6:1");'
 savimec 'create_dataset("dspart2:int", literal(2, 8));'
 savimec 'create_dataset("dsepart1:long", literal(3, 1, 4));'
@@ -28,6 +29,8 @@ savimec 'create_tar("ep", "*", "explicit, x, dsexplict  | explicit, y, dsexplict
 savimec 'create_tar("et", "*", "explicit, x, dsexplict  | explicit, y, dsexplict", "a,double");'
 savimec 'create_tar("vi", "*", "implicit, i, int, 1, 5, 1", "a,int:2");'
 savimec 'create_tar("vs", "*", "implicit, i, int, 0, 5, 1", "s,char:10");'
+
+
 
 #test load ORDERED SUBTARS INTO IMPLICIT DIMENSIONS (SIMPLEST CASE)
 savimec 'load_subtar("io", "ordered, x, 0, 2  | ordered, y, 0, 2",  "a,base");'
@@ -137,4 +140,7 @@ savimec 'aggregate(et, avg, y, avg_y, y);'
 
 echo "Complex Queries Example: For every X, at what Y does 'a' reaches its peak?"
 savimec 'aggregate(where(cross(io, aggregate(io, max, a, max_a, x)), left_a = right_max_a), max, left_y, y_at_max, left_x);'
+#savimec 'where(cross(io, aggregate(io, max, a, max_a, x)), left_a = right_max_a);'
+#savimec 'cross(io, aggregate(io, max, a, max_a, x));'
+
 savimec 'aggregate(where(cross(et, aggregate(et, max, a, max_a, x)), left_a = right_max_a), max, left_y, y_at_max, left_x);'

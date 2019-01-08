@@ -1,3 +1,5 @@
+#include <utility>
+
 #ifndef METADATA_H
 #define METADATA_H
 
@@ -11,7 +13,7 @@
 #include "types.h"
 #include "savime.h"
 #include "dynamic_bitset.h"
-#define UNSAVED_ID -1
+#define UNSAVED_ID (-1)
 #define INDEX_SEPARATOR ':'
 
 /*TARS' hard limits*/
@@ -31,12 +33,10 @@
 #define MAX_VECTOR_ATT_LEN  std::numeric_limits<uint32_t>::max()
 #define MAX_DIM_BOUND (RealIndex)(1.0/std::numeric_limits<double>::epsilon())
 #define MAX_DIM_LEN (RealIndex)(1.0/std::numeric_limits<double>::epsilon())
-#define MIN_SPACING std::numeric_limits<float>::min()
+#define MIN_SPACING 1e-06
 #define MAX_SUBTAR_LEN std::numeric_limits<int64_t>::max()
 #define MAX_ENTRIES_IN_DATASET std::numeric_limits<int64_t>::max()
 
-
-  
 using namespace std;
 
 class TAR;
@@ -52,15 +52,14 @@ typedef std::shared_ptr<RTree<int64_t, int64_t>> SubtarsIndex;
 typedef std::shared_ptr<TAR> TARPtr;
 
 extern const char * dataTypeNames[];
-extern const char * dimTypeNames[];
-extern const char * specsTypeNames[];
+//extern const char * dimTypeNames[];
+//extern const char * specsTypeNames[];
 
 /**
  * Enum with codes for possible types of a DataElement. A data element is a
  * component
  * of a TAR (Typed Array). It can be either a dimension, defining the structure
- * of
- * the TAR, or an attribute, defining an element in a TAR cell.
+ * of the TAR, or an attribute, defining an element in a TAR cell.
  */
 typedef enum {
   DIMENSION_SCHEMA_ELEMENT, /*!<Indicates a dimension data element. */
@@ -125,7 +124,7 @@ public:
   * @param listener is a MetadaObjectListener to be notified for events related
   * to the instance.
   */
-  virtual void Addlistener(MetadataObjectListenerPtr listener) {
+  virtual void AddListener(const MetadataObjectListenerPtr &listener) {
     _listeners.push_back(listener);
   }
 
@@ -204,12 +203,13 @@ private:
   void Define(int64_t id, string name, string file, DataType type);
 
 public:
+  Dataset(int64_t id, string name, savime_size_t size, DataType type);
   Dataset(int64_t id, string name, string file, DataType type);
-  Dataset(BitsetPtr bitMask);
-  Dataset(savime_size_t bitmaskSize);
+  explicit Dataset(BitsetPtr bitMask);
+  explicit Dataset(savime_size_t bitmaskSize);
   int64_t& GetId() { return _dsId; }
   string& GetName() { return _name; }
-  string GetLocation() { return _location; }
+  string& GetLocation() { return _location; }
   savime_size_t GetLength() { return _length; }
   savime_size_t GetEntryCount() { return _entry_count; };
   DataType GetType() { return _type; }
@@ -287,7 +287,7 @@ public:
   * subtar in the dimension.
   * @return An unsigned 64-bit integer containing the current dimension length.
   */
-  savime_size_t GetCurrentLength() { return _current_upper_bound + 1; }
+  savime_size_t GetCurrentLength() { return static_cast<savime_size_t>(_current_upper_bound + 1); }
   
   ~Dimension();
 };
@@ -335,13 +335,13 @@ public:
   * Constructor.
   * @param dimension is a dimension to be encapsulated as a data element.
   */
-  DataElement(DimensionPtr dimension);
+  explicit DataElement(DimensionPtr dimension);
 
   /**
   * Constructor.
   * @param attribute is an attribute to be encapsulated as a data element.
   */
-  DataElement(AttributePtr attribute);
+  explicit DataElement(AttributePtr attribute);
 
   /**
   * Returns a dimension being encapsulated as the data element. If the instance
@@ -398,10 +398,10 @@ typedef std::shared_ptr<DataElement> DataElementPtr;
 *cell within the subTAR region follow a ordered well behaved pattern. If the
 * specified dimension is IMPLICIT, logical dimension indexes for any position
 * within the subtar can be inferred based on the dimension specification
-*lower_bound, upper_bound, adjacency and skew.
+*lower_bound, upper_bound, adjacency and stride.
 * If the dimension is EXPLICIT, then ORDERED means that the real dimension
 *indexes can be inferred based on the dimension specification lower_bound,
-* upper_bound, adjacency adn skew, and the logical dimension indexes can
+* upper_bound, adjacency and stride, and the logical dimension indexes can
 * be then obtained by using the mapping dataset in the dimension object.
 *
 * If the dimension specification is PARTIAL, it means that values are possibly
@@ -434,7 +434,7 @@ typedef std::shared_ptr<DataElement> DataElementPtr;
 *dimension. It is also the product of all
 * lengths of posterior dimensions in the subtar. The adjacency for the last
 *dimension is always equals to 1.
-* skew: Length of a sequence of elements indexes containing all indexes for a
+* stride: Length of a sequence of elements indexes containing all indexes for a
 *dimension. It is the product of the
 * dimension length with the lengths of all posterior dimensions.
 *
@@ -450,7 +450,7 @@ typedef std::shared_ptr<DataElement> DataElementPtr;
 *|3  |	3,0   |	3,1   |	3,2   |	3,3   |
 *
 *
-*|Dim	  |Order  | lw	  | up	  | adj	   |skew   |len	   | total |
+*|Dim	  |Order  | lw	  | up	  | adj	   |stride |len	   | total |
 *| :----: |:----: |:----: |:----: | :----: |:----: |:----: |:----: |
 *| i	  |1	  |0	  | 3	  |4	   |16     | 4	   | 16    |
 *| j	  |2	  |0	  | 3	  |1	   |4	   | 4	   | 16    |
@@ -464,7 +464,7 @@ typedef std::shared_ptr<DataElement> DataElementPtr;
 *|2	  | 2,0,0 | 2,1,0 | 2,2,0 | 2,0,1  | 2,1,1  | 2,2,1 |
 *
 *
-*|Dim	  |Order  | lw	  | up	  | adj	   |skew   |len	   | total |
+*|Dim	  |Order  | lw	  | up	  | adj	   |stride |len	   | total |
 *| :----: |:----: |:----: |:----: | :----: |:----: |:----: |:----: |
 *|i	  |1	  |0	  |2	  |6	   |18     |  3    |18     |
 *|j	  |2	  |0	  |2	  |2	   |6	   |  3	   |18     |
@@ -491,10 +491,10 @@ private:
   RealIndex
       _upper_bound;    /*!<Real index of the TAR specifying the lower of bound of
                          the subtar for that dimension.*/
-  savime_size_t _skew; /*!<Length of a sequence of elements indexes containing
+  savime_size_t _stride; /*!<Length of a sequence of elements indexes containing
                        * all indexes for a dimension.
                        * It is the product of the dimension length with the
-                       * lenghts of all posterior dimensions.*/
+                       * lengths of all posterior dimensions.*/
   savime_size_t _adjacency; /*!<Number of consecutive elements with the same
                             *index for a given dimension. It is also the product
                             *of all
@@ -505,10 +505,10 @@ private:
 public:
 
   DimensionSpecification(int32_t id, DimensionPtr dimension, RealIndex lowerBound,
-      RealIndex upperBound, savime_size_t skew, savime_size_t adjacency);
+      RealIndex upperBound, savime_size_t stride, savime_size_t adjacency);
 
   DimensionSpecification(int32_t id, DimensionPtr dimension, DatasetPtr dataset, RealIndex lowerBound,
-                         RealIndex upperBound, savime_size_t skew, savime_size_t adjacency);
+                         RealIndex upperBound, savime_size_t stride, savime_size_t adjacency);
 
   DimensionSpecification(int32_t id, DimensionPtr dimension, DatasetPtr dataset, RealIndex lowerBound,
                          RealIndex upperBound);
@@ -520,11 +520,11 @@ public:
   SpecsType GetSpecsType() { return _type;}
   RealIndex GetLowerBound() { return _lower_bound;}
   RealIndex GetUpperBound() { return _upper_bound;}
-  savime_size_t GetSkew() { return _skew;}
+  savime_size_t GetStride() { return _stride;}
   savime_size_t GetAdjacency() { return _adjacency;}
 
   void AlterDimension(DimensionPtr dimension);
-  void AlterSkew(savime_size_t skew);
+  void AlterStride(savime_size_t stride);
   void AlterAdjacency(savime_size_t adj);
   void AlterBoundaries(RealIndex lowerBound, RealIndex upperBound);
   void AlterDataset(DatasetPtr dataset);
@@ -535,10 +535,10 @@ public:
   * a dimension for which the subtar actually holds data.
   */
   savime_size_t GetFilledLength() {
-    savime_size_t filledLength;
+    savime_size_t filledLength = 0;
 
     if (_type == ORDERED) {
-      filledLength = _upper_bound - _lower_bound + 1;
+      filledLength = static_cast<savime_size_t>(_upper_bound - _lower_bound + 1);
     } else if (_type == PARTIAL || _type == TOTAL) {
       filledLength = _dataset->GetEntryCount();
     }
@@ -553,7 +553,7 @@ public:
   */
   savime_size_t GetSpannedLength() {
     savime_size_t spannedLength;
-    spannedLength = _upper_bound - _lower_bound + 1;
+    spannedLength = static_cast<savime_size_t>(_upper_bound - _lower_bound + 1);
     return spannedLength;
   }
 
@@ -561,7 +561,45 @@ public:
 };
 typedef std::shared_ptr<DimensionSpecification> DimSpecPtr;
 
+/**
+ * Compares two dimension specifications by their adjacency values. Used to sort
+ * dimensions specifications.
+ * @param a is dimension specification
+ * @param b is dimension specification
+ * @return Returns true if adjacency of a is larger than b and false otherwise.
+ */
 bool compareAdj(DimSpecPtr a, DimSpecPtr b);
+
+
+/**
+ * Adjusts the stride and the adjacency of all dimension specifications
+ * according to their order in the list\vector.
+ * @param dimensionsSpecs is a list of dimension specifications to be adjusted.
+ */
+#define ADJUST_SPECS(SPECS)                                                    \
+  for (auto spec : (SPECS)) {                                                  \
+    bool isPosterior = false;                                                  \
+    savime_size_t stride = 1;                                                  \
+    savime_size_t adjacency = 1;                                               \
+                                                                               \
+    for (auto innerSpec : (SPECS)) {                                           \
+      if (isPosterior)                                                         \
+        adjacency *= innerSpec->GetFilledLength();                             \
+                                                                               \
+      if (spec->GetDimension()->GetName() ==                                   \
+              innerSpec->GetDimension()->GetName()) {                          \
+        isPosterior = true;                                                    \
+      }                                                                        \
+                                                                               \
+      if (isPosterior)                                                         \
+        stride *= innerSpec->GetFilledLength();                                \
+    }                                                                          \
+                                                                               \
+    spec->AlterAdjacency(adjacency);                                           \
+    spec->AlterStride(stride);                                                 \
+  }                                                                            \
+  \
+
 
 /**
 * A TAR region is instantiated with data as a subTAR. A subTAR encompasses
@@ -570,26 +608,23 @@ bool compareAdj(DimSpecPtr a, DimSpecPtr b);
 *SubTARs not only define a partitioning scheme for a TAR, but also serve
 *as a way to allow users to specify the details about how their data is laid
 *out, avoiding costly data transformations and rearrangements during ingestion into
-*the Savime.
+* Savime.
 */
 class Subtar : MetadataObject {
 
 private:
-  int32_t _id; /*!<Id of the subtar in the metada manager.*/
-  int32_t
-      _id_tar; /*!<Id of the tar to which the subtar belogs to in the metada
-                  manager.*/
-  TARPtr _tar; /*!<Reference to tar to which the subtar belongs to.*/
-  map<string, DimSpecPtr> _dimSpecs; /*!<Maps between dimension names and
+  int32_t _id{}; /*!<Id of the subtar in the metada manager.*/
+  TARPtr _tar; /*!<Reference to the TAR which the subtar belongs to.*/
+  map<string, DimSpecPtr> _dimSpecs; /*!<Map between dimension names and
                                         dimension specifications references.*/
   map<string, DatasetPtr>
-      _dataSets; /*!<Maps between attribute names and datasets holding data.*/
+      _dataSets; /*!<Map between attribute names and datasets holding data.*/
 
 public:
   /**
   * Constructor.
   */
-  Subtar(){};
+  Subtar() = default;;
 
   /**
   * Returns the subtar Id.
@@ -642,25 +677,6 @@ public:
   * region covered by the subtar.
   */
   savime_size_t GetSpannedLength();
-
-  /**
-  * Adds a new dimension specification to the subtar.
-  * @param dimension is the dimension the dimension specification is associated
-  * to. It
-  * must be present in the the associated TAR.
-  * @param  offset is reserved for future use, default to zero.
-  * @param  lowerBound is the dimension specification lower bound.
-  * @param  upperBound is the dimension specification upper bound.
-  * @param  adjacency is the dimension specification adjacency.
-  * @param  skew is the dimension specification skew.
-  * @param  type is the dimension specification type.
-  * @param  associatedDataSet is dimension specification dataset.
-  */
-  void AddDimensionsSpecification(DataElementPtr dimension,
-                                  savime_size_t offset, RealIndex lowerBound,
-                                  RealIndex upperBound, savime_size_t adjacency,
-                                  savime_size_t skew, SpecsType type,
-                                  DatasetPtr associatedDataSet);
 
   /**
   * Adds an already created new dimension specification to the subtar.
@@ -779,15 +795,13 @@ typedef std::shared_ptr<Type> TypePtr;
 class TAR : MetadataObject {
 
 private:
-  int32_t _id;                /*!<Id of the TAR in the metada manager.*/
-  int32_t _idType;            /*!<Id of the TAR type in the metada manager.*/
+  int32_t _id{};                /*!<Id of the TAR in the metada manager.*/
   TypePtr _type;              /*!<Reference to the TAR type.*/
   SubtarsIndex _subtarsIndex; /*!<RTree index containing subtars.*/
   string _name;               /*!<User given TAR name.*/
   list<DataElementPtr>
       _elements; /*!<List of TAR data elements forming its schema.*/
   vector<SubtarPtr> _subtars; /*!<Vector of subTARs.*/
-  vector<int32_t> _idSubtars; /*!<Vector of subTARs ids in the metada manager.*/
   map<string, RolePtr>
       _roles; /*!<Map between data element names and their roles.*/
 
@@ -817,7 +831,7 @@ private:
   * the requirements to be added to the TAR's subtar list.
   * @param subtar is a subtar reference to be validated.
   */
-  void validadeSubtar(SubtarPtr subtar);
+  void validateSubtar(SubtarPtr subtar);
 
   /**
   * Callback function called by the SubtarsIndex structure when
@@ -835,7 +849,7 @@ public:
   /**
   * Default constructor.
   */
-  TAR(){};
+  TAR() = default;
 
   /**
   * Constructor.
@@ -899,7 +913,7 @@ public:
   * @param realUpper is largest possible real index for that dimension.
   * @param dataset is the dataset containing the mapping between real and
   * logical indexes.
-  * @param current_upper_bound is current largest logical filled.
+  * @param current_upper_bound is current largest real index filled.
   */
   void AddDimension(string name, DataType type, double lowerBound,
                     double upperBound, RealIndex realLower, RealIndex reaUpper,
@@ -943,18 +957,6 @@ public:
   TypePtr GetType();
 
   /**
-  * Gets the TAR type id.
-  * @return A 32-bit integer containing the type id.
-  */
-  int32_t GetTypeId();
-
-  /**
-  * Sets the TAR type id.
-  * @param idType is a 32-bit integer containing the type id.
-  */
-  void SetTypeId(int32_t idType);
-
-  /**
   * Modifies some basic TAR info.
   * @param newId is a 32-bit integer containing the new TAR id.
   * @param newName is a string containing the new TAR name.
@@ -991,12 +993,6 @@ public:
   * @return A reference to vector containing all subtars in the TAR.
   */
   vector<SubtarPtr> &GetSubtars();
-
-  /**
-  * Gets the TAR subtars id vector.
-  * @return A reference to vector containing all ids of subtars in the TAR.
-  */
-  vector<int32_t> &GetIdSubtars();
 
   /**
   * Gets the all subtars in the TAR that intersects with the parameter subtar.
@@ -1111,10 +1107,8 @@ struct TARS : MetadataObject {
   int32_t id;        /*!<Id of the TARS in the metada manager.*/
   string name;       /*!<User given TARS name.*/
   list<TARPtr> tars; /*!<List containing references to all TARs in the TARS.*/
-  list<int32_t> id_tars; /*!<List containing ids for all TARs in the TARS.*/
   list<TypePtr>
       types; /*!<List containing references to all Types in the TARS.*/
-  list<int32_t> id_types; /*!<List containing ids for all Types in the TARS.*/
   list<DatasetPtr>
       datasets; /*!<List containing references to all Datasets in the TARS.*/
   list<int32_t>
@@ -1142,7 +1136,7 @@ public:
   */
   MetadataManager(ConfigurationManagerPtr configurationManager,
                   SystemLoggerPtr systemLogger)
-      : SavimeModule("Metada Manager", configurationManager, systemLogger) {}
+      : SavimeModule("Metada Manager", std::move(configurationManager), std::move(systemLogger)) {}
 
   /**
   * Saves a new TARS in the metadata manager underlying storage.

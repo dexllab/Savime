@@ -2261,7 +2261,7 @@ INCLUDED_BY_GRAPH      = YES
 # If the CALL_GRAPH tag is set to YES then doxygen will generate a call
 # dependency graph for every global function or class method.
 #
-# Note that enabling this option will significantly increase the time of a run.
+# Note that enabling this option will significantly increase the time of a Run.
 # So in most cases it will be better to enable call graphs for selected
 # functions only using the \callgraph command. Disabling a call graph can be
 # accomplished by means of the command \hidecallgraph.

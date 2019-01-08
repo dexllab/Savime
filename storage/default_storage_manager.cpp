@@ -41,6 +41,13 @@ using namespace std::chrono;
                                            to_string(GET_DURATION()) +         \
                                            " ms.");
 
+#define BUF2STR(OUT, BUFFER, IDX, SIZE)                                        \
+   {                                                                           \
+     char strbuffer[SIZE];                                                     \
+     memcpy(strbuffer, &(*BUFFER)[IDX], SIZE);                                 \
+     OUT = strbuffer;                                                          \
+   }
+
 std::mutex TemplateBuilder::templateBuilderMutex;
 
 DefaultDatasetHandler::DefaultDatasetHandler(DatasetPtr ds,
@@ -227,8 +234,7 @@ DatasetPtr DefaultStorageManager::Create(DataType type, savime_size_t entries) {
       throw runtime_error("Attempt to create a dataset with invalid size.");
     }
 
-    int error, typeSize;
-    typeSize = TYPE_SIZE(type);
+    int typeSize = TYPE_SIZE(type);
     auto location = GenerateUniqueFileName();
     auto size = entries * typeSize;
 
@@ -245,7 +251,7 @@ DatasetPtr DefaultStorageManager::Create(DataType type, savime_size_t entries) {
     }
 
     ftruncate(fd, size);
-    // if((error = ftruncate(fd, ds->length))!= 0)
+    //if((error = ftruncate(fd, ds->length))!= 0)
     //{
     // ignoring errors during truncation in hugetblfs
     // if(error != EINTR)
@@ -260,7 +266,7 @@ DatasetPtr DefaultStorageManager::Create(DataType type, savime_size_t entries) {
     _usedStorageSize += size;
     _mutex.unlock();
 
-    ds->Addlistener(_this);
+    ds->AddListener(_this);
     close(fd);
     return ds;
 
@@ -281,21 +287,21 @@ DatasetPtr DefaultStorageManager::Create(DataType type, double init,
   DimSpecPtr dummySpecs = make_shared<DimensionSpecification>(
     UNSAVED_ID, dummyDimension, 0, dummyDimension->GetLength() - 1, 1, rep);
 
-  MaterializeDim(dummySpecs, dummySpecs->GetFilledLength(), newDataset);
+  MaterializeDim(dummySpecs, dummySpecs->GetFilledLength()*rep, newDataset);
 
   return newDataset;
 }
 
 DatasetPtr DefaultStorageManager::Create(DataType type,
                                          vector<string> literals) {
-#define BLANK ' '
+#define BLANK '\0'
 
   DatasetPtr newDataset;
 
   if (type != CHAR)
     newDataset = Create(type, literals.size() / type.vectorLength());
   else
-    newDataset = Create(type, literals.size() * type.vectorLength());
+    newDataset = Create(type, literals.size());
 
   DatasetHandlerPtr handler = GetHandler(newDataset);
 
@@ -314,7 +320,7 @@ DatasetPtr DefaultStorageManager::Create(DataType type,
       }
 
       /*Adding padding*/
-      for (int32_t j = len; j < type.vectorLength(); j++) {
+      for (int64_t j = len; j < type.vectorLength(); j++) {
         buffer[i * type.vectorLength() + j] = (int8_t)BLANK;
       }
     }
@@ -411,7 +417,7 @@ SavimeResult DefaultStorageManager::Save(DatasetPtr dataset) {
 
   _usedStorageSize += dataset->GetLength();
   _mutex.unlock();
-  dataset->Addlistener(_this);
+  dataset->AddListener(_this);
 
   return SAVIME_SUCCESS;
 }
@@ -467,16 +473,19 @@ bool DefaultStorageManager::CheckSorted(DatasetPtr dataset) {
     GET_T1();
 #endif
 
+    if(dataset == nullptr)
+      throw runtime_error(
+          "Attempt to call CheckSorted with invalid dataset.");
+
     DataType type = dataset->GetType();
+    if(type.isVector())
+      throw runtime_error(
+          "Attempt to call CheckSorted with vector typed dataset.");
 
-    if (!type.isVector()) {
-      AbstractStorageManagerPtr st = TemplateBuilder::Build(
-        _this, _configurationManager, _systemLogger, type, type, type);
+    AbstractStorageManagerPtr st = TemplateBuilder::Build(
+      _this, _configurationManager, _systemLogger, type, type, type);
 
-      return st->CheckSorted(dataset);
-    } else {
-      throw runtime_error("Invalid vector dataset in CheckSorted.");
-    }
+     return st->CheckSorted(dataset);
 
 #ifdef TIME
     PRINT_TIME_INFO("CheckSorted")
@@ -491,6 +500,15 @@ RealIndex DefaultStorageManager::Logical2Real(DimensionPtr dimension,
                                               Literal logicalIndex) {
   RealIndex realIndex = 0;
   try {
+
+    if(dimension == nullptr)
+      throw runtime_error(
+          "Attempt to call Logical2Real with invalid dimension.");
+
+    if(logicalIndex.type == NO_TYPE)
+      throw runtime_error(
+          "Attempt to call Logical2Real with invalid logical index.");
+
     DataType type1 = dimension->GetType();
     DataType type2 = logicalIndex.type;
     AbstractStorageManagerPtr st = TemplateBuilder::Build(
@@ -508,6 +526,15 @@ IndexPair DefaultStorageManager::Logical2ApproxReal(DimensionPtr dimension,
                                                     Literal logicalIndex) {
   IndexPair indexPair;
   try {
+
+    if(dimension == nullptr)
+      throw runtime_error(
+          "Attempt to call Logical2ApproxReal with invalid dimension.");
+
+    if(logicalIndex.type == NO_TYPE)
+      throw runtime_error(
+          "Attempt to call Logical2ApproxReal with invalid logical index.");
+
     DataType type1 = dimension->GetType();
     DataType type2 = logicalIndex.type;
 
@@ -533,6 +560,18 @@ SavimeResult DefaultStorageManager::Logical2Real(DimensionPtr dimension,
     GET_T1();
 #endif
 
+    if(dimension == nullptr)
+      throw runtime_error(
+          "Attempt to call Logical2Real with invalid dimension.");
+
+    if(dimSpecs == nullptr)
+      throw runtime_error(
+          "Attempt to call Logical2Real with invalid dimension specification.");
+
+    if(logicalIndexes == nullptr)
+      throw runtime_error(
+          "Attempt to call Logical2Real with invalid logical indexes dataset.");
+
     DataType type = dimension->GetType();
     AbstractStorageManagerPtr st = TemplateBuilder::Build(
       _this, _configurationManager, _systemLogger, type, type, type);
@@ -555,6 +594,19 @@ SavimeResult DefaultStorageManager::UnsafeLogical2Real(
   DimensionPtr dimension, DimSpecPtr dimSpecs, DatasetPtr logicalIndexes,
   DatasetPtr &destinyDataset) {
   try {
+
+    if(dimension == nullptr)
+      throw runtime_error(
+          "Attempt to call Logical2Real with invalid dimension.");
+
+    if(dimSpecs == nullptr)
+      throw runtime_error(
+          "Attempt to call Logical2Real with invalid dimension specification.");
+
+    if(logicalIndexes == nullptr)
+      throw runtime_error(
+          "Attempt to call Logical2Real with invalid logical indexes dataset.");
+
     SavimeResult result;
 
 #ifdef TIME
@@ -586,6 +638,11 @@ Literal DefaultStorageManager::Real2Logical(DimensionPtr dimension,
   logicalIndex.type = dimension->GetType();
 
   try {
+
+    if(dimension == nullptr)
+      throw runtime_error(
+          "Attempt to call Real2Logical with invalid dimension.");
+
     DataType type = dimension->GetType();
     AbstractStorageManagerPtr st = TemplateBuilder::Build(
       _this, _configurationManager, _systemLogger, type, type, type);
@@ -609,6 +666,19 @@ SavimeResult DefaultStorageManager::Real2Logical(DimensionPtr dimension,
 #ifdef TIME
     GET_T1();
 #endif
+
+    if(dimension == nullptr)
+      throw runtime_error(
+          "Attempt to call Real2Logical with invalid dimension.");
+
+    if(dimSpecs == nullptr)
+      throw runtime_error(
+          "Attempt to call Real2Logical with invalid dimension specification.");
+
+    if(realIndexes == nullptr || (realIndexes->GetType() != REAL_INDEX
+        && realIndexes->GetType() != INT64))
+      throw runtime_error(
+          "Attempt to call Real2Logical with invalid logical indexes dataset.");
 
     DataType type = dimension->GetType();
     AbstractStorageManagerPtr st = TemplateBuilder::Build(
@@ -636,6 +706,14 @@ DefaultStorageManager::IntersectDimensions(DimensionPtr dim1, DimensionPtr dim2,
 #ifdef TIME
     GET_T1();
 #endif
+
+    if(dim1 == nullptr)
+      throw runtime_error(
+          "Attempt to call IntersectDimensions with invalid dimension.");
+
+    if(dim2 == nullptr)
+      throw runtime_error(
+          "Attempt to call IntersectDimensions with invalid dimension.");
 
     DataType type1 = dim1->GetType();
     DataType type2 = dim2->GetType();
@@ -669,8 +747,30 @@ SavimeResult DefaultStorageManager::Copy(DatasetPtr originDataset,
     GET_T1();
 #endif
 
+    if(originDataset == nullptr)
+      throw runtime_error(
+          "Attempt to call Copy with invalid origin dataset.");
+
+    if(destinyDataset == nullptr)
+      throw runtime_error(
+          "Attempt to call Copy with invalid destiny dataset.");
+
     DataType type1 = originDataset->GetType();
     DataType type2 = destinyDataset->GetType();
+
+    if((lowerBound > upperBound)
+        || lowerBound >= originDataset->GetLength()
+        || upperBound >= originDataset->GetLength() )
+      throw runtime_error(
+          "Attempt to call Copy with invalid lower and upper bounds.");
+
+    savime_size_t sizeInDestiny = offsetInDestiny +
+                                  (upperBound - lowerBound+1)*spacingInDestiny;
+
+    if(sizeInDestiny >= destinyDataset->GetLength())
+      throw runtime_error(
+          "Attempt to call Copy with invalid offsetInDestiny "
+          "and spacingInDestiny.");
 
     AbstractStorageManagerPtr st = TemplateBuilder::Build(
       _this, _configurationManager, _systemLogger, type1, type2, type1);
@@ -699,6 +799,22 @@ SavimeResult DefaultStorageManager::Copy(DatasetPtr originDataset,
 #ifdef TIME
     GET_T1();
 #endif
+
+    if(originDataset == nullptr)
+      throw runtime_error(
+          "Attempt to call Copy with invalid origin dataset.");
+
+    if(mapping == nullptr)
+      throw runtime_error(
+          "Attempt to call Copy with invalid mapping.");
+
+    if(destinyDataset == nullptr)
+      throw runtime_error(
+          "Attempt to call Copy with invalid destiny dataset.");
+
+    if(originDataset->GetEntryCount() != mapping->size())
+      throw runtime_error(
+          "Attempt to call Copy with inconformant origin dataset and mapping.");
 
     DataType type1 = originDataset->GetType();
     DataType type2 = destinyDataset->GetType();
@@ -730,6 +846,22 @@ SavimeResult DefaultStorageManager::Copy(DatasetPtr originDataset,
     GET_T1();
 #endif
 
+    if(originDataset == nullptr)
+      throw runtime_error(
+          "Attempt to call Copy with invalid origin dataset.");
+
+    if(mapping == nullptr)
+      throw runtime_error(
+          "Attempt to call Copy with invalid mapping dataset.");
+
+    if(destinyDataset == nullptr)
+      throw runtime_error(
+          "Attempt to call Copy with invalid destiny dataset.");
+
+    if(originDataset->GetEntryCount() != mapping->GetEntryCount())
+      throw runtime_error(
+          "Attempt to call Copy with inconformant origin dataset and mapping.");
+
     DataType type1 = originDataset->GetType();
     DataType type2 = destinyDataset->GetType();
 
@@ -759,6 +891,14 @@ SavimeResult DefaultStorageManager::Filter(DatasetPtr originDataset,
     GET_T1();
 #endif
 
+    if(originDataset == nullptr)
+      throw runtime_error(
+          "Attempt to call Filter with invalid origin dataset.");
+
+    if(filterDataSet == nullptr)
+      throw runtime_error(
+          "Attempt to call Filter with invalid filter dataset.");
+
     DataType type = originDataset->GetType();
 
     AbstractStorageManagerPtr st = TemplateBuilder::Build(
@@ -786,29 +926,34 @@ SavimeResult DefaultStorageManager::And(DatasetPtr operand1,
     GET_T1();
 #endif
 
+    if(operand1 == nullptr || operand1->BitMask() == nullptr)
+      throw runtime_error(
+          "Attempt to call And with operand1 dataset.");
+
+    if(operand2 == nullptr || operand2->BitMask() == nullptr)
+      throw runtime_error(
+          "Attempt to call And with operand2 dataset.");
+
+
     int numCores = _configurationManager->GetIntValue(MAX_THREADS);
     int32_t minWorkPerThread =
       _configurationManager->GetIntValue(WORK_PER_THREAD);
     int64_t startPositionPerCore[numCores];
     int64_t finalPositionPerCore[numCores];
 
-    if (operand1->BitMask() != nullptr && operand2->BitMask() != nullptr) {
-      SetWorkloadPerThread(operand1->BitMask()->size(), minWorkPerThread,
-                           startPositionPerCore, finalPositionPerCore,
-                           numCores);
+    SetWorkloadPerThread(operand1->BitMask()->size(), minWorkPerThread,
+                         startPositionPerCore, finalPositionPerCore,
+                         numCores);
 
-      destinyDataset = make_shared<Dataset>(operand1->BitMask()->size());
-      destinyDataset->Addlistener(_this);
-      destinyDataset->HasIndexes() = false;
-      destinyDataset->Sorted() = false;
+    destinyDataset = make_shared<Dataset>(operand1->BitMask()->size());
+    destinyDataset->AddListener(_this);
+    destinyDataset->HasIndexes() = false;
+    destinyDataset->Sorted() = false;
 
-      boost::dynamic_bitset<>::and_parallel(
-        *(destinyDataset->BitMask()), *(operand1->BitMask()),
-        *(operand2->BitMask()), numCores, minWorkPerThread);
+    boost::dynamic_bitset<>::and_parallel(
+      *(destinyDataset->BitMask()), *(operand1->BitMask()),
+      *(operand2->BitMask()), numCores, minWorkPerThread);
 
-    } else {
-      throw std::runtime_error("Invalid dataset type for logic operation.");
-    }
 
 #ifdef TIME
     PRINT_TIME_INFO("And")
@@ -828,29 +973,33 @@ SavimeResult DefaultStorageManager::Or(DatasetPtr operand1, DatasetPtr operand2,
     GET_T1();
 #endif
 
+    if(operand1 == nullptr || operand1->BitMask() == nullptr)
+      throw runtime_error(
+          "Attempt to call Or with operand1 dataset.");
+
+    if(operand2 == nullptr || operand2->BitMask() == nullptr)
+      throw runtime_error(
+          "Attempt to call Or with operand2 dataset.");
+
     int numCores = _configurationManager->GetIntValue(MAX_THREADS);
     int32_t minWorkPerThread =
       _configurationManager->GetIntValue(WORK_PER_THREAD);
     int64_t startPositionPerCore[numCores];
     int64_t finalPositionPerCore[numCores];
 
-    if (operand1->BitMask() != nullptr && operand2->BitMask() != nullptr) {
-      SetWorkloadPerThread(operand1->BitMask()->size(), minWorkPerThread,
-                           startPositionPerCore, finalPositionPerCore,
-                           numCores);
 
-      destinyDataset = make_shared<Dataset>(operand1->BitMask()->size());
-      destinyDataset->HasIndexes() = false;
-      destinyDataset->Sorted() = false;
-      destinyDataset->Addlistener(_this);
+    SetWorkloadPerThread(operand1->BitMask()->size(), minWorkPerThread,
+                         startPositionPerCore, finalPositionPerCore,
+                         numCores);
 
-      boost::dynamic_bitset<>::or_parallel(
-        *(destinyDataset->BitMask()), *(operand1->BitMask()),
-        *(operand2->BitMask()), numCores, minWorkPerThread);
+    destinyDataset = make_shared<Dataset>(operand1->BitMask()->size());
+    destinyDataset->HasIndexes() = false;
+    destinyDataset->Sorted() = false;
+    destinyDataset->AddListener(_this);
 
-    } else {
-      throw std::runtime_error("Invalid dataset type for logic operation.");
-    }
+    boost::dynamic_bitset<>::or_parallel(
+      *(destinyDataset->BitMask()), *(operand1->BitMask()),
+      *(operand2->BitMask()), numCores, minWorkPerThread);
 
 #ifdef TIME
     PRINT_TIME_INFO("Or")
@@ -870,29 +1019,28 @@ SavimeResult DefaultStorageManager::Not(DatasetPtr operand1,
     GET_T1();
 #endif
 
+    if(operand1 == nullptr || operand1->BitMask() == nullptr)
+      throw runtime_error(
+          "Attempt to call Not with operand1 dataset.");
+
     int numCores = _configurationManager->GetIntValue(MAX_THREADS);
     int32_t minWorkPerThread =
       _configurationManager->GetIntValue(WORK_PER_THREAD);
     int64_t startPositionPerCore[numCores];
     int64_t finalPositionPerCore[numCores];
 
-    if (operand1->BitMask() != nullptr) {
-      SetWorkloadPerThread(operand1->BitMask()->size(), minWorkPerThread,
-                           startPositionPerCore, finalPositionPerCore,
-                           numCores);
+    SetWorkloadPerThread(operand1->BitMask()->size(), minWorkPerThread,
+                         startPositionPerCore, finalPositionPerCore,
+                         numCores);
 
-      destinyDataset = make_shared<Dataset>(operand1->BitMask()->size());
-      destinyDataset->HasIndexes() = false;
-      destinyDataset->Sorted() = false;
-      destinyDataset->Addlistener(_this);
+    destinyDataset = make_shared<Dataset>(operand1->BitMask()->size());
+    destinyDataset->HasIndexes() = false;
+    destinyDataset->Sorted() = false;
+    destinyDataset->AddListener(_this);
 
-      boost::dynamic_bitset<>::not_parallel(*(destinyDataset->BitMask()),
-                                            *(operand1->BitMask()), numCores,
-                                            minWorkPerThread);
-
-    } else {
-      throw std::runtime_error("Invalid dataset type for logical operation.");
-    }
+    boost::dynamic_bitset<>::not_parallel(*(destinyDataset->BitMask()),
+                                          *(operand1->BitMask()), numCores,
+                                          minWorkPerThread);
 
 #ifdef TIME
     PRINT_TIME_INFO("Not")
@@ -905,12 +1053,113 @@ SavimeResult DefaultStorageManager::Not(DatasetPtr operand1,
   }
 }
 
+SavimeResult DefaultStorageManager::ComparisonStr(string op, DatasetPtr operand1,
+                                               DatasetPtr operand2,
+                                               DatasetPtr &destinyDataset) {
+
+  int numCores = _configurationManager->GetIntValue(MAX_THREADS);
+  int32_t minWorkPerThread =
+      _configurationManager->GetIntValue(WORK_PER_THREAD);
+  int64_t entryCount = operand1->GetEntryCount() <= operand2->GetEntryCount()
+                       ? operand1->GetEntryCount()
+                       : operand2->GetEntryCount();
+
+  DatasetHandlerPtr op1Handler = GetHandler(operand1);
+  DatasetHandlerPtr op2Handler = GetHandler(operand2);
+
+  auto op1Buffer =
+      BUILD_VECTOR<char>(op1Handler->GetBuffer(), operand1->GetType());
+
+  auto op2Buffer =
+      BUILD_VECTOR<char>(op2Handler->GetBuffer(), operand2->GetType());
+
+
+  destinyDataset = make_shared<Dataset>(entryCount);
+  destinyDataset->AddListener(_this);
+  destinyDataset->HasIndexes() = false;
+  destinyDataset->Sorted() = false;
+
+  SET_THREADS_ALIGNED(entryCount, minWorkPerThread, numCores,
+                      (int32_t)destinyDataset->GetBitsPerBlock());
+
+  string lhs, rhs;
+  int32_t lhsSize = operand1->GetType().vectorLength();
+  int32_t rhsSize = operand2->GetType().vectorLength();
+
+  if (op == _EQ) {
+#pragma omp parallel
+    for (SubTARPosition i = THREAD_FIRST(); i < THREAD_LAST(); ++i) {
+      BUF2STR(lhs, op1Buffer, i, lhsSize);
+      BUF2STR(rhs, op2Buffer, i, rhsSize);
+      (*destinyDataset->BitMask())[i] = lhs == rhs;
+    }
+  } else if (op == _NEQ) {
+#pragma omp parallel
+    for (SubTARPosition i = THREAD_FIRST(); i < THREAD_LAST(); ++i) {
+      BUF2STR(lhs, op1Buffer, i, lhsSize);
+      BUF2STR(rhs, op2Buffer, i, rhsSize);
+      (*destinyDataset->BitMask())[i] = lhs != rhs;
+    }
+  } else if (op == _LE) {
+#pragma omp parallel
+    for (SubTARPosition i = THREAD_FIRST(); i < THREAD_LAST(); ++i) {
+      BUF2STR(lhs, op1Buffer, i, lhsSize);
+      BUF2STR(rhs, op2Buffer, i, rhsSize);
+      (*destinyDataset->BitMask())[i] = lhs < rhs;
+    }
+  } else if (op == _GE) {
+#pragma omp parallel
+    for (SubTARPosition i = THREAD_FIRST(); i < THREAD_LAST(); ++i) {
+      BUF2STR(lhs, op1Buffer, i, lhsSize);
+      BUF2STR(rhs, op2Buffer, i, rhsSize);
+      (*destinyDataset->BitMask())[i] = lhs > rhs;
+    }
+  } else if (op == _LEQ) {
+#pragma omp parallel
+    for (SubTARPosition i = THREAD_FIRST(); i < THREAD_LAST(); ++i) {
+      BUF2STR(lhs, op1Buffer, i, lhsSize);
+      BUF2STR(rhs, op2Buffer, i, rhsSize);
+      (*destinyDataset->BitMask())[i] = lhs <= rhs;
+    }
+  } else if (op == _GEQ) {
+#pragma omp parallel
+    for (SubTARPosition i = THREAD_FIRST(); i < THREAD_LAST(); ++i) {
+      BUF2STR(lhs, op1Buffer, i, lhsSize);
+      BUF2STR(rhs, op2Buffer, i, rhsSize);
+      (*destinyDataset->BitMask())[i] = lhs >= rhs;
+    }
+  } else if (op == _LIKE) {
+#pragma omp parallel
+    for (SubTARPosition i = THREAD_FIRST(); i < THREAD_LAST(); ++i) {
+      BUF2STR(lhs, op1Buffer, i, lhsSize);
+      BUF2STR(rhs, op2Buffer, i, rhsSize);
+      (*destinyDataset->BitMask())[i] = like(lhs, rhs);
+    }
+  } else {
+    throw std::runtime_error("Invalid comparison operation.");
+  }
+
+  op1Handler->Close();
+  op2Handler->Close();
+
+  return SAVIME_SUCCESS;
+}
+
 SavimeResult DefaultStorageManager::Comparison(string op, DatasetPtr operand1,
                                                DatasetPtr operand2,
                                                DatasetPtr &destinyDataset) {
   SavimeResult result;
 
   try {
+
+    if(operand1 == nullptr)
+      throw runtime_error(
+          "Attempt to call Comparison with invalid operand1 dataset.");
+
+    if(operand2 == nullptr)
+      throw runtime_error(
+          "Attempt to call Comparison with invalid operand2 dataset.");
+
 #ifdef TIME
     GET_T1();
 #endif
@@ -918,10 +1167,14 @@ SavimeResult DefaultStorageManager::Comparison(string op, DatasetPtr operand1,
     DataType type1 = operand1->GetType();
     DataType type2 = operand2->GetType();
 
-    AbstractStorageManagerPtr st = TemplateBuilder::Build(
-      _this, _configurationManager, _systemLogger, type1, type2, type1);
+    if(type1.isNumeric() && type2.isNumeric()) {
+      AbstractStorageManagerPtr st = TemplateBuilder::Build(
+          _this, _configurationManager, _systemLogger, type1, type2, type1);
 
-    result = st->Comparison(op, operand1, operand2, destinyDataset);
+      result = st->Comparison(op, operand1, operand2, destinyDataset);
+    } else {
+      result = ComparisonStr(op, operand1, operand2, destinyDataset);
+    }
 
 #ifdef TIME
     PRINT_TIME_INFO("Comparison")
@@ -960,6 +1213,81 @@ SavimeResult DefaultStorageManager::ComparisonDim(string op,
   }
 }
 
+SavimeResult DefaultStorageManager::ComparisonStr(std::string op,
+                                               DatasetPtr operand1,
+                                               Literal operand2,
+                                               DatasetPtr &destinyDataset) {
+  int numCores = _configurationManager->GetIntValue(MAX_THREADS);
+  int32_t minWorkPerThread =
+      _configurationManager->GetIntValue(WORK_PER_THREAD);
+  int64_t entryCount = operand1->GetEntryCount();
+  DatasetHandlerPtr op1Handler = GetHandler(operand1);
+
+  auto op1Buffer =
+      BUILD_VECTOR<char>(op1Handler->GetBuffer(), operand1->GetType());
+
+  destinyDataset = make_shared<Dataset>(entryCount);
+  destinyDataset->AddListener(_this);
+  destinyDataset->HasIndexes() = false;
+  destinyDataset->Sorted() = false;
+
+  SET_THREADS_ALIGNED(entryCount, minWorkPerThread, numCores,
+                      (int32_t)destinyDataset->GetBitsPerBlock());
+
+  string lhs, rhs = operand2.str;
+  int32_t lhsSize = operand1->GetType().vectorLength();
+
+  if (op == _EQ) {
+#pragma omp parallel
+    for (SubTARPosition i = THREAD_FIRST(); i < THREAD_LAST(); ++i) {
+      BUF2STR(lhs, op1Buffer, i, lhsSize);
+      (*destinyDataset->BitMask())[i] = lhs == rhs;
+    }
+  } else if (op == _NEQ) {
+#pragma omp parallel
+    for (SubTARPosition i = THREAD_FIRST(); i < THREAD_LAST(); ++i) {
+      BUF2STR(lhs, op1Buffer, i, lhsSize);
+      (*destinyDataset->BitMask())[i] = lhs != rhs;
+    }
+  } else if (op == _LE) {
+#pragma omp parallel
+    for (SubTARPosition i = THREAD_FIRST(); i < THREAD_LAST(); ++i) {
+      BUF2STR(lhs, op1Buffer, i, lhsSize);
+      (*destinyDataset->BitMask())[i] = lhs < rhs;
+    }
+  } else if (op == _GE) {
+#pragma omp parallel
+    for (SubTARPosition i = THREAD_FIRST(); i < THREAD_LAST(); ++i) {
+      BUF2STR(lhs, op1Buffer, i, lhsSize);
+      (*destinyDataset->BitMask())[i] = lhs > rhs;
+    }
+  } else if (op == _LEQ) {
+#pragma omp parallel
+    for (SubTARPosition i = THREAD_FIRST(); i < THREAD_LAST(); ++i) {
+      BUF2STR(lhs, op1Buffer, i, lhsSize);
+      (*destinyDataset->BitMask())[i] = lhs <= rhs;
+    }
+  } else if (op == _GEQ) {
+#pragma omp parallel
+    for (SubTARPosition i = THREAD_FIRST(); i < THREAD_LAST(); ++i) {
+      BUF2STR(lhs, op1Buffer, i, lhsSize);
+      (*destinyDataset->BitMask())[i] = lhs >= rhs;
+    }
+  } else if (op == _LIKE) {
+#pragma omp parallel
+    for (SubTARPosition i = THREAD_FIRST(); i < THREAD_LAST(); ++i) {
+      BUF2STR(lhs, op1Buffer, i, lhsSize);
+      (*destinyDataset->BitMask())[i] = like(lhs, rhs);
+    }
+  } else {
+    throw std::runtime_error("Invalid comparison operation.");
+  }
+
+  op1Handler->Close();
+
+  return SAVIME_SUCCESS;
+}
+
 SavimeResult DefaultStorageManager::Comparison(std::string op,
                                                DatasetPtr operand1,
                                                Literal operand2,
@@ -970,13 +1298,25 @@ SavimeResult DefaultStorageManager::Comparison(std::string op,
     GET_T1();
 #endif
 
+    if (operand1 == nullptr)
+      throw runtime_error(
+          "Attempt to call Comparison with invalid operand1 dataset.");
+
+    if (operand2.type == NO_TYPE)
+      throw runtime_error(
+          "Attempt to call Comparison with invalid operand2 literal type.");
+
     DataType type1 = operand1->GetType();
     DataType type2 = operand2.type;
 
-    AbstractStorageManagerPtr st = TemplateBuilder::Build(
-      _this, _configurationManager, _systemLogger, type1, type2, type1);
+    if (type1.isNumeric() && type2.isNumeric()) {
+      AbstractStorageManagerPtr st = TemplateBuilder::Build(
+        _this, _configurationManager, _systemLogger, type1, type2, type1);
 
-    result = st->Comparison(op, operand1, operand2, destinyDataset);
+      result = st->Comparison(op, operand1, operand2, destinyDataset);
+    } else {
+      result = ComparisonStr(op, operand1, operand2, destinyDataset);
+    }
 
 #ifdef TIME
     PRINT_TIME_INFO("Comparison")
@@ -1001,6 +1341,14 @@ SavimeResult DefaultStorageManager::ComparisonDim(string op,
 #ifdef TIME
     GET_T1();
 #endif
+
+    if (dimSpecs == nullptr)
+      throw runtime_error(
+          "Attempt to call ComparisonDim with invalid dimension specification.");
+
+    if (operand2.type == NO_TYPE)
+      throw runtime_error(
+          "Attempt to call ComparisonDim with invalid operand2 literal type.");
 
     DataType type1 = operand1->GetType();
     DataType type2 = operand2.type;
@@ -1032,6 +1380,15 @@ SavimeResult DefaultStorageManager::SubsetDims(vector<DimSpecPtr> dimSpecs,
     GET_T1();
 #endif
 
+    if (dimSpecs.empty())
+      throw runtime_error(
+          "Attempt to call SubsetDims with empty dimSpecs list.");
+
+    if (lowerBounds.size() != upperBounds.size()
+        || dimSpecs.size() != lowerBounds.size())
+      throw runtime_error(
+          "Attempt to call SubsetDims with invalid bounds.");
+
     DataType type(DOUBLE, 1);
     AbstractStorageManagerPtr st = TemplateBuilder::Build(
       _this, _configurationManager, _systemLogger, type, type, type);
@@ -1057,6 +1414,15 @@ SavimeResult DefaultStorageManager::Apply(string op, DatasetPtr operand1,
 #ifdef TIME
     GET_T1();
 #endif
+
+    if (operand1 == nullptr)
+      throw runtime_error(
+          "Attempt to call Apply with invalid operand1.");
+
+    if (operand2 == nullptr)
+      throw runtime_error(
+          "Attempt to call Apply with invalid operand2.");
+
 
     DataType type1 = operand1->GetType();
     DataType type2 = operand2->GetType();
@@ -1087,6 +1453,14 @@ SavimeResult DefaultStorageManager::Apply(string op, DatasetPtr operand1,
     GET_T1();
 #endif
 
+    if (operand1 == nullptr)
+      throw runtime_error(
+          "Attempt to call Apply with invalid operand1.");
+
+    if (operand2.type == NO_TYPE)
+      throw runtime_error(
+          "Attempt to call Apply with invalid operand2.");
+
     DataType type1 = operand1->GetType();
     DataType type2 = operand2.type;
     DataType resultType = SelectType(operand1->GetType(), operand2.type, op);
@@ -1116,6 +1490,10 @@ SavimeResult DefaultStorageManager::MaterializeDim(DimSpecPtr dimSpecs,
     GET_T1();
 #endif
 
+    if (dimSpecs == nullptr)
+      throw runtime_error(
+          "Attempt to call MaterializeDim with invalid dimSpecs.");
+
     DataType type1 = dimSpecs->GetDimension()->GetType();
     AbstractStorageManagerPtr st = TemplateBuilder::Build(
       _this, _configurationManager, _systemLogger, type1, type1, type1);
@@ -1141,6 +1519,14 @@ SavimeResult DefaultStorageManager::PartiatMaterializeDim(
 #ifdef TIME
     GET_T1();
 #endif
+
+    if (filter == nullptr)
+      throw runtime_error(
+          "Attempt to call PartiatMaterializeDim with invalid filter.");
+
+    if (dimSpecs == nullptr)
+      throw runtime_error(
+          "Attempt to call PartiatMaterializeDim with invalid dimSpecs.");
 
     DataType type1 = dimSpecs->GetDimension()->GetType();
     AbstractStorageManagerPtr st = TemplateBuilder::Build(
@@ -1173,6 +1559,15 @@ SavimeResult DefaultStorageManager::Stretch(DatasetPtr origin,
     GET_T1();
 #endif
 
+    if (origin == nullptr)
+      throw runtime_error(
+          "Attempt to call Stretch with invalid DatasetPtr.");
+
+    if (entryCount > origin->GetEntryCount())
+      throw runtime_error(
+          "Attempt to call Stretch with invalid entryCount.");
+
+
     DataType type1 = origin->GetType();
     AbstractStorageManagerPtr st = TemplateBuilder::Build(
       _this, _configurationManager, _systemLogger, type1, type1, type1);
@@ -1200,6 +1595,14 @@ SavimeResult DefaultStorageManager::Match(DatasetPtr ds1, DatasetPtr ds2,
 #ifdef TIME
     GET_T1();
 #endif
+
+    if (ds1 == nullptr)
+      throw runtime_error(
+          "Attempt to call Match with invalid ds1.");
+
+    if (ds2 == nullptr)
+      throw runtime_error(
+          "Attempt to call Match with invalid ds2.");
 
     /*Smaller dataset is the one on the right.*/
     if (ds1->GetEntryCount() > ds2->GetEntryCount()) {
@@ -1241,6 +1644,14 @@ SavimeResult DefaultStorageManager::MatchDim(DimSpecPtr dim1, int64_t totalLen1,
 #ifdef TIME
     GET_T1();
 #endif
+
+    if (dim1 == nullptr)
+      throw runtime_error(
+          "Attempt to call MatchDim with invalid dim1.");
+
+    if (dim2 == nullptr)
+      throw runtime_error(
+          "Attempt to call MatchDim with invalid dim2.");
 
     /*Smaller dataset is the one on the right.*/
     // if (dim1->GetLength() > dim2->GetLength()) {
@@ -1346,7 +1757,7 @@ void DefaultStorageManager::FromBitMaskToPosition(DatasetPtr &dataset,
   }
 
   // Dataset must be created
-  auto auxDataSet = Create(DataType(SUBTAR_POSITION, 1), totalLen);
+  auto auxDataSet = this->Create(DataType(SUBTAR_POSITION, 1), totalLen);
   if (auxDataSet == nullptr)
     throw std::runtime_error("Could not create a dataset.");
 
@@ -1357,7 +1768,7 @@ void DefaultStorageManager::FromBitMaskToPosition(DatasetPtr &dataset,
   // To avoid file removal by destructor
   auxDataSet->ClearListeners();
 
-  DatasetHandlerPtr handler = GetHandler(dataset);
+  DatasetHandlerPtr handler = this->GetHandler(dataset);
   SubTARPosition *buffer = (SubTARPosition *)handler->GetBuffer();
 
 // creating index set from bitmap
@@ -1428,10 +1839,5 @@ void DefaultStorageManager::DisposeObject(MetadataObject *object) {
 
 string DefaultStorageManager::GetObjectInfo(MetadataObjectPtr object,
                                             string infoType) {
-  if (infoType == INFO_TYPE_DISTINCT_COUNT) {
-    if (Dataset *dataset = dynamic_cast<Dataset *>(object)) {
-    }
-  }
-
   return "";
 }

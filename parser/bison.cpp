@@ -62,7 +62,7 @@
 
 
 /* Copy the first part of user declarations.  */
-#line 1 "/home/hermano/Dropbox/workspace/Savime/parser/grammar.y" /* yacc.c:339  */
+#line 1 "./grammar.y" /* yacc.c:339  */
 
  #include <stdio.h>
  #include <string.h>
@@ -141,38 +141,39 @@ extern int yydebug;
     DIV = 268,
     OR = 269,
     AND = 270,
-    LEFT_PAREN = 271,
-    RIGHT_PAREN = 272,
-    LEFT_ANGLE_BRACKETS = 273,
-    RIGHT_ANGLE_BRACKETS = 274,
-    DOUBLE_QUOTE = 275,
-    IS = 276,
-    DOUBLE_PIPE = 277,
-    RIGHT_ARROW = 278,
-    IDENTIFIER_BODY = 279,
-    TRUE = 280,
-    FALSE = 281,
-    UNKNOWN = 282,
-    B = 283,
-    BITS = 284,
-    X = 285,
-    HEX = 286,
-    BETWEEN = 287,
-    IN = 288,
-    EXACT_NUMBER = 289,
-    SIGNED_EXACT_NUMBER = 290,
-    APROX_NUMBER = 291,
-    SIGNED_APROX_NUMBER = 292,
-    STRING = 293,
-    QUOTE = 294,
-    EQ = 295,
-    NEQ = 296,
-    LE = 297,
-    GE = 298,
-    LEQ = 299,
-    GEQ = 300,
-    NEWLINE = 301,
-    NOT = 302
+    LIKE = 271,
+    LEFT_PAREN = 272,
+    RIGHT_PAREN = 273,
+    LEFT_ANGLE_BRACKETS = 274,
+    RIGHT_ANGLE_BRACKETS = 275,
+    DOUBLE_QUOTE = 276,
+    IS = 277,
+    DOUBLE_PIPE = 278,
+    RIGHT_ARROW = 279,
+    IDENTIFIER_BODY = 280,
+    TRUE = 281,
+    FALSE = 282,
+    UNKNOWN = 283,
+    B = 284,
+    BITS = 285,
+    X = 286,
+    HEX = 287,
+    BETWEEN = 288,
+    IN = 289,
+    EXACT_NUMBER = 290,
+    SIGNED_EXACT_NUMBER = 291,
+    APROX_NUMBER = 292,
+    SIGNED_APROX_NUMBER = 293,
+    STRING = 294,
+    QUOTE = 295,
+    EQ = 296,
+    NEQ = 297,
+    LE = 298,
+    GE = 299,
+    LEQ = 300,
+    GEQ = 301,
+    NEWLINE = 302,
+    NOT = 303
   };
 #endif
 
@@ -181,7 +182,7 @@ extern int yydebug;
 
 union YYSTYPE
 {
-#line 86 "/home/hermano/Dropbox/workspace/Savime/parser/grammar.y" /* yacc.c:355  */
+#line 87 "./grammar.y" /* yacc.c:355  */
 
 	float num;
 	char * value;
@@ -200,7 +201,7 @@ union YYSTYPE
 	std::shared_ptr<HexStringLiteral> * hexStringLiteral;
 	std::shared_ptr<CompOp> * compOp;
 
-#line 204 "bison.cpp" /* yacc.c:355  */
+#line 205 "bison.cpp" /* yacc.c:355  */
 };
 
 typedef union YYSTYPE YYSTYPE;
@@ -216,7 +217,7 @@ int yyparse (void * scanner, void ** ret);
 
 /* Copy the second part of user declarations.  */
 
-#line 220 "bison.cpp" /* yacc.c:358  */
+#line 221 "bison.cpp" /* yacc.c:358  */
 
 #ifdef short
 # undef short
@@ -458,21 +459,21 @@ union yyalloc
 /* YYFINAL -- State number of the termination state.  */
 #define YYFINAL  7
 /* YYLAST -- Last index in YYTABLE.  */
-#define YYLAST   183
+#define YYLAST   186
 
 /* YYNTOKENS -- Number of terminals.  */
-#define YYNTOKENS  48
+#define YYNTOKENS  49
 /* YYNNTS -- Number of nonterminals.  */
 #define YYNNTS  14
 /* YYNRULES -- Number of rules.  */
-#define YYNRULES  45
+#define YYNRULES  46
 /* YYNSTATES -- Number of states.  */
-#define YYNSTATES  75
+#define YYNSTATES  77
 
 /* YYTRANSLATE[YYX] -- Symbol number corresponding to YYX as returned
    by yylex, with out-of-bounds checking.  */
 #define YYUNDEFTOK  2
-#define YYMAXUTOK   302
+#define YYMAXUTOK   303
 
 #define YYTRANSLATE(YYX)                                                \
   ((unsigned int) (YYX) <= YYMAXUTOK ? yytranslate[YYX] : YYUNDEFTOK)
@@ -511,18 +512,18 @@ static const yytype_uint8 yytranslate[] =
       15,    16,    17,    18,    19,    20,    21,    22,    23,    24,
       25,    26,    27,    28,    29,    30,    31,    32,    33,    34,
       35,    36,    37,    38,    39,    40,    41,    42,    43,    44,
-      45,    46,    47
+      45,    46,    47,    48
 };
 
 #if YYDEBUG
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,   137,   137,   138,   139,   140,   144,   148,   149,   153,
-     154,   158,   159,   160,   161,   162,   163,   164,   165,   166,
-     167,   168,   169,   170,   171,   172,   173,   174,   175,   176,
-     177,   178,   179,   183,   184,   188,   192,   193,   194,   198,
-     199,   203,   204,   208,   212,   216
+       0,   138,   138,   139,   140,   141,   145,   149,   150,   154,
+     155,   159,   160,   161,   162,   163,   164,   165,   166,   167,
+     168,   169,   170,   171,   172,   173,   174,   175,   176,   177,
+     178,   179,   180,   181,   185,   186,   190,   194,   195,   196,
+     200,   201,   205,   206,   210,   214,   218
 };
 #endif
 
@@ -533,10 +534,10 @@ static const char *const yytname[] =
 {
   "$end", "error", "$undefined", "ASTERISK", "COMMA", "PERIOD", "COLON",
   "SEMICOLON", "PLUS_SIGN", "MINUS_SIGN", "SOLIDUS", "MODULUS", "POWER",
-  "DIV", "OR", "AND", "LEFT_PAREN", "RIGHT_PAREN", "LEFT_ANGLE_BRACKETS",
-  "RIGHT_ANGLE_BRACKETS", "DOUBLE_QUOTE", "IS", "DOUBLE_PIPE",
-  "RIGHT_ARROW", "IDENTIFIER_BODY", "TRUE", "FALSE", "UNKNOWN", "B",
-  "BITS", "X", "HEX", "BETWEEN", "IN", "EXACT_NUMBER",
+  "DIV", "OR", "AND", "LIKE", "LEFT_PAREN", "RIGHT_PAREN",
+  "LEFT_ANGLE_BRACKETS", "RIGHT_ANGLE_BRACKETS", "DOUBLE_QUOTE", "IS",
+  "DOUBLE_PIPE", "RIGHT_ARROW", "IDENTIFIER_BODY", "TRUE", "FALSE",
+  "UNKNOWN", "B", "BITS", "X", "HEX", "BETWEEN", "IN", "EXACT_NUMBER",
   "SIGNED_EXACT_NUMBER", "APROX_NUMBER", "SIGNED_APROX_NUMBER", "STRING",
   "QUOTE", "EQ", "NEQ", "LE", "GE", "LEQ", "GEQ", "NEWLINE", "NOT",
   "$accept", "expression", "expression_bulk", "query_expression",
@@ -556,14 +557,14 @@ static const yytype_uint16 yytoknum[] =
      265,   266,   267,   268,   269,   270,   271,   272,   273,   274,
      275,   276,   277,   278,   279,   280,   281,   282,   283,   284,
      285,   286,   287,   288,   289,   290,   291,   292,   293,   294,
-     295,   296,   297,   298,   299,   300,   301,   302
+     295,   296,   297,   298,   299,   300,   301,   302,   303
 };
 # endif
 
-#define YYPACT_NINF -33
+#define YYPACT_NINF -37
 
 #define yypact_value_is_default(Yystate) \
-  (!!((Yystate) == (-33)))
+  (!!((Yystate) == (-37)))
 
 #define YYTABLE_NINF -1
 
@@ -574,14 +575,14 @@ static const yytype_uint16 yytoknum[] =
      STATE-NUM.  */
 static const yytype_int16 yypact[] =
 {
-     -19,   -33,   -33,     2,    -3,   -33,    -5,   -33,   -32,   121,
-     -33,   136,   -33,   -21,   -20,   -33,   -33,   -33,   -33,   -33,
-     136,   -33,    -1,    14,    15,    -5,   -33,   -33,   -33,   -33,
-     -33,   -33,    -2,    -8,     1,    57,   136,   -33,   136,   136,
-     136,   136,   136,   136,   136,   136,   -33,   136,   136,   136,
-     136,   136,   136,     6,   -33,    -4,     5,    14,    19,    71,
-      71,    19,    19,    19,    57,    57,    68,    68,    68,    68,
-      68,    68,   -33,   -33,   -33
+     -20,   -37,   -37,     2,    -4,   -37,   -13,   -37,   -36,   123,
+     -37,   138,   -37,   -25,   -22,   -37,   -37,   -37,   -37,   -37,
+     138,   -37,    15,    14,    16,   -13,   -37,   -37,   -37,   -37,
+     -37,   -37,    -2,   -10,    -1,    58,   138,   -37,   138,   138,
+     138,   138,   138,   138,   138,   138,   138,   -37,   138,   138,
+     138,   138,   138,   138,     7,   -37,    -5,    -3,    14,    24,
+      35,    35,    24,    24,    24,    58,    58,    69,    69,    69,
+      69,    69,    69,    69,   -37,   -37,   -37
 };
 
   /* YYDEFACT[STATE-NUM] -- Default reduction number in state STATE-NUM.
@@ -589,21 +590,21 @@ static const yytype_int16 yypact[] =
      means the default is an error.  */
 static const yytype_uint8 yydefact[] =
 {
-       0,    35,     5,     0,     2,     6,     0,     1,     3,     0,
-       4,     0,     8,     0,     0,    39,    41,    40,    42,    43,
-       0,    12,     0,     9,    11,    33,    16,    14,    15,    36,
-      37,    38,     0,     0,     0,    30,     0,     7,     0,     0,
-       0,     0,     0,     0,     0,     0,    17,     0,     0,     0,
-       0,     0,     0,     0,    13,     0,     0,    10,    23,    18,
-      19,    21,    22,    20,    31,    32,    24,    25,    26,    27,
-      28,    29,    34,    44,    45
+       0,    36,     5,     0,     2,     6,     0,     1,     3,     0,
+       4,     0,     8,     0,     0,    40,    42,    41,    43,    44,
+       0,    12,     0,     9,    11,    34,    16,    14,    15,    37,
+      38,    39,     0,     0,     0,    31,     0,     7,     0,     0,
+       0,     0,     0,     0,     0,     0,     0,    17,     0,     0,
+       0,     0,     0,     0,     0,    13,     0,     0,    10,    23,
+      18,    19,    21,    22,    20,    32,    33,    30,    24,    25,
+      26,    27,    28,    29,    35,    45,    46
 };
 
   /* YYPGOTO[NTERM-NUM].  */
 static const yytype_int8 yypgoto[] =
 {
-     -33,   -33,   -33,    34,   -33,    84,   -33,     0,   -33,   -33,
-     -33,   -33,   -33,   -33
+     -37,   -37,   -37,    48,   -37,    86,   -37,     0,   -37,   -37,
+     -37,   -37,   -37,   -37
 };
 
   /* YYDEFGOTO[NTERM-NUM].  */
@@ -618,72 +619,72 @@ static const yytype_int8 yydefgoto[] =
      number is the opposite.  If YYTABLE_NINF, syntax error.  */
 static const yytype_int8 yytable[] =
 {
-       6,    38,     7,    36,     8,     1,    39,    40,    41,    42,
-      43,     9,    44,    45,    10,    54,    37,    38,    33,    34,
-      53,    55,    39,    40,    41,    42,    43,     2,    44,    45,
-       1,    43,    56,    46,     5,    73,     0,     0,    47,    48,
-      49,    50,    51,    52,    74,     0,     0,     0,     0,    46,
-       0,     0,     0,    72,    47,    48,    49,    50,    51,    52,
-      38,     0,     0,     0,     0,    39,    40,    41,    42,    43,
-       0,    38,     0,     0,    38,     0,    39,    40,    41,    42,
-      43,    41,    42,    43,     0,     0,     0,     0,     0,     0,
-       0,     0,    46,     0,     0,    32,     0,    47,    48,    49,
-      50,    51,    52,    46,    35,     0,    46,     0,    -1,    -1,
-      -1,    -1,    -1,    -1,     0,     0,     0,     0,     0,     0,
-      57,     0,    58,    59,    60,    61,    62,    63,    64,    65,
-       0,    66,    67,    68,    69,    70,    71,    11,    12,     0,
-       0,     0,     0,     0,     0,     1,     0,     0,     0,    13,
-       0,    14,    11,     0,     0,    15,    16,    17,    18,    19,
-       1,     0,     0,     0,    13,     0,    14,     0,    20,     0,
-      15,    16,    17,    18,    19,     0,     0,     0,     0,     0,
-       0,     0,     0,    20
+       6,    38,     7,     8,     9,     1,    39,    40,    41,    42,
+      43,    10,    44,    45,    46,    33,    55,    38,    34,    36,
+      56,    54,    39,    40,    41,    42,    43,     2,    44,    45,
+      46,    57,     1,    37,    47,    75,    43,    76,    38,    48,
+      49,    50,    51,    52,    53,    41,    42,    43,     5,     0,
+      47,     0,     0,     0,    74,    48,    49,    50,    51,    52,
+      53,    38,     0,     0,     0,     0,    39,    40,    41,    42,
+      43,    47,    38,     0,    46,     0,     0,    39,    40,    41,
+      42,    43,     0,     0,     0,    -1,     0,     0,     0,     0,
+       0,     0,     0,     0,    47,     0,     0,    32,     0,    48,
+      49,    50,    51,    52,    53,    47,    35,     0,     0,     0,
+      -1,    -1,    -1,    -1,    -1,    -1,     0,     0,     0,     0,
+       0,     0,    58,     0,    59,    60,    61,    62,    63,    64,
+      65,    66,    67,     0,    68,    69,    70,    71,    72,    73,
+      11,    12,     0,     0,     0,     0,     0,     0,     1,     0,
+       0,     0,    13,     0,    14,    11,     0,     0,    15,    16,
+      17,    18,    19,     1,     0,     0,     0,    13,     0,    14,
+       0,    20,     0,    15,    16,    17,    18,    19,     0,     0,
+       0,     0,     0,     0,     0,     0,    20
 };
 
 static const yytype_int8 yycheck[] =
 {
-       0,     3,     0,     4,     7,    24,     8,     9,    10,    11,
-      12,    16,    14,    15,    46,    17,    17,     3,    39,    39,
-       5,    29,     8,     9,    10,    11,    12,    46,    14,    15,
-      24,    12,    31,    35,     0,    39,    -1,    -1,    40,    41,
-      42,    43,    44,    45,    39,    -1,    -1,    -1,    -1,    35,
-      -1,    -1,    -1,    53,    40,    41,    42,    43,    44,    45,
-       3,    -1,    -1,    -1,    -1,     8,     9,    10,    11,    12,
-      -1,     3,    -1,    -1,     3,    -1,     8,     9,    10,    11,
-      12,    10,    11,    12,    -1,    -1,    -1,    -1,    -1,    -1,
-      -1,    -1,    35,    -1,    -1,    11,    -1,    40,    41,    42,
-      43,    44,    45,    35,    20,    -1,    35,    -1,    40,    41,
-      42,    43,    44,    45,    -1,    -1,    -1,    -1,    -1,    -1,
-      36,    -1,    38,    39,    40,    41,    42,    43,    44,    45,
-      -1,    47,    48,    49,    50,    51,    52,    16,    17,    -1,
-      -1,    -1,    -1,    -1,    -1,    24,    -1,    -1,    -1,    28,
-      -1,    30,    16,    -1,    -1,    34,    35,    36,    37,    38,
-      24,    -1,    -1,    -1,    28,    -1,    30,    -1,    47,    -1,
-      34,    35,    36,    37,    38,    -1,    -1,    -1,    -1,    -1,
-      -1,    -1,    -1,    47
+       0,     3,     0,     7,    17,    25,     8,     9,    10,    11,
+      12,    47,    14,    15,    16,    40,    18,     3,    40,     4,
+      30,     5,     8,     9,    10,    11,    12,    47,    14,    15,
+      16,    32,    25,    18,    36,    40,    12,    40,     3,    41,
+      42,    43,    44,    45,    46,    10,    11,    12,     0,    -1,
+      36,    -1,    -1,    -1,    54,    41,    42,    43,    44,    45,
+      46,     3,    -1,    -1,    -1,    -1,     8,     9,    10,    11,
+      12,    36,     3,    -1,    16,    -1,    -1,     8,     9,    10,
+      11,    12,    -1,    -1,    -1,    16,    -1,    -1,    -1,    -1,
+      -1,    -1,    -1,    -1,    36,    -1,    -1,    11,    -1,    41,
+      42,    43,    44,    45,    46,    36,    20,    -1,    -1,    -1,
+      41,    42,    43,    44,    45,    46,    -1,    -1,    -1,    -1,
+      -1,    -1,    36,    -1,    38,    39,    40,    41,    42,    43,
+      44,    45,    46,    -1,    48,    49,    50,    51,    52,    53,
+      17,    18,    -1,    -1,    -1,    -1,    -1,    -1,    25,    -1,
+      -1,    -1,    29,    -1,    31,    17,    -1,    -1,    35,    36,
+      37,    38,    39,    25,    -1,    -1,    -1,    29,    -1,    31,
+      -1,    48,    -1,    35,    36,    37,    38,    39,    -1,    -1,
+      -1,    -1,    -1,    -1,    -1,    -1,    48
 };
 
   /* YYSTOS[STATE-NUM] -- The (internal number of the) accessing
      symbol of state STATE-NUM.  */
 static const yytype_uint8 yystos[] =
 {
-       0,    24,    46,    49,    50,    51,    55,     0,     7,    16,
-      46,    16,    17,    28,    30,    34,    35,    36,    37,    38,
-      47,    51,    52,    53,    54,    55,    56,    57,    58,    59,
-      60,    61,    53,    39,    39,    53,     4,    17,     3,     8,
-       9,    10,    11,    12,    14,    15,    35,    40,    41,    42,
-      43,    44,    45,     5,    17,    29,    31,    53,    53,    53,
-      53,    53,    53,    53,    53,    53,    53,    53,    53,    53,
-      53,    53,    55,    39,    39
+       0,    25,    47,    50,    51,    52,    56,     0,     7,    17,
+      47,    17,    18,    29,    31,    35,    36,    37,    38,    39,
+      48,    52,    53,    54,    55,    56,    57,    58,    59,    60,
+      61,    62,    54,    40,    40,    54,     4,    18,     3,     8,
+       9,    10,    11,    12,    14,    15,    16,    36,    41,    42,
+      43,    44,    45,    46,     5,    18,    30,    32,    54,    54,
+      54,    54,    54,    54,    54,    54,    54,    54,    54,    54,
+      54,    54,    54,    54,    56,    40,    40
 };
 
   /* YYR1[YYN] -- Symbol number of symbol that rule YYN derives.  */
 static const yytype_uint8 yyr1[] =
 {
-       0,    48,    49,    49,    49,    49,    50,    51,    51,    52,
-      52,    53,    53,    53,    53,    53,    53,    53,    53,    53,
-      53,    53,    53,    53,    53,    53,    53,    53,    53,    53,
-      53,    53,    53,    54,    54,    55,    56,    56,    56,    57,
-      57,    58,    58,    59,    60,    61
+       0,    49,    50,    50,    50,    50,    51,    52,    52,    53,
+      53,    54,    54,    54,    54,    54,    54,    54,    54,    54,
+      54,    54,    54,    54,    54,    54,    54,    54,    54,    54,
+      54,    54,    54,    54,    55,    55,    56,    57,    57,    57,
+      58,    58,    59,    59,    60,    61,    62
 };
 
   /* YYR2[YYN] -- Number of symbols on the right hand side of rule YYN.  */
@@ -692,8 +693,8 @@ static const yytype_uint8 yyr2[] =
        0,     2,     1,     2,     3,     1,     1,     4,     3,     1,
        3,     1,     1,     3,     1,     1,     1,     2,     3,     3,
        3,     3,     3,     3,     3,     3,     3,     3,     3,     3,
-       2,     3,     3,     1,     3,     1,     1,     1,     1,     1,
-       1,     1,     1,     1,     4,     4
+       3,     2,     3,     3,     1,     3,     1,     1,     1,     1,
+       1,     1,     1,     1,     1,     4,     4
 };
 
 
@@ -1378,271 +1379,277 @@ yyreduce:
   switch (yyn)
     {
         case 2:
-#line 137 "/home/hermano/Dropbox/workspace/Savime/parser/grammar.y" /* yacc.c:1646  */
+#line 138 "./grammar.y" /* yacc.c:1646  */
     {}
-#line 1384 "bison.cpp" /* yacc.c:1646  */
+#line 1385 "bison.cpp" /* yacc.c:1646  */
     break;
 
   case 3:
-#line 138 "/home/hermano/Dropbox/workspace/Savime/parser/grammar.y" /* yacc.c:1646  */
+#line 139 "./grammar.y" /* yacc.c:1646  */
     {}
-#line 1390 "bison.cpp" /* yacc.c:1646  */
+#line 1391 "bison.cpp" /* yacc.c:1646  */
     break;
 
   case 4:
-#line 139 "/home/hermano/Dropbox/workspace/Savime/parser/grammar.y" /* yacc.c:1646  */
+#line 140 "./grammar.y" /* yacc.c:1646  */
     {}
-#line 1396 "bison.cpp" /* yacc.c:1646  */
+#line 1397 "bison.cpp" /* yacc.c:1646  */
     break;
 
   case 5:
-#line 140 "/home/hermano/Dropbox/workspace/Savime/parser/grammar.y" /* yacc.c:1646  */
+#line 141 "./grammar.y" /* yacc.c:1646  */
     {}
-#line 1402 "bison.cpp" /* yacc.c:1646  */
+#line 1403 "bison.cpp" /* yacc.c:1646  */
     break;
 
   case 6:
-#line 144 "/home/hermano/Dropbox/workspace/Savime/parser/grammar.y" /* yacc.c:1646  */
+#line 145 "./grammar.y" /* yacc.c:1646  */
     {}
-#line 1408 "bison.cpp" /* yacc.c:1646  */
+#line 1409 "bison.cpp" /* yacc.c:1646  */
     break;
 
   case 7:
-#line 148 "/home/hermano/Dropbox/workspace/Savime/parser/grammar.y" /* yacc.c:1646  */
+#line 149 "./grammar.y" /* yacc.c:1646  */
     {(yyval.queryExpression) = new QueryExpressionPtr  (new QueryExpression(*(yyvsp[-3].identifier), *(yyvsp[-1].valueExpressionList))); delete (yyvsp[-3].identifier); delete (yyvsp[-1].valueExpressionList); *ret = (void*)(yyval.queryExpression);}
-#line 1414 "bison.cpp" /* yacc.c:1646  */
+#line 1415 "bison.cpp" /* yacc.c:1646  */
     break;
 
   case 8:
-#line 149 "/home/hermano/Dropbox/workspace/Savime/parser/grammar.y" /* yacc.c:1646  */
+#line 150 "./grammar.y" /* yacc.c:1646  */
     {(yyval.queryExpression) = new QueryExpressionPtr  (new QueryExpression(*(yyvsp[-2].identifier), NULL)); delete (yyvsp[-2].identifier); *ret = (void*)(yyval.queryExpression);}
-#line 1420 "bison.cpp" /* yacc.c:1646  */
+#line 1421 "bison.cpp" /* yacc.c:1646  */
     break;
 
   case 9:
-#line 153 "/home/hermano/Dropbox/workspace/Savime/parser/grammar.y" /* yacc.c:1646  */
+#line 154 "./grammar.y" /* yacc.c:1646  */
     {(yyval.valueExpressionList) = new std::shared_ptr<ValueExpressionList>(new ValueExpressionList(*(yyvsp[0].valueExpression), NULL)); delete (yyvsp[0].valueExpression);}
-#line 1426 "bison.cpp" /* yacc.c:1646  */
+#line 1427 "bison.cpp" /* yacc.c:1646  */
     break;
 
   case 10:
-#line 154 "/home/hermano/Dropbox/workspace/Savime/parser/grammar.y" /* yacc.c:1646  */
+#line 155 "./grammar.y" /* yacc.c:1646  */
     {(yyval.valueExpressionList) = new std::shared_ptr<ValueExpressionList>(new ValueExpressionList(*(yyvsp[0].valueExpression), *(yyvsp[-2].valueExpressionList))); delete (yyvsp[-2].valueExpressionList); delete (yyvsp[0].valueExpression);}
-#line 1432 "bison.cpp" /* yacc.c:1646  */
+#line 1433 "bison.cpp" /* yacc.c:1646  */
     break;
 
   case 11:
-#line 158 "/home/hermano/Dropbox/workspace/Savime/parser/grammar.y" /* yacc.c:1646  */
+#line 159 "./grammar.y" /* yacc.c:1646  */
     {(yyval.valueExpression) = new ValueExpressionPtr (); *(yyval.valueExpression) = PARSE(*(yyvsp[0].identifierChain), ValueExpression); delete (yyvsp[0].identifierChain);}
-#line 1438 "bison.cpp" /* yacc.c:1646  */
+#line 1439 "bison.cpp" /* yacc.c:1646  */
     break;
 
   case 12:
-#line 159 "/home/hermano/Dropbox/workspace/Savime/parser/grammar.y" /* yacc.c:1646  */
+#line 160 "./grammar.y" /* yacc.c:1646  */
     {(yyval.valueExpression) = new ValueExpressionPtr (); *(yyval.valueExpression) = PARSE(*(yyvsp[0].queryExpression), ValueExpression); delete (yyvsp[0].queryExpression);}
-#line 1444 "bison.cpp" /* yacc.c:1646  */
+#line 1445 "bison.cpp" /* yacc.c:1646  */
     break;
 
   case 13:
-#line 160 "/home/hermano/Dropbox/workspace/Savime/parser/grammar.y" /* yacc.c:1646  */
+#line 161 "./grammar.y" /* yacc.c:1646  */
     {(yyval.valueExpression) = new ValueExpressionPtr (); *(yyval.valueExpression) = PARSE(*(yyvsp[-1].valueExpression), ValueExpression); delete (yyvsp[-1].valueExpression);}
-#line 1450 "bison.cpp" /* yacc.c:1646  */
+#line 1451 "bison.cpp" /* yacc.c:1646  */
     break;
 
   case 14:
-#line 161 "/home/hermano/Dropbox/workspace/Savime/parser/grammar.y" /* yacc.c:1646  */
+#line 162 "./grammar.y" /* yacc.c:1646  */
     {(yyval.valueExpression) = new ValueExpressionPtr (); *(yyval.valueExpression) = PARSE(*(yyvsp[0].unsignedNumericLiteral), ValueExpression); delete (yyvsp[0].unsignedNumericLiteral);}
-#line 1456 "bison.cpp" /* yacc.c:1646  */
+#line 1457 "bison.cpp" /* yacc.c:1646  */
     break;
 
   case 15:
-#line 162 "/home/hermano/Dropbox/workspace/Savime/parser/grammar.y" /* yacc.c:1646  */
+#line 163 "./grammar.y" /* yacc.c:1646  */
     {(yyval.valueExpression) = new ValueExpressionPtr (); *(yyval.valueExpression) = PARSE(*(yyvsp[0].signedNumericLiteral), ValueExpression); delete (yyvsp[0].signedNumericLiteral);}
-#line 1462 "bison.cpp" /* yacc.c:1646  */
+#line 1463 "bison.cpp" /* yacc.c:1646  */
     break;
 
   case 16:
-#line 163 "/home/hermano/Dropbox/workspace/Savime/parser/grammar.y" /* yacc.c:1646  */
+#line 164 "./grammar.y" /* yacc.c:1646  */
     {(yyval.valueExpression) = new ValueExpressionPtr (); *(yyval.valueExpression) = PARSE(*(yyvsp[0].generalLiteral), ValueExpression); delete (yyvsp[0].generalLiteral);}
-#line 1468 "bison.cpp" /* yacc.c:1646  */
+#line 1469 "bison.cpp" /* yacc.c:1646  */
     break;
 
   case 17:
-#line 164 "/home/hermano/Dropbox/workspace/Savime/parser/grammar.y" /* yacc.c:1646  */
+#line 165 "./grammar.y" /* yacc.c:1646  */
     {(yyval.valueExpression) = new ValueExpressionPtr (new SummationNumericExpression(*(yyvsp[-1].valueExpression), strtod((yyvsp[0].value), NULL))); delete (yyvsp[-1].valueExpression);}
-#line 1474 "bison.cpp" /* yacc.c:1646  */
+#line 1475 "bison.cpp" /* yacc.c:1646  */
     break;
 
   case 18:
-#line 165 "/home/hermano/Dropbox/workspace/Savime/parser/grammar.y" /* yacc.c:1646  */
+#line 166 "./grammar.y" /* yacc.c:1646  */
     {(yyval.valueExpression) = new ValueExpressionPtr (new SummationNumericExpression(*(yyvsp[-2].valueExpression), *(yyvsp[0].valueExpression))); delete (yyvsp[-2].valueExpression); delete (yyvsp[0].valueExpression);}
-#line 1480 "bison.cpp" /* yacc.c:1646  */
+#line 1481 "bison.cpp" /* yacc.c:1646  */
     break;
 
   case 19:
-#line 166 "/home/hermano/Dropbox/workspace/Savime/parser/grammar.y" /* yacc.c:1646  */
+#line 167 "./grammar.y" /* yacc.c:1646  */
     {(yyval.valueExpression) = new ValueExpressionPtr (new SubtractionNumericalExpression(*(yyvsp[-2].valueExpression), *(yyvsp[0].valueExpression))); delete (yyvsp[-2].valueExpression); delete (yyvsp[0].valueExpression);}
-#line 1486 "bison.cpp" /* yacc.c:1646  */
+#line 1487 "bison.cpp" /* yacc.c:1646  */
     break;
 
   case 20:
-#line 167 "/home/hermano/Dropbox/workspace/Savime/parser/grammar.y" /* yacc.c:1646  */
+#line 168 "./grammar.y" /* yacc.c:1646  */
     {(yyval.valueExpression) = new ValueExpressionPtr (new PowerNumericalExpression(*(yyvsp[-2].valueExpression), *(yyvsp[0].valueExpression))); delete (yyvsp[-2].valueExpression); delete (yyvsp[0].valueExpression);}
-#line 1492 "bison.cpp" /* yacc.c:1646  */
+#line 1493 "bison.cpp" /* yacc.c:1646  */
     break;
 
   case 21:
-#line 168 "/home/hermano/Dropbox/workspace/Savime/parser/grammar.y" /* yacc.c:1646  */
+#line 169 "./grammar.y" /* yacc.c:1646  */
     {(yyval.valueExpression) = new ValueExpressionPtr (new DivisonNumericalExpression(*(yyvsp[-2].valueExpression), *(yyvsp[0].valueExpression))); delete (yyvsp[-2].valueExpression); delete (yyvsp[0].valueExpression);}
-#line 1498 "bison.cpp" /* yacc.c:1646  */
+#line 1499 "bison.cpp" /* yacc.c:1646  */
     break;
 
   case 22:
-#line 169 "/home/hermano/Dropbox/workspace/Savime/parser/grammar.y" /* yacc.c:1646  */
+#line 170 "./grammar.y" /* yacc.c:1646  */
     {(yyval.valueExpression) = new ValueExpressionPtr (new ModulusNumericalExpression(*(yyvsp[-2].valueExpression), *(yyvsp[0].valueExpression))); delete (yyvsp[-2].valueExpression); delete (yyvsp[0].valueExpression);}
-#line 1504 "bison.cpp" /* yacc.c:1646  */
+#line 1505 "bison.cpp" /* yacc.c:1646  */
     break;
 
   case 23:
-#line 170 "/home/hermano/Dropbox/workspace/Savime/parser/grammar.y" /* yacc.c:1646  */
+#line 171 "./grammar.y" /* yacc.c:1646  */
     {(yyval.valueExpression) = new ValueExpressionPtr (new ProductNumericalExpression(*(yyvsp[-2].valueExpression), *(yyvsp[0].valueExpression))); delete (yyvsp[-2].valueExpression); delete (yyvsp[0].valueExpression);}
-#line 1510 "bison.cpp" /* yacc.c:1646  */
+#line 1511 "bison.cpp" /* yacc.c:1646  */
     break;
 
   case 24:
-#line 171 "/home/hermano/Dropbox/workspace/Savime/parser/grammar.y" /* yacc.c:1646  */
+#line 172 "./grammar.y" /* yacc.c:1646  */
     {(yyval.valueExpression) = new ValueExpressionPtr (new ComparisonPredicate(*(yyvsp[-2].valueExpression), std::shared_ptr<CompOp>(new CompOp(EQUALS)), *(yyvsp[0].valueExpression))); delete (yyvsp[-2].valueExpression); delete (yyvsp[0].valueExpression);}
-#line 1516 "bison.cpp" /* yacc.c:1646  */
+#line 1517 "bison.cpp" /* yacc.c:1646  */
     break;
 
   case 25:
-#line 172 "/home/hermano/Dropbox/workspace/Savime/parser/grammar.y" /* yacc.c:1646  */
+#line 173 "./grammar.y" /* yacc.c:1646  */
     {(yyval.valueExpression) = new ValueExpressionPtr (new ComparisonPredicate(*(yyvsp[-2].valueExpression), std::shared_ptr<CompOp>(new CompOp(NOT_EQUALS)), *(yyvsp[0].valueExpression))); delete (yyvsp[-2].valueExpression); delete (yyvsp[0].valueExpression);}
-#line 1522 "bison.cpp" /* yacc.c:1646  */
+#line 1523 "bison.cpp" /* yacc.c:1646  */
     break;
 
   case 26:
-#line 173 "/home/hermano/Dropbox/workspace/Savime/parser/grammar.y" /* yacc.c:1646  */
+#line 174 "./grammar.y" /* yacc.c:1646  */
     {(yyval.valueExpression) = new ValueExpressionPtr (new ComparisonPredicate(*(yyvsp[-2].valueExpression), std::shared_ptr<CompOp>(new CompOp(LESS_THAN)), *(yyvsp[0].valueExpression))); delete (yyvsp[-2].valueExpression); delete (yyvsp[0].valueExpression);}
-#line 1528 "bison.cpp" /* yacc.c:1646  */
+#line 1529 "bison.cpp" /* yacc.c:1646  */
     break;
 
   case 27:
-#line 174 "/home/hermano/Dropbox/workspace/Savime/parser/grammar.y" /* yacc.c:1646  */
+#line 175 "./grammar.y" /* yacc.c:1646  */
     {(yyval.valueExpression) = new ValueExpressionPtr (new ComparisonPredicate(*(yyvsp[-2].valueExpression), std::shared_ptr<CompOp>(new CompOp(GREATER_THAN)), *(yyvsp[0].valueExpression))); delete (yyvsp[-2].valueExpression); delete (yyvsp[0].valueExpression);}
-#line 1534 "bison.cpp" /* yacc.c:1646  */
+#line 1535 "bison.cpp" /* yacc.c:1646  */
     break;
 
   case 28:
-#line 175 "/home/hermano/Dropbox/workspace/Savime/parser/grammar.y" /* yacc.c:1646  */
+#line 176 "./grammar.y" /* yacc.c:1646  */
     {(yyval.valueExpression) = new ValueExpressionPtr (new ComparisonPredicate(*(yyvsp[-2].valueExpression), std::shared_ptr<CompOp>(new CompOp(LESS_EQ_THAN)), *(yyvsp[0].valueExpression))); delete (yyvsp[-2].valueExpression); delete (yyvsp[0].valueExpression);}
-#line 1540 "bison.cpp" /* yacc.c:1646  */
+#line 1541 "bison.cpp" /* yacc.c:1646  */
     break;
 
   case 29:
-#line 176 "/home/hermano/Dropbox/workspace/Savime/parser/grammar.y" /* yacc.c:1646  */
+#line 177 "./grammar.y" /* yacc.c:1646  */
     {(yyval.valueExpression) = new ValueExpressionPtr (new ComparisonPredicate(*(yyvsp[-2].valueExpression), std::shared_ptr<CompOp>(new CompOp(GREATER_EQ_THAN)), *(yyvsp[0].valueExpression))); delete (yyvsp[-2].valueExpression); delete (yyvsp[0].valueExpression);}
-#line 1546 "bison.cpp" /* yacc.c:1646  */
+#line 1547 "bison.cpp" /* yacc.c:1646  */
     break;
 
   case 30:
-#line 177 "/home/hermano/Dropbox/workspace/Savime/parser/grammar.y" /* yacc.c:1646  */
-    {(yyval.valueExpression) = new ValueExpressionPtr (new BooleanValueExpression(*(yyvsp[0].valueExpression))); delete (yyvsp[0].valueExpression);}
-#line 1552 "bison.cpp" /* yacc.c:1646  */
+#line 178 "./grammar.y" /* yacc.c:1646  */
+    {(yyval.valueExpression) = new ValueExpressionPtr (new ComparisonPredicate(*(yyvsp[-2].valueExpression), std::shared_ptr<CompOp>(new CompOp(LIKE_COMP)), *(yyvsp[0].valueExpression))); delete (yyvsp[-2].valueExpression); delete (yyvsp[0].valueExpression);}
+#line 1553 "bison.cpp" /* yacc.c:1646  */
     break;
 
   case 31:
-#line 178 "/home/hermano/Dropbox/workspace/Savime/parser/grammar.y" /* yacc.c:1646  */
-    {(yyval.valueExpression) = new ValueExpressionPtr (new LogicalConjunction(*(yyvsp[-2].valueExpression), *(yyvsp[0].valueExpression))); delete (yyvsp[-2].valueExpression); delete (yyvsp[0].valueExpression);}
-#line 1558 "bison.cpp" /* yacc.c:1646  */
+#line 179 "./grammar.y" /* yacc.c:1646  */
+    {(yyval.valueExpression) = new ValueExpressionPtr (new BooleanValueExpression(*(yyvsp[0].valueExpression))); delete (yyvsp[0].valueExpression);}
+#line 1559 "bison.cpp" /* yacc.c:1646  */
     break;
 
   case 32:
-#line 179 "/home/hermano/Dropbox/workspace/Savime/parser/grammar.y" /* yacc.c:1646  */
-    {(yyval.valueExpression) = new ValueExpressionPtr (new LogicalDisjunction(*(yyvsp[-2].valueExpression), *(yyvsp[0].valueExpression))); delete (yyvsp[-2].valueExpression); delete (yyvsp[0].valueExpression);}
-#line 1564 "bison.cpp" /* yacc.c:1646  */
+#line 180 "./grammar.y" /* yacc.c:1646  */
+    {(yyval.valueExpression) = new ValueExpressionPtr (new LogicalConjunction(*(yyvsp[-2].valueExpression), *(yyvsp[0].valueExpression))); delete (yyvsp[-2].valueExpression); delete (yyvsp[0].valueExpression);}
+#line 1565 "bison.cpp" /* yacc.c:1646  */
     break;
 
   case 33:
-#line 183 "/home/hermano/Dropbox/workspace/Savime/parser/grammar.y" /* yacc.c:1646  */
-    {(yyval.identifierChain) = new IdentifierChainPtr (new IdentifierChain(*(yyvsp[0].identifier), NULL)); delete (yyvsp[0].identifier);}
-#line 1570 "bison.cpp" /* yacc.c:1646  */
+#line 181 "./grammar.y" /* yacc.c:1646  */
+    {(yyval.valueExpression) = new ValueExpressionPtr (new LogicalDisjunction(*(yyvsp[-2].valueExpression), *(yyvsp[0].valueExpression))); delete (yyvsp[-2].valueExpression); delete (yyvsp[0].valueExpression);}
+#line 1571 "bison.cpp" /* yacc.c:1646  */
     break;
 
   case 34:
-#line 184 "/home/hermano/Dropbox/workspace/Savime/parser/grammar.y" /* yacc.c:1646  */
-    {(yyval.identifierChain) = new IdentifierChainPtr (new IdentifierChain(*(yyvsp[0].identifier), *(yyvsp[-2].identifierChain))); delete (yyvsp[-2].identifierChain); delete (yyvsp[0].identifier);}
-#line 1576 "bison.cpp" /* yacc.c:1646  */
+#line 185 "./grammar.y" /* yacc.c:1646  */
+    {(yyval.identifierChain) = new IdentifierChainPtr (new IdentifierChain(*(yyvsp[0].identifier), NULL)); delete (yyvsp[0].identifier);}
+#line 1577 "bison.cpp" /* yacc.c:1646  */
     break;
 
   case 35:
-#line 188 "/home/hermano/Dropbox/workspace/Savime/parser/grammar.y" /* yacc.c:1646  */
-    {std::string literal((yyvsp[0].value)); (yyval.identifier) = new IdentifierPtr (new Identifier(literal));}
-#line 1582 "bison.cpp" /* yacc.c:1646  */
+#line 186 "./grammar.y" /* yacc.c:1646  */
+    {(yyval.identifierChain) = new IdentifierChainPtr (new IdentifierChain(*(yyvsp[0].identifier), *(yyvsp[-2].identifierChain))); delete (yyvsp[-2].identifierChain); delete (yyvsp[0].identifier);}
+#line 1583 "bison.cpp" /* yacc.c:1646  */
     break;
 
   case 36:
-#line 192 "/home/hermano/Dropbox/workspace/Savime/parser/grammar.y" /* yacc.c:1646  */
-    {(yyval.generalLiteral) = new std::shared_ptr<GeneralLiteral>(); *(yyval.generalLiteral) = PARSE(*(yyvsp[0].characterStringLiteral), GeneralLiteral); delete (yyvsp[0].characterStringLiteral);}
-#line 1588 "bison.cpp" /* yacc.c:1646  */
+#line 190 "./grammar.y" /* yacc.c:1646  */
+    {std::string literal((yyvsp[0].value)); (yyval.identifier) = new IdentifierPtr (new Identifier(literal));}
+#line 1589 "bison.cpp" /* yacc.c:1646  */
     break;
 
   case 37:
-#line 193 "/home/hermano/Dropbox/workspace/Savime/parser/grammar.y" /* yacc.c:1646  */
-    {(yyval.generalLiteral) = new std::shared_ptr<GeneralLiteral>(); *(yyval.generalLiteral) = PARSE(*(yyvsp[0].bitStringLiteral), GeneralLiteral); delete (yyvsp[0].bitStringLiteral);}
-#line 1594 "bison.cpp" /* yacc.c:1646  */
+#line 194 "./grammar.y" /* yacc.c:1646  */
+    {(yyval.generalLiteral) = new std::shared_ptr<GeneralLiteral>(); *(yyval.generalLiteral) = PARSE(*(yyvsp[0].characterStringLiteral), GeneralLiteral); delete (yyvsp[0].characterStringLiteral);}
+#line 1595 "bison.cpp" /* yacc.c:1646  */
     break;
 
   case 38:
-#line 194 "/home/hermano/Dropbox/workspace/Savime/parser/grammar.y" /* yacc.c:1646  */
-    {(yyval.generalLiteral) = new std::shared_ptr<GeneralLiteral>(); *(yyval.generalLiteral) = PARSE(*(yyvsp[0].hexStringLiteral), GeneralLiteral); delete (yyvsp[0].hexStringLiteral);}
-#line 1600 "bison.cpp" /* yacc.c:1646  */
+#line 195 "./grammar.y" /* yacc.c:1646  */
+    {(yyval.generalLiteral) = new std::shared_ptr<GeneralLiteral>(); *(yyval.generalLiteral) = PARSE(*(yyvsp[0].bitStringLiteral), GeneralLiteral); delete (yyvsp[0].bitStringLiteral);}
+#line 1601 "bison.cpp" /* yacc.c:1646  */
     break;
 
   case 39:
-#line 198 "/home/hermano/Dropbox/workspace/Savime/parser/grammar.y" /* yacc.c:1646  */
-    {(yyval.unsignedNumericLiteral) = new UnsignedNumericLiteralPtr (new UnsignedNumericLiteral(strtod((yyvsp[0].value),NULL)));}
-#line 1606 "bison.cpp" /* yacc.c:1646  */
+#line 196 "./grammar.y" /* yacc.c:1646  */
+    {(yyval.generalLiteral) = new std::shared_ptr<GeneralLiteral>(); *(yyval.generalLiteral) = PARSE(*(yyvsp[0].hexStringLiteral), GeneralLiteral); delete (yyvsp[0].hexStringLiteral);}
+#line 1607 "bison.cpp" /* yacc.c:1646  */
     break;
 
   case 40:
-#line 199 "/home/hermano/Dropbox/workspace/Savime/parser/grammar.y" /* yacc.c:1646  */
+#line 200 "./grammar.y" /* yacc.c:1646  */
     {(yyval.unsignedNumericLiteral) = new UnsignedNumericLiteralPtr (new UnsignedNumericLiteral(strtod((yyvsp[0].value),NULL)));}
-#line 1612 "bison.cpp" /* yacc.c:1646  */
+#line 1613 "bison.cpp" /* yacc.c:1646  */
     break;
 
   case 41:
-#line 203 "/home/hermano/Dropbox/workspace/Savime/parser/grammar.y" /* yacc.c:1646  */
-    {(yyval.signedNumericLiteral) = new SignedNumericLiteralPtr (new SignedNumericLiteral(strtod((yyvsp[0].value), NULL)));}
-#line 1618 "bison.cpp" /* yacc.c:1646  */
+#line 201 "./grammar.y" /* yacc.c:1646  */
+    {(yyval.unsignedNumericLiteral) = new UnsignedNumericLiteralPtr (new UnsignedNumericLiteral(strtod((yyvsp[0].value),NULL)));}
+#line 1619 "bison.cpp" /* yacc.c:1646  */
     break;
 
   case 42:
-#line 204 "/home/hermano/Dropbox/workspace/Savime/parser/grammar.y" /* yacc.c:1646  */
+#line 205 "./grammar.y" /* yacc.c:1646  */
     {(yyval.signedNumericLiteral) = new SignedNumericLiteralPtr (new SignedNumericLiteral(strtod((yyvsp[0].value), NULL)));}
-#line 1624 "bison.cpp" /* yacc.c:1646  */
+#line 1625 "bison.cpp" /* yacc.c:1646  */
     break;
 
   case 43:
-#line 208 "/home/hermano/Dropbox/workspace/Savime/parser/grammar.y" /* yacc.c:1646  */
-    {std::string literal((yyvsp[0].value)); (yyval.characterStringLiteral) = new CharacterStringLiteralPtr (new CharacterStringLiteral(literal));}
-#line 1630 "bison.cpp" /* yacc.c:1646  */
+#line 206 "./grammar.y" /* yacc.c:1646  */
+    {(yyval.signedNumericLiteral) = new SignedNumericLiteralPtr (new SignedNumericLiteral(strtod((yyvsp[0].value), NULL)));}
+#line 1631 "bison.cpp" /* yacc.c:1646  */
     break;
 
   case 44:
-#line 212 "/home/hermano/Dropbox/workspace/Savime/parser/grammar.y" /* yacc.c:1646  */
-    {std::string literal((yyvsp[-1].value)); (yyval.bitStringLiteral) = new std::shared_ptr<BitStringLiteral>(new BitStringLiteral(literal));}
-#line 1636 "bison.cpp" /* yacc.c:1646  */
+#line 210 "./grammar.y" /* yacc.c:1646  */
+    {std::string literal((yyvsp[0].value)); (yyval.characterStringLiteral) = new CharacterStringLiteralPtr (new CharacterStringLiteral(literal));}
+#line 1637 "bison.cpp" /* yacc.c:1646  */
     break;
 
   case 45:
-#line 216 "/home/hermano/Dropbox/workspace/Savime/parser/grammar.y" /* yacc.c:1646  */
+#line 214 "./grammar.y" /* yacc.c:1646  */
+    {std::string literal((yyvsp[-1].value)); (yyval.bitStringLiteral) = new std::shared_ptr<BitStringLiteral>(new BitStringLiteral(literal));}
+#line 1643 "bison.cpp" /* yacc.c:1646  */
+    break;
+
+  case 46:
+#line 218 "./grammar.y" /* yacc.c:1646  */
     {std::string literal((yyvsp[-1].value)); (yyval.hexStringLiteral) = new std::shared_ptr<HexStringLiteral>(new HexStringLiteral(literal));}
-#line 1642 "bison.cpp" /* yacc.c:1646  */
+#line 1649 "bison.cpp" /* yacc.c:1646  */
     break;
 
 
-#line 1646 "bison.cpp" /* yacc.c:1646  */
+#line 1653 "bison.cpp" /* yacc.c:1646  */
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -1870,7 +1877,7 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 219 "/home/hermano/Dropbox/workspace/Savime/parser/grammar.y" /* yacc.c:1906  */
+#line 221 "./grammar.y" /* yacc.c:1906  */
 
 //Copy error msg from Bison internals to a buffer
 void yyerror(void * scanner,void ** ret, const char *s) 

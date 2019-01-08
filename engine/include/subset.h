@@ -32,12 +32,12 @@ typedef std::unordered_map<string, string> FilteredDimMap;
 typedef std::unordered_map<string, double> BoundMap;
 
 #define SUBSET_GET_NEXT_UNTESTED(CURRENT)                                      \
-  mutex.lock();                                                                \
+  //mutex.lock();                                                               \
   CURRENT = nextUntested;                                                      \
   nextUntested++;                                                              \
-  mutex.unlock();
+  //mutex.unlock();
 
-inline void subset_get_boundaries(OperationPtr operation,
+inline void subset_get_boundaries(const OperationPtr &operation,
                                   FilteredDimMap &filteredDim,
                                   BoundMap &lower_bounds,
                                   BoundMap &upper_bounds) {
@@ -58,14 +58,14 @@ inline void subset_get_boundaries(OperationPtr operation,
 }
 
 inline void check_intersection(
-    StorageManagerPtr storageManager, SubtarPtr subtar, TARPtr outputTAR,
-    TARPtr inputTAR, FilteredDimMap filteredDim, BoundMap lower_bounds,
-    BoundMap upper_bounds, SubsetIntersectionType &currentSubtarIntersection,
+    const StorageManagerPtr &storageManager, const SubtarPtr &subtar,  const TARPtr &outputTAR,
+    const TARPtr &inputTAR, FilteredDimMap filteredDim, const BoundMap &lower_bounds,
+    const BoundMap &upper_bounds, SubsetIntersectionType &currentSubtarIntersection,
     bool &isAllOrdered) {
 
   for (auto entry : subtar->GetDimSpecs()) {
 
-    double specsLowerBound, specsUpperBound;
+    double specsLowerBound = 0, specsUpperBound = 0;
     auto dimName = entry.first;
     auto specs = entry.second;
     auto dim = outputTAR->GetDataElement(dimName)->GetDimension();
@@ -75,8 +75,9 @@ inline void check_intersection(
       isAllOrdered = false;
     if (filteredDim.find(dimName) == filteredDim.end())
       continue;
-    double lb = lower_bounds[dimName];
-    double ub = upper_bounds[dimName];
+
+    //double lb = lower_bounds[dimName];
+    //double ub = upper_bounds[dimName];
 
     auto lowerLogicalIndex =
         storageManager->Real2Logical(originalDim, specs->GetLowerBound());

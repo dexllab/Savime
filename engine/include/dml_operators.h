@@ -22,6 +22,8 @@
 #include "../core/include/util.h"
 #include "../core/include/query_data_manager.h"
 #include "../core/../core/include/storage_manager.h"
+#include "default_engine.h"
+#include "subset.h"
 
 #define ERROR_MSG(F, O)                                                        \
   "Error during " + std::string(F) + " execution in " + std::string(O) +       \
@@ -29,26 +31,22 @@
 
 #define FIRST_SUBTAR 0
 
-#define DECLARE_TARS(INPUT, OUTPUT)\
+#define SET_TARS(INPUT, OUTPUT)\
     ParameterPtr inputTarParam = operation->GetParametersByName(INPUT_TAR);\
-    TARPtr INPUT = inputTarParam->tar;\
+    INPUT = inputTarParam->tar;\
     assert(INPUT != nullptr);\
-    TARPtr OUTPUT = operation->GetResultingTAR();\
+    OUTPUT = operation->GetResultingTAR();\
     assert(OUTPUT != nullptr);
-
-#define DECLARE_GENERATOR(GENERATOR, TAR_NAME)\
-   auto GENERATOR = (std::dynamic_pointer_cast<DefaultEngine>(engine))\
-                         ->GetGenerators()[TAR_NAME]
 
 #define SET_GENERATOR(GENERATOR, TAR_NAME)\
         GENERATOR = (std::dynamic_pointer_cast<DefaultEngine>(engine))\
                          ->GetGenerators()[TAR_NAME]
 
-#define GET_INT_CONFIG_VAL(VAR, KEY)\
-   int32_t VAR = configurationManager->GetIntValue(KEY)
+#define SET_INT_CONFIG_VAL(VAR, KEY)\
+   VAR = configurationManager->GetIntValue(KEY)
 
-#define GET_BOOL_CONFIG_VAL(VAR, KEY)\
-   int32_t VAR = configurationManager->GetBooleanValue(KEY)
+#define SET_BOOL_CONFIG_VAL(VAR, KEY)\
+   VAR = configurationManager->GetBooleanValue(KEY)
 
 #define SET_SUBTARS_THREADS(NUM)\
     omp_set_num_threads(NUM);\
@@ -60,10 +58,6 @@
 #define SUB_THREADS_LAST()\
     omp_get_thread_num()
 
-#define SET_ERROR(EXCEPTION, QUERY_DATA_MANAGER)\
-   string error = QUERY_DATA_MANAGER->GetErrorResponse();\
-    QUERY_DATA_MANAGER->SetErrorResponseText(EXCEPTION.what() + \
-                                                string("\n") + error);
 
 typedef std::mutex DMLMutex;
 typedef std::unordered_map<int32_t, SubtarPtr> SubtarMap;
@@ -71,89 +65,226 @@ typedef std::vector<int32_t> SubtarIndexList;
 
 
 /*----------------------------OPERATORS PROTOTYPES----------------------------*/
-int scan(SubTARIndex subtarIndex, OperationPtr operation,
-         ConfigurationManagerPtr configurationManager,
-         QueryDataManagerPtr queryDataManager,
-         MetadataManagerPtr metadataManager, StorageManagerPtr storageManager,
+class Scan : public EngineOperator {
+
+  TARPtr _inputTAR;
+  TARPtr _outputTAR;
+  TARGeneratorPtr _generator;
+
+public:
+  Scan(OperationPtr operation, ConfigurationManagerPtr configurationManager,
+       QueryDataManagerPtr queryDataManager, MetadataManagerPtr metadataManager, StorageManagerPtr storageManager,
+       EnginePtr engine);
+
+  SavimeResult GenerateSubtar(SubTARIndex subtarIndex) override;
+  SavimeResult Run() override { return SAVIME_FAILURE; }
+
+};
+
+class Select : public EngineOperator {
+
+    int32_t _numSubtars;
+    TARPtr _inputTAR;
+    TARPtr _outputTAR;
+    TARGeneratorPtr _generator;
+    TARGeneratorPtr _outputGenerator;
+
+public :
+    Select(OperationPtr operation, ConfigurationManagerPtr configurationManager,
+         QueryDataManagerPtr queryDataManager, MetadataManagerPtr metadataManager, StorageManagerPtr storageManager,
          EnginePtr engine);
 
-int select(SubTARIndex subtarIndex, OperationPtr operation,
-           ConfigurationManagerPtr configurationManager,
-           QueryDataManagerPtr queryDataManager,
-           MetadataManagerPtr metadataManager, StorageManagerPtr storageManager,
+    SavimeResult GenerateSubtar(SubTARIndex subtarIndex) override;
+    SavimeResult Run() override{ return SAVIME_FAILURE; }
+
+};
+
+class Filter : public EngineOperator {
+
+    int32_t _numThreads;
+    int32_t _workPerThread;
+    int32_t _numSubtars;
+    TARPtr _inputTAR;
+    TARPtr _outputTAR;
+    TARGeneratorPtr _generator;
+    TARGeneratorPtr _filterGenerator;
+    TARGeneratorPtr _outputGenerator;
+
+public:
+    Filter(OperationPtr operation, ConfigurationManagerPtr configurationManager,
+           QueryDataManagerPtr queryDataManager, MetadataManagerPtr metadataManager, StorageManagerPtr storageManager,
            EnginePtr engine);
 
-int filter(SubTARIndex subtarIndex, OperationPtr operation,
-           ConfigurationManagerPtr configurationManager,
-           QueryDataManagerPtr queryDataManager,
-           MetadataManagerPtr metadataManager, StorageManagerPtr storageManager,
+    SavimeResult GenerateSubtar(SubTARIndex subtarIndex) override;
+    SavimeResult Run() override { return SAVIME_FAILURE; }
+
+};
+
+class Subset : public EngineOperator {
+
+    int32_t _numThreads;
+    int32_t _workPerThread;
+    int32_t _numSubtars;
+    TARPtr _inputTAR;
+    TARPtr _outputTAR;
+    TARGeneratorPtr _generator;
+    TARGeneratorPtr _outputGenerator;
+    FilteredDimMap _filteredDim;
+    BoundMap _lower_bounds, _upper_bounds;
+
+public :
+    Subset(OperationPtr operation, ConfigurationManagerPtr configurationManager,
+           QueryDataManagerPtr queryDataManager, MetadataManagerPtr metadataManager, StorageManagerPtr storageManager,
            EnginePtr engine);
 
-int subset(SubTARIndex subtarIndex, OperationPtr operation,
-           ConfigurationManagerPtr configurationManager,
-           QueryDataManagerPtr queryDataManager,
-           MetadataManagerPtr metadataManager, StorageManagerPtr storageManager,
+    SavimeResult GenerateSubtar(SubTARIndex subtarIndex) override;
+    SavimeResult Run() override { return SAVIME_FAILURE; }
+
+};
+
+class Logical : public EngineOperator {
+
+    int32_t _numThreads;
+    int32_t _workPerThread;
+    int32_t _numSubtars;
+    TARPtr _inputTAR;
+    TARPtr _outputTAR;
+    TARGeneratorPtr _generator;
+    TARGeneratorPtr _generatorOp1;
+    TARGeneratorPtr _generatorOp2;
+    ParameterPtr _logicalOperation;
+    ParameterPtr _operand1;
+    ParameterPtr _operand2;
+
+public :
+    Logical(OperationPtr operation, ConfigurationManagerPtr configurationManager,
+           QueryDataManagerPtr queryDataManager, MetadataManagerPtr metadataManager, StorageManagerPtr storageManager,
            EnginePtr engine);
 
-int logical(SubTARIndex subtarIndex, OperationPtr operation,
-            ConfigurationManagerPtr configurationManager,
-            QueryDataManagerPtr queryDataManager,
-            MetadataManagerPtr metadataManager,
-            StorageManagerPtr storageManager, EnginePtr engine);
+    SavimeResult GenerateSubtar(SubTARIndex subtarIndex) override;
+    SavimeResult Run() override { return SAVIME_FAILURE; }
 
-int comparison(SubTARIndex subtarIndex, OperationPtr operation,
-               ConfigurationManagerPtr configurationManager,
-               QueryDataManagerPtr queryDataManager,
-               MetadataManagerPtr metadataManager,
-               StorageManagerPtr storageManager, EnginePtr engine);
+};
 
-int arithmetic(SubTARIndex subtarIndex, OperationPtr operation,
-               ConfigurationManagerPtr configurationManager,
-               QueryDataManagerPtr queryDataManager,
-               MetadataManagerPtr metadataManager,
-               StorageManagerPtr storageManager, EnginePtr engine);
+class Comparison : public EngineOperator {
 
-int cross_join(SubTARIndex subtarIndex, OperationPtr operation,
-               ConfigurationManagerPtr configurationManager,
-               QueryDataManagerPtr queryDataManager,
-               MetadataManagerPtr metadataManager,
-               StorageManagerPtr storageManager, EnginePtr engine);
+    int32_t _numSubtars;
+    TARPtr _inputTAR;
+    TARPtr _outputTAR;
+    TARGeneratorPtr _generator;
+    TARGeneratorPtr _outputGenerator;
+    ParameterPtr _operand1;
+    ParameterPtr _operand2;
+    ParameterPtr _comparisonOperation;
 
-int equijoin(SubTARIndex subtarIndex, OperationPtr operation,
-             ConfigurationManagerPtr configurationManager,
-             QueryDataManagerPtr queryDataManager,
-             MetadataManagerPtr metadataManager,
-             StorageManagerPtr storageManager, EnginePtr engine);
+public :
+    Comparison(OperationPtr operation, ConfigurationManagerPtr configurationManager,
+            QueryDataManagerPtr queryDataManager, MetadataManagerPtr metadataManager, StorageManagerPtr storageManager,
+            EnginePtr engine);
 
-int dimjoin(SubTARIndex subtarIndex, OperationPtr operation,
-            ConfigurationManagerPtr configurationManager,
-            QueryDataManagerPtr queryDataManager,
-            MetadataManagerPtr metadataManager,
-            StorageManagerPtr storageManager, EnginePtr engine);
+    SavimeResult GenerateSubtar(SubTARIndex subtarIndex) override;
+    SavimeResult Run() override { return SAVIME_FAILURE; }
 
-int slice(SubTARIndex subtarIndex, OperationPtr operation,
-          ConfigurationManagerPtr configurationManager,
-          QueryDataManagerPtr queryDataManager,
-          MetadataManagerPtr metadataManager, StorageManagerPtr storageManager,
-          EnginePtr engine);
+};
 
-int aggregate(SubTARIndex subtarIndex, OperationPtr operation,
-              ConfigurationManagerPtr configurationManager,
-              QueryDataManagerPtr queryDataManager,
-              MetadataManagerPtr metadataManager,
-              StorageManagerPtr storageManager, EnginePtr engine);
+class Arithmetic : public EngineOperator {
 
-int split(SubTARIndex subtarIndex, OperationPtr operation,
-          ConfigurationManagerPtr configurationManager,
-          QueryDataManagerPtr queryDataManager,
-          MetadataManagerPtr metadataManager, StorageManagerPtr storageManager,
-          EnginePtr engine);
+    int32_t _numSubtars;
+    TARPtr _inputTAR;
+    TARPtr _outputTAR;
+    TARGeneratorPtr _generator;
+    TARGeneratorPtr _outputGenerator;
+    ParameterPtr _newMember;
+    ParameterPtr _op;
 
-int user_defined(SubTARIndex subtarIndex, OperationPtr operation,
-                 ConfigurationManagerPtr configurationManager,
-                 QueryDataManagerPtr queryDataManager,
-                 MetadataManagerPtr metadataManager,
-                 StorageManagerPtr storageManager, EnginePtr engine);
+public :
+    Arithmetic(OperationPtr operation, ConfigurationManagerPtr configurationManager,
+               QueryDataManagerPtr queryDataManager, MetadataManagerPtr metadataManager, StorageManagerPtr storageManager,
+               EnginePtr engine);
+
+    SavimeResult GenerateSubtar(SubTARIndex subtarIndex) override;
+    SavimeResult Run() override { return SAVIME_FAILURE; }
+
+};
+
+class CrossJoin : public EngineOperator {
+
+    int32_t _numSubtars;
+    TARPtr _leftTAR;
+    TARPtr _rightTAR;
+    TARPtr _outputTAR;
+    bool _freeBufferedSubtars;
+    TARGeneratorPtr _leftGenerator;
+    TARGeneratorPtr _rightGenerator;
+    TARGeneratorPtr _outputGenerator;
+
+public :
+    CrossJoin(OperationPtr operation, ConfigurationManagerPtr configurationManager,
+               QueryDataManagerPtr queryDataManager, MetadataManagerPtr metadataManager, StorageManagerPtr storageManager,
+               EnginePtr engine);
+
+    SavimeResult GenerateSubtar(SubTARIndex subtarIndex) override;
+    SavimeResult Run() override { return SAVIME_FAILURE; }
+
+};
+
+class DimJoin : public EngineOperator {
+
+    int32_t _numThreads;
+    int32_t _workPerThread;
+    int32_t _numSubtars;
+    TARPtr _leftTAR;
+    TARPtr _rightTAR;
+    TARPtr _outputTAR;
+    bool _freeBufferedSubtars;
+    TARGeneratorPtr _leftGenerator;
+    TARGeneratorPtr _rightGenerator;
+    TARGeneratorPtr _outputGenerator;
+
+public :
+    DimJoin(OperationPtr operation, ConfigurationManagerPtr configurationManager,
+              QueryDataManagerPtr queryDataManager, MetadataManagerPtr metadataManager, StorageManagerPtr storageManager,
+              EnginePtr engine);
+
+    SavimeResult GenerateSubtar(SubTARIndex subtarIndex) override;
+    SavimeResult Run() override { return SAVIME_FAILURE; }
+
+};
+
+class Aggregate : public EngineOperator {
+
+    int32_t _numThreads;
+    int32_t _workPerThread;
+    int32_t _numSubtars;
+    TARPtr _inputTAR;
+    TARPtr _outputTAR;
+    TARGeneratorPtr _generator;
+    TARGeneratorPtr _outputGenerator;
+
+public :
+    Aggregate(OperationPtr operation, ConfigurationManagerPtr configurationManager,
+            QueryDataManagerPtr queryDataManager, MetadataManagerPtr metadataManager, StorageManagerPtr storageManager,
+            EnginePtr engine);
+
+    SavimeResult GenerateSubtar(SubTARIndex subtarIndex) override;
+    SavimeResult Run() override { return SAVIME_FAILURE; }
+
+};
+
+
+
+class UserDefined : public EngineOperator {
+
+public :
+    UserDefined(OperationPtr operation, ConfigurationManagerPtr configurationManager,
+              QueryDataManagerPtr queryDataManager, MetadataManagerPtr metadataManager, StorageManagerPtr storageManager,
+              EnginePtr engine);
+
+    SavimeResult GenerateSubtar(SubTARIndex subtarIndex) override;
+    SavimeResult Run() override { return SAVIME_FAILURE; }
+
+};
+
 
 #endif /* DML_OPERATORS_H */
 

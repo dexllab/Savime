@@ -18,6 +18,8 @@
 #include "../core/include/parser.h"
 #include "default_metada_manager.h" 
 
+#define PRT_COUNT_NOREF 4
+
 DefaultMetadataManager::DefaultMetadataManager(
     ConfigurationManagerPtr configurationManager, SystemLoggerPtr systemLogger)
     : MetadataManager(configurationManager, systemLogger) {
@@ -51,7 +53,7 @@ SavimeResult DefaultMetadataManager::SaveTARS(TARSPtr tars) {
 }
 
 TARSPtr DefaultMetadataManager::GetTARS(int32_t id) {
-  TARSPtr tars = NULL;
+  TARSPtr tars = nullptr;
 
   try {
     _mutex.lock();
@@ -109,7 +111,7 @@ std::list<TARPtr> DefaultMetadataManager::GetTARs(TARSPtr tars) {
 }
 
 TARPtr DefaultMetadataManager::GetTARByName(TARSPtr tars, std::string tarName) {
-  TARPtr tar = NULL;
+  TARPtr tar = nullptr;
 
   _mutex.lock();
   if (_tarName.find(tarName) != _tarName.end()) {
@@ -124,7 +126,7 @@ SavimeResult DefaultMetadataManager::RemoveTar(TARSPtr tars, TARPtr tar) {
   try {
     _mutex.lock();
     if (_tar.find(tar->GetId()) != _tar.end()) {
-      for (SubtarPtr s : tar->GetSubtars()) {
+      for (const SubtarPtr& s : tar->GetSubtars()) {
         _subtar.erase(s->GetId());
       }
 
@@ -132,8 +134,7 @@ SavimeResult DefaultMetadataManager::RemoveTar(TARSPtr tars, TARPtr tar) {
       _tarName.erase(tar->GetName());
       tars->tars.remove(tar);
       tar->GetSubtars().clear();
-      tar->AlterType(NULL);
-      // delete tar;
+      tar->AlterType(nullptr);
     }
     _mutex.unlock();
 
@@ -171,7 +172,6 @@ std::list<SubtarPtr> DefaultMetadataManager::GetSubtars(std::string tarName) {
   _mutex.lock();
   if (_tarName.find(tarName) != _tarName.end()) {
     auto tar = _tarName[tarName];
-    std::list<SubtarPtr> list;
     std::copy(tar->GetSubtars().begin(), tar->GetSubtars().end(),
               std::back_inserter(list));
   }
@@ -195,9 +195,13 @@ SavimeResult DefaultMetadataManager::RemoveSubtar(TARPtr tar,
     _mutex.lock();
     if (_subtar.find(subtar->GetId()) != _subtar.end()) {
       _subtar.erase(subtar->GetId());
-      auto subtars = tar->GetSubtars();
-      subtars.erase(std::remove(subtars.begin(), subtars.end(), subtar),
-                    subtars.end());
+
+      for(SubTARIndex i = 0; i < tar->GetSubtars().size(); i++){
+        if(tar->GetSubtars()[i]->GetId() == subtar->GetId()){
+          tar->GetSubtars().erase(tar->GetSubtars().begin() + i);
+          break;
+        }
+      }
     }
     _mutex.unlock();
 
@@ -239,11 +243,11 @@ DatasetPtr DefaultMetadataManager::GetDataSet(int32_t id) {
       return _dataset[id];
     }
     _mutex.unlock();
-    return NULL;
+    return nullptr;
   } catch (std::exception &e) {
     _mutex.unlock();
     _systemLogger->LogEvent(this->_moduleName, e.what());
-    return NULL;
+    return nullptr;
   }
 }
 
@@ -255,22 +259,20 @@ DatasetPtr DefaultMetadataManager::GetDataSetByName(std::string dsName) {
       return _datasetName[dsName];
     }
     _mutex.unlock();
-    return NULL;
+    return nullptr;
   } catch (std::exception &e) {
     _mutex.unlock();
     _systemLogger->LogEvent(this->_moduleName, e.what());
-    return NULL;
+    return nullptr;
   }
 }
 
 SavimeResult DefaultMetadataManager::RemoveDataSet(TARSPtr tars,
                                                    DatasetPtr dataset) {
-#define PRT_COUNT_NOREF 4
-
   try {
     _mutex.lock();
     if (_dataset.find(dataset->GetId()) != _dataset.end()) {
-      if (dataset.use_count() != PRT_COUNT_NOREF) {
+      if (dataset.use_count() > PRT_COUNT_NOREF) {
         _mutex.unlock();
         return SAVIME_FAILURE;
       }
@@ -318,17 +320,17 @@ TypePtr DefaultMetadataManager::GetType(int32_t typeId) {
     }
 
     _mutex.unlock();
-    return NULL;
+    return nullptr;
   } catch (std::exception &e) {
     _mutex.unlock();
     _systemLogger->LogEvent(this->_moduleName, e.what());
-    return NULL;
+    return nullptr;
   }
 }
 
 TypePtr DefaultMetadataManager::GetTypeByName(TARSPtr tars,
                                               std::string typeName) {
-  TypePtr searchedType = NULL;
+  TypePtr searchedType = nullptr;
 
   _mutex.lock();
   for (auto type : tars->types) {
@@ -347,11 +349,11 @@ std::list<TypePtr> DefaultMetadataManager::GetTypes(TARSPtr tars) {
 }
 
 SavimeResult DefaultMetadataManager::RemoveType(TARSPtr tars, TypePtr type) {
-#define PRT_COUNT_NOREF 4
+
   try {
     _mutex.lock();
 
-    if (type.use_count() != PRT_COUNT_NOREF) {
+    if (type.use_count() > PRT_COUNT_NOREF) {
       _mutex.unlock();
       return SAVIME_FAILURE;
     }

@@ -39,7 +39,7 @@ std::mutex DefaultSession::id_mutex;
 std::mutex DefaultSession::global_mutex;
 
 void DefaultSession::SetThisPtr(std::shared_ptr<DefaultSession> ownPtr) {
-  _this = ownPtr;
+  _this = std::move(ownPtr);
 }
 
 int DefaultSession::GetId() { return _id; }
@@ -49,7 +49,7 @@ int DefaultSession::GetId() { return _id; }
  */
 ConnectionListenerPtr
 DefaultSession::NotifyNewConnection(ConnectionDetailsPtr connectionDetails) {
-  return NULL;
+  return nullptr;
 }
 
 void DefaultSession::NotifyMessageArrival(
@@ -58,7 +58,7 @@ void DefaultSession::NotifyMessageArrival(
     //_systemLogger->LogEvent(SESSION_ID, "Server notified.");
     _serverJobHasBeenNotified = true;
 
-    if (_currentConnection == NULL)
+    if (_currentConnection == nullptr)
       _currentConnection = connectionDetails;
   }
 
@@ -66,14 +66,13 @@ void DefaultSession::NotifyMessageArrival(
 }
 
 int DefaultSession::NotifyTextResponse(std::string text) {
-  // Session can only be notified by engine while its processing a query
+  // Session can only be notified by engine while its processing a query.
   if (_serverState == PROCESS_QUERY) {
-    static MessageHeaderPtr responseHeader =
-        MessageHeaderPtr(new MessageHeader());
+    static MessageHeaderPtr responseHeader = std::make_shared<MessageHeader>();
 
     // convert string to char array
     char *ctext = (char *)malloc(sizeof(char) * text.length() + 1);
-    if (ctext == NULL) {
+    if (ctext == nullptr) {
       _systemLogger->LogEvent(SESSION_ID, "Could not allocate more memory.");
       return SAVIME_FAILURE;
     }
@@ -81,7 +80,7 @@ int DefaultSession::NotifyTextResponse(std::string text) {
 
     // Initialize header values
     init_header((*responseHeader), _currentClient, _currentQuery, 0,
-                S_SEND_TEXT, strlen(ctext) + 1, NULL, NULL);
+                S_SEND_TEXT, strlen(ctext) + 1, nullptr, nullptr);
 
     // Send text result from engine
     SendMessage(responseHeader, _currentConnection, ctext);
@@ -107,7 +106,7 @@ int DefaultSession::NotifyNewBlockReady(std::string blockName,
     GET_T1();
 #endif
 
-    MessageHeaderPtr responseHeader = MessageHeaderPtr(new MessageHeader());
+    MessageHeaderPtr responseHeader = std::make_shared<MessageHeader>();
     memset((char *)responseHeader.get(), 0, sizeof(MessageHeader));
 
     enum MessageType type;
@@ -122,21 +121,21 @@ int DefaultSession::NotifyNewBlockReady(std::string blockName,
 
     // Initialize header for block data
     init_header_block((*responseHeader), _currentClient, _currentQuery, 0, type,
-                      size, blockName.c_str(), 0, NULL, NULL);
-    SendMessage(responseHeader, _currentConnection, NULL);
+                      size, blockName.c_str(), 0, nullptr, nullptr);
+    SendMessage(responseHeader, _currentConnection, nullptr);
 
-    // Last block might not contain any data, is send inform the block's ended
+    // Last block might not contain any data.
+    // It is sent to inform the block's ended.
     if (size != 0) {
-      MessagePtr message = std::shared_ptr<Message>(new Message());
-      PayloadPtr payload = std::shared_ptr<Payload>(new Payload());
+      MessagePtr message = std::make_shared<Message>();
+      PayloadPtr payload = std::make_shared<Payload>();
       message->connection_details = _currentConnection;
       message->payload = payload;
       message->payload->is_in_file = true;
       message->payload->file_descriptor = file_descriptor;
-      message->payload->data = NULL;
+      message->payload->data = nullptr;
       message->payload->size = size;
 
-      // alterar send
       if (_connectionManager->Send(message) != SAVIME_SUCCESS) {
         _systemLogger->LogEvent(SESSION_ID,
                                 "Error while sending engine data block!");
@@ -194,9 +193,9 @@ void DefaultSession::Terminate() {
 
 void DefaultSession::ReadHeader(ConnectionDetailsPtr connectionDetails,
                                 MessageHeaderPtr messageHeader) {
-  MessagePtr message = std::shared_ptr<Message>(new Message());
-  PayloadPtr payload = std::shared_ptr<Payload>(new Payload());
-  message->connection_details = connectionDetails;
+  MessagePtr message = std::make_shared<Message>();
+  PayloadPtr payload = std::make_shared<Payload>();
+  message->connection_details = std::move(connectionDetails);
   payload->data = (char *)messageHeader.get();
   payload->size = sizeof(MessageHeader);
   message->payload = payload;
@@ -219,12 +218,12 @@ void DefaultSession::ReadHeader(ConnectionDetailsPtr connectionDetails,
 void DefaultSession::SendMessage(MessageHeaderPtr header,
                                  ConnectionDetailsPtr connectionDetails,
                                  char *content) {
-  MessagePtr message = std::shared_ptr<Message>(new Message());
-  PayloadPtr payload = std::shared_ptr<Payload>(new Payload());
-  message->connection_details = connectionDetails;
+  MessagePtr message = std::make_shared<Message>();
+  PayloadPtr payload = std::make_shared<Payload>();
+  message->connection_details = std::move(connectionDetails);
   message->payload = payload;
 
-  MessageHeader headerAux;
+  MessageHeader headerAux{};
   memset((char *)&headerAux, 0, sizeof(MessageHeader));
   strncpy(headerAux.block_name, header->block_name, sizeof(header->block_name));
   headerAux.block_num = header->block_num;
@@ -254,7 +253,7 @@ void DefaultSession::SendMessage(MessageHeaderPtr header,
   payload->size = header->payload_length;
 
   // Send content second (if content is null, nothing is send)
-  if (payload->data != NULL &&
+  if (payload->data != nullptr &&
       _connectionManager->Send(message) != SAVIME_SUCCESS) {
     throw std::runtime_error(
         "MessagePtr: " + std::to_string(header->msg_number) + " to client " +
@@ -265,10 +264,10 @@ void DefaultSession::SendMessage(MessageHeaderPtr header,
 
 void DefaultSession::SendAck(ConnectionDetailsPtr connectionDetails,
                              MessageHeaderPtr header) {
-  MessageHeaderPtr responseHeader = MessageHeaderPtr(new MessageHeader());
+  MessageHeaderPtr responseHeader = std::make_shared<MessageHeader>();
   init_header((*responseHeader), header->clientid, header->queryid,
-              header->msg_number, S_ACK, 0, NULL, NULL);
-  SendMessage(responseHeader, connectionDetails, NULL);
+              header->msg_number, S_ACK, 0, nullptr, nullptr);
+  SendMessage(responseHeader, std::move(connectionDetails), nullptr);
 }
 
 void DefaultSession::WaitAck(ConnectionDetailsPtr connectionDetails,
@@ -281,7 +280,7 @@ void DefaultSession::WaitAck(ConnectionDetailsPtr connectionDetails,
   }
   _serverJobHasBeenNotified = false;
 
-  ReadHeader(connectionDetails, header);
+  ReadHeader(std::move(connectionDetails), header);
 
   if (header->type != C_ACK) {
     throw std::runtime_error(
@@ -310,11 +309,11 @@ void DefaultSession::HandleConnectionRequest(
     header->clientid = GetNextClientId();
     _currentClient = header->clientid;
     int server_id = _configurationManager->GetIntValue(SERVER_ID);
-    MessageHeaderPtr responseHeader = MessageHeaderPtr(new MessageHeader());
+    MessageHeaderPtr responseHeader = std::make_shared<MessageHeader>();
     init_header((*responseHeader), header->clientid, 0, header->msg_number + 1,
-                S_CONNECTION_ACCEPT, 0, NULL, NULL);
+                S_CONNECTION_ACCEPT, 0, nullptr, nullptr);
 
-    SendMessage(responseHeader, connectionDetails, NULL);
+    SendMessage(responseHeader, std::move(connectionDetails), nullptr);
 
     _serverState = WAIT_QUERY;
   } else {
@@ -325,7 +324,7 @@ void DefaultSession::HandleConnectionRequest(
 
 void DefaultSession::HandleCreateQueryResquest(
     ConnectionDetailsPtr connectionDetails, MessageHeaderPtr header) {
-  MessageHeaderPtr responseHeader = MessageHeaderPtr(new MessageHeader());
+  MessageHeaderPtr responseHeader = std::make_shared<MessageHeader>();
   GET_T1_LOCAL();
 
   if (_serverState == WAIT_QUERY) {
@@ -340,9 +339,9 @@ void DefaultSession::HandleCreateQueryResquest(
     _queryDataManager->SetQueryId(_currentQuery);
 
     init_header((*responseHeader), header->clientid, header->queryid,
-                header->msg_number + 1, S_QUERY_ACCEPT, 0, NULL, NULL);
+                header->msg_number + 1, S_QUERY_ACCEPT, 0, nullptr, nullptr);
 
-    SendMessage(responseHeader, connectionDetails, NULL);
+    SendMessage(responseHeader, std::move(connectionDetails), nullptr);
     _serverState = RECEIVE_QUERY;
   } else {
     throw std::runtime_error(
@@ -375,13 +374,13 @@ void DefaultSession::HandleSendQueryText(ConnectionDetailsPtr connectionDetails,
 
       char *buffer = (char *)malloc(sizeof(char) * size);
 
-      if (buffer == NULL) {
+      if (buffer == nullptr) {
         throw std::runtime_error(
             "Could not allocate enough memory for processing request.");
       }
 
-      MessagePtr message = std::shared_ptr<Message>(new Message());
-      PayloadPtr payload = std::shared_ptr<Payload>(new Payload());
+      MessagePtr message = std::make_shared<Message>();
+      PayloadPtr payload = std::make_shared<Payload>();
 
       message->connection_details = connectionDetails;
 
@@ -438,7 +437,7 @@ void DefaultSession::HandleSendParamRequest(
       throw std::runtime_error("Invalid query.");
     }
 
-    SendAck(connectionDetails, header);
+    SendAck(std::move(connectionDetails), header);
     _serverState = RECEIVE_PARAM;
   } else {
     throw std::runtime_error(
@@ -458,11 +457,11 @@ void DefaultSession::HandleSendParamData(ConnectionDetailsPtr connectionDetails,
     }
 
     while (true) {
-      MessagePtr messageHandle = std::shared_ptr<Message>(new Message());
-      PayloadPtr payload = std::shared_ptr<Payload>(new Payload());
+      MessagePtr messageHandle = std::make_shared<Message>();
+      PayloadPtr payload = std::make_shared<Payload>();
       messageHandle->connection_details = _currentConnection;
       messageHandle->payload = payload;
-      messageHandle->payload->data = NULL;
+      messageHandle->payload->data = nullptr;
       messageHandle->payload->size = header->payload_length;
       messageHandle->payload->file_descriptor =
           _queryDataManager->GetParamFile(header->block_name);
@@ -526,10 +525,10 @@ void DefaultSession::HandleResultRequest(ConnectionDetailsPtr connectionDetails,
       throw std::runtime_error("Invalid query.");
     }
 
-    MessageHeaderPtr responseHeader = MessageHeaderPtr(new MessageHeader());
+    MessageHeaderPtr responseHeader = std::make_shared<MessageHeader>();
     init_header((*responseHeader), header->clientid, header->queryid,
-                header->msg_number + 1, S_SEND_START_RESPONSE, 0, NULL, NULL);
-    SendMessage(responseHeader, connectionDetails, NULL);
+                header->msg_number + 1, S_SEND_START_RESPONSE, 0, nullptr, nullptr);
+    SendMessage(responseHeader, connectionDetails, nullptr);
 
     WaitAck(connectionDetails, responseHeader);
 
@@ -538,7 +537,7 @@ void DefaultSession::HandleResultRequest(ConnectionDetailsPtr connectionDetails,
 
     if (_parser->Parse(_queryDataManager) != SAVIME_SUCCESS ||
         _optimizer->Optimize(_queryDataManager) != SAVIME_SUCCESS ||
-        _engine->run(_queryDataManager, this) != SAVIME_SUCCESS) {
+      _engine->Run(_queryDataManager, this) != SAVIME_SUCCESS) {
       error = true;
       NotifyTextResponse(_queryDataManager->GetErrorResponse());
     }
@@ -553,8 +552,8 @@ void DefaultSession::HandleResultRequest(ConnectionDetailsPtr connectionDetails,
     }
 
     init_header((*responseHeader), header->clientid, header->queryid,
-                header->msg_number, S_RESPONSE_END, 0, NULL, NULL);
-    SendMessage(responseHeader, connectionDetails, NULL);
+                header->msg_number, S_RESPONSE_END, 0, nullptr, nullptr);
+    SendMessage(responseHeader, connectionDetails, nullptr);
 
     _queryDataManager->Release();
     _serverState = WAIT_QUERY;
@@ -587,7 +586,7 @@ void DefaultSession::HandleCloseConnection(
 
 void DefaultSession::HandleShutdonwSignal(
     ConnectionDetailsPtr connectionDetails, MessageHeaderPtr header) {
-  SendAck(connectionDetails, header);
+  SendAck(std::move(connectionDetails), std::move(header));
   _systemLogger->LogEvent(SESSION_ID, "Client signalled Savime to shutdown.");
   _systemLogger->LogEvent(SESSION_ID, "Shutting down.");
   exit(EXIT_SUCCESS);
@@ -595,7 +594,7 @@ void DefaultSession::HandleShutdonwSignal(
 
 void DefaultSession::HandleMessage(ConnectionDetailsPtr connectionDetails) {
   try {
-    MessageHeaderPtr header = MessageHeaderPtr(new MessageHeader());
+    MessageHeaderPtr header = std::make_shared<MessageHeader>();
     ReadHeader(connectionDetails, header);
 
     switch (header->type) {
@@ -679,5 +678,5 @@ void DefaultSession::Run() {
   // cleaning up and notify session manager thread has finished
   _connectionManager->RemoveConnectionListener(this);
   _sessionManager->EndSession(this);
-  _this = NULL;
+  _this = nullptr;
 }

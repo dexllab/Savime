@@ -94,7 +94,7 @@ enum ServerState {
  * MessageHeader is the struct containing the basic info transferred
  * between the client and the server.
  */
-struct MessageHeader {
+struct __attribute__((__packed__)) MessageHeader {
   char magic; /*!<Magic number for message header validation. It must be 0x42.*/
   char protocol_version; /*!<Protocol version, reserved for future use. Default
                             is 0x01.*/

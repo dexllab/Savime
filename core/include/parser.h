@@ -1,3 +1,5 @@
+#include <utility>
+
 #ifndef PARSER_H
 #define PARSER_H
 /*! \file */
@@ -6,29 +8,6 @@
 #include "storage_manager.h"
 #include "query_data_manager.h"
 
-#define DEFAULT_TEMP_MEMBER "_aux"
-#define DEFAULT_SYNTHETIC_DIMENSION "_i"
-#define SYNTHETIC_DIMENSION "i"
-#define DEFAULT_MASK_ATTRIBUTE "mask"
-#define DEFAULT_OFFSET_ATTRIBUTE "offset"
-#define NUM_TARS_FOR_JOIN 2
-#define LEFT_DATAELEMENT_PREFIX "left_"
-#define RIGHT_DATAELEMENT_PREFIX "right_"
-#define INPUT_TAR "input_tar"
-#define OPERATOR_NAME "operator_name"
-#define NEW_MEMBER "new_member"
-#define AUX_TAR "aux_tar"
-#define OP "op"
-#define LITERAL "literal"
-#define IDENTIFIER "identifier"
-#define COMMAND "command_str"
-#define NO_INTERSECTION_JOIN "no_intersection_join"
-#define EMPTY_SUBSET "empty_subset"
-#define OPERAND(x) "operand"+std::to_string(x)
-#define DIM(x) "dim"+std::to_string(x)
-#define LB(x) "lb"+std::to_string(x)
-#define UP(x) "up"+std::to_string(x)
-#define LITERAL_FILLER_MARK string("___LITERAL___")
 
 /**Parser is the module responsible for parsing the query text and generating
  * a query plan.*/
@@ -42,19 +21,26 @@ public:
   */
   Parser(ConfigurationManagerPtr configurationManager,
          SystemLoggerPtr systemLogger)
-      : SavimeModule("Parser", configurationManager, systemLogger) {}
+      : SavimeModule("Parser", std::move(configurationManager), std::move(systemLogger)) {}
 
   /**
   * Sets the standard Metadata Manager for the Parser.
   * @param metadaManager is the standard system MetadataManager.
   */
-  virtual void SetMetadaManager(MetadataManagerPtr metadaManager) = 0;
+  virtual void SetMetadataManager(MetadataManagerPtr metadaManager) = 0;
 
   /**
   * Sets the standard Storage Manager for the Parser.
   * @param metadaManager is the standard system StorageManager.
   */
   virtual void SetStorageManager(StorageManagerPtr storageManager) = 0;
+
+  /**
+  * Infers the schema for the output TAR for the operation.
+  * @param operation is the operation for which the resulting TAR schema must be inferred;
+  * @return the TARPtr with the resulting TAR schema.
+  */
+  virtual TARPtr InferOutputTARSchema(OperationPtr operation) = 0;
 
   /**
   * Parses the query string and creates a QueryPlan in the QueryDataManager.
@@ -75,9 +61,6 @@ inline bool validadeIdentifier(string identifier) {
       return false;
 
     if (isdigit(cIdentifier[i]) && i == 0)
-      return false;
-
-    if (identifier == DEFAULT_SYNTHETIC_DIMENSION)
       return false;
   }
 

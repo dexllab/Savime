@@ -1,3 +1,5 @@
+#include <memory>
+
 /*
 *    This program is free software: you can redistribute it and/or modify
 *    it under the terms of the GNU General Public License as published by
@@ -25,20 +27,21 @@
 
 using namespace std;
 
-#define DECLARE_DIMJOIN_TARS()                                                 \
-  auto leftTAR = operation->GetParametersByName(OPERAND(0))->tar;              \
-  auto rightTAR = operation->GetParametersByName(OPERAND(1))->tar;             \
-  assert(leftTAR != nullptr && rightTAR != nullptr);                           \
-  TARPtr outputTAR = operation->GetResultingTAR();                             \
+#define SET_DIMJOIN_TARS()                                                     \
+  _leftTAR = operation->GetParametersByName(OPERAND(0))->tar;                  \
+  _rightTAR = operation->GetParametersByName(OPERAND(1))->tar;                 \
+  assert(_leftTAR != nullptr && _rightTAR != nullptr);                         \
+  _outputTAR = operation->GetResultingTAR();                                   \
 
-#define CHECK_INTERSECTION()                                                   \
+#define CHECK_INTERSECTION2()                                                  \
   bool hasNoIntersection = false;                                              \
-  auto interParam = operation->GetParametersByName(NO_INTERSECTION_JOIN);      \
+  auto interParam = _operation->GetParametersByName(NO_INTERSECTION_JOIN);     \
   if(interParam) {                                                             \
     hasNoIntersection = interParam->literal_bool;                              \
     if(hasNoIntersection)                                                      \
        return SAVIME_SUCCESS;                                                  \
   }
+
 
 struct JoinedRange {
   int64_t lower_bound;
@@ -47,11 +50,11 @@ struct JoinedRange {
 };
 typedef shared_ptr<JoinedRange> JoinedRangePtr;
 
-bool compareDimSpecsByAdj(DimSpecPtr a, DimSpecPtr b) {
+inline bool compareDimSpecsByAdj(const DimSpecPtr &a, const DimSpecPtr &b) {
   return a->GetAdjacency() < b->GetAdjacency();
 }
 
-void createDimensionMappings(const OperationPtr& operation,
+inline void createDimensionMappings(const OperationPtr& operation,
                              map<string, string> &leftDims,
                              map<string, string> &rightDims) {
   int32_t count = 0;
@@ -71,41 +74,41 @@ void createDimensionMappings(const OperationPtr& operation,
   INDEX = nextUntested;\
   nextUntested++;\
   rightSubtarIndex =\
-      outputGenerator->GetSubtarsIndexMap(1, INDEX - 1) + 1;\
-  rightSubtar = rightGenerator->GetSubtar(rightSubtarIndex);\
+      _outputGenerator->GetSubtarsIndexMap(1, INDEX - 1) + 1;\
+  rightSubtar = _rightGenerator->GetSubtar(rightSubtarIndex);\
   if (rightSubtar == nullptr) {\
     leftSubtarIndex =\
-        outputGenerator->GetSubtarsIndexMap(0, INDEX - 1) + 1;\
-    leftGenerator->TestAndDisposeSubtar(leftSubtarIndex - 1);\
+        _outputGenerator->GetSubtarsIndexMap(0, INDEX - 1) + 1;\
+    _leftGenerator->TestAndDisposeSubtar(leftSubtarIndex - 1);\
     rightSubtarIndex = 0;\
-    rightSubtar = rightGenerator->GetSubtar(rightSubtarIndex);\
+    rightSubtar = _rightGenerator->GetSubtar(rightSubtarIndex);\
   } else if (INDEX > 0) {\
     leftSubtarIndex =\
-        outputGenerator->GetSubtarsIndexMap(0, INDEX - 1);\
+        _outputGenerator->GetSubtarsIndexMap(0, INDEX - 1);\
   } else {\
     leftSubtarIndex = 0;\
   }\
   if(leftSubtarIndex >= 0)\
-    leftSubtar = leftGenerator->GetSubtar(leftSubtarIndex);\
+    leftSubtar = _leftGenerator->GetSubtar(leftSubtarIndex);\
   else\
     leftSubtar =  nullptr;\
   if (leftSubtar == nullptr || rightSubtar == nullptr) {\
     int32_t lastSubtar =\
-        outputGenerator->GetSubtarsIndexMap(1, INDEX - 2);\
-    if (!freeBufferedSubtars) {\
+        _outputGenerator->GetSubtarsIndexMap(1, INDEX - 2);\
+    if (!_freeBufferedSubtars) {\
       for (int32_t i = 0; i <= lastSubtar; i++) {\
-        rightGenerator->TestAndDisposeSubtar(i);\
+        _rightGenerator->TestAndDisposeSubtar(i);\
       }\
     }\
     finalSubtar = true;\
   }\
   if(!finalSubtar) { \
-    outputGenerator->SetSubtarsIndexMap(0, INDEX, leftSubtarIndex);\
-    outputGenerator->SetSubtarsIndexMap(1, INDEX, rightSubtarIndex);\
+    _outputGenerator->SetSubtarsIndexMap(0, INDEX, leftSubtarIndex);\
+    _outputGenerator->SetSubtarsIndexMap(1, INDEX, rightSubtarIndex);\
   }\
   mutex.unlock();
 
-bool checkIntersection(TARPtr tar, SubtarPtr subtar1, SubtarPtr subtar2,
+inline bool checkIntersection(const TARPtr &tar, SubtarPtr subtar1, SubtarPtr subtar2,
                        map<string, string> joinedDims,
                        map<string, JoinedRangePtr> &intersection,
                        const StorageManagerPtr& storageManager) {
@@ -134,7 +137,7 @@ bool checkIntersection(TARPtr tar, SubtarPtr subtar1, SubtarPtr subtar2,
 
     if (IN_RANGE(realLower[0], realLower[1], realUpper[1]) ||
         IN_RANGE(realLower[1], realLower[0], realUpper[0])) {
-      JoinedRangePtr joinedRange = JoinedRangePtr(new JoinedRange());
+      JoinedRangePtr joinedRange = std::make_shared<JoinedRange>();
       joinedRange->lower_bound =
           (realLower[0] > realLower[1]) ? realLower[0] : realLower[1];
       joinedRange->upper_bound =
@@ -148,7 +151,7 @@ bool checkIntersection(TARPtr tar, SubtarPtr subtar1, SubtarPtr subtar2,
   return true;
 }
 
-void calculateMultipliers(unordered_map<string, int64_t> &multipliers,
+inline void calculateMultipliers(unordered_map<string, int64_t> &multipliers,
                           vector<DimensionPtr> dimensions) {
 
   auto numDims = dimensions.size();
@@ -171,7 +174,7 @@ inline DatasetPtr calculateSingleDim(vector<DatasetPtr> matDims,
   auto numDims = matDims.size();
 
   if (numDims == 1) {
-    return matDims[0];
+   // return matDims[0];
   }
 
   vector<DatasetHandlerPtr> handlers(numDims);
@@ -179,7 +182,7 @@ inline DatasetPtr calculateSingleDim(vector<DatasetPtr> matDims,
   auto dimCount = 0;
   auto size = matDims[0]->GetEntryCount();
 
-  for (auto matdimDs : matDims) {
+  for (const auto &matdimDs : matDims) {
     handlers[dimCount] = storageManager->GetHandler(matdimDs);
     buffers[dimCount] = (int64_t *) handlers[dimCount]->GetBuffer();
     dimCount++;
@@ -200,7 +203,7 @@ inline DatasetPtr calculateSingleDim(vector<DatasetPtr> matDims,
     singleBuffer[i] = 0;
     for (int32_t d = 0; d < numDims; d++) {
       if (buffers[d][i] == INVALID_EXACT_REAL_INDEX) {
-        singleBuffer[i] = invalidFlag;
+        singleBuffer[i] = static_cast<TARPosition>(invalidFlag);
         (*singleDs->BitMask())[i] = true;
         break;
       }

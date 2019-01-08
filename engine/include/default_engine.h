@@ -1,3 +1,5 @@
+#include <utility>
+
 /*
 *    This program is free software: you can redistribute it and/or modify
 *    it under the terms of the GNU General Public License as published by
@@ -38,44 +40,43 @@ typedef std::shared_ptr<SubtarControler> SubtarControlerPtr;
 
 #define MAX_MAPS 5
 #define DEFAULT_MAP 0
+#define NONSET -1
 
 class TARGenerator {
   mutex _mutex;
   int32_t _maxAccesses = 1;
   unordered_map<SubTARIndex, SubTARIndex> _subtarIndexMap[MAX_MAPS];
   unordered_map<SubTARIndex, SubtarControlerPtr> _subtarMap;
+  SubTARIndex _lastSubtarId = NONSET;
 
   TARPtr _tar;
   vector<SubtarPtr> _subtarsVector;
-
   OperationPtr _operation;
-  ConfigurationManagerPtr _configurationManager;
-  QueryDataManagerPtr _queryDataManager;
-  MetadataManagerPtr _metadataManager;
-  StorageManagerPtr _storageManager;
-  EnginePtr _engine;
-  OperatorFunction _producer;
+  EngineOperatorPtr _producer;
 
 public:
-  TARGenerator(TARPtr tar) {
+
+  TARGenerator() {
+    _tar = nullptr;
+  }
+
+  explicit TARGenerator(TARPtr tar) {
     _tar = tar;
     for (auto& subtar : tar->GetSubtars())
       _subtarsVector.push_back(subtar);
   }
 
-  TARGenerator(OperatorFunction producer, OperationPtr operation,
-               ConfigurationManagerPtr configurationManager,
-               QueryDataManagerPtr queryDataManager,
-               MetadataManagerPtr metadataManager,
-               StorageManagerPtr storageManager, EnginePtr engine) {
-    _producer = producer;
-    _operation = operation;
-    _configurationManager = configurationManager;
-    _queryDataManager = queryDataManager;
-    _metadataManager = metadataManager;
-    _storageManager = storageManager;
-    _engine = engine;
+  explicit TARGenerator(EngineOperatorPtr producer) {
+    _producer = std::move(producer);
     _tar = nullptr;
+  }
+
+  void SetProducer(EngineOperatorPtr producer){
+    _producer = std::move(producer);
+  }
+
+  EngineOperatorPtr GetProducer(){
+    return _producer;
   }
 
   SubtarPtr GetSubtar(SubTARIndex subtarIndex);
@@ -83,10 +84,10 @@ public:
   void TestAndDisposeSubtar(SubTARIndex subtarIndex);
 
   // unordered_map<int32_t, int32_t>& GetSubtarsIndexMap();
-  int32_t GetSubtarsIndexMap(SubTARIndex index);
+  SubTARIndex GetSubtarsIndexMap(SubTARIndex index);
   void SetSubtarsIndexMap(SubTARIndex index, SubTARIndex value);
 
-  int32_t GetSubtarsIndexMap(SubTARIndex mapIndex, SubTARIndex index);
+  SubTARIndex GetSubtarsIndexMap(SubTARIndex mapIndex, SubTARIndex index);
   void SetSubtarsIndexMap(int32_t mapIndex, SubTARIndex index,
     SubTARIndex value);
 
@@ -112,6 +113,7 @@ typedef std::shared_ptr<BlockToDispatch> BlockToDispatchPtr;
 
 class DefaultEngine : public Engine {
 
+protected:
   mutex _mutex;
   mutex _dispatchMutex;
   condition_variable _conditionVar;
@@ -126,7 +128,7 @@ class DefaultEngine : public Engine {
   unordered_map<std::string, TARGeneratorPtr> _generators;
 
   void CleanTempTARs();
-  void SendResultingTAR(EngineListener *caller, TARPtr tar);
+  virtual void SendResultingTAR(EngineListener *caller, TARPtr tar);
   SavimeResult WaitSendBlocksCompletion();
   void AddBlockToDispatchList(EngineListener *caller, const DatasetPtr& dataset,
                               const string& paramName, const string& fileLocation,
@@ -148,7 +150,7 @@ public:
   void SetThisPtr(EnginePtr thisPtr) { _this = thisPtr; }
   unordered_map<std::string, TARGeneratorPtr> &GetGenerators();
   void SetMetadaManager(MetadataManagerPtr metadaManager);
-  SavimeResult run(QueryDataManagerPtr queryDataManager,
+  SavimeResult Run(QueryDataManagerPtr queryDataManager,
                    EngineListenerPtr caller);
 };
 typedef std::shared_ptr<DefaultEngine> DefaultEnginePtr;

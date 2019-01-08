@@ -55,12 +55,16 @@ void free_mem(void * buffer);
 			    return OR;
 	       		 }
 
-[aA][nN][dD] 		 {
+[aA][nN][dD] 	 {
 			    return AND;
 	       		 }
 
-[nN][oO][tT] 		 {
+[nN][oO][tT] 	 {
 			    return NOT;
+	       		 }
+
+[lL][iI][kK][eE] {
+			    return LIKE;
 	       		 }
 
 [(]			 {
@@ -108,9 +112,13 @@ void free_mem(void * buffer);
 			    return QUOTE;
 	       		 }
 
-[=]	 	 	 {
+[=]	 	 	     {
 			    return EQ;
 	       		 }
+
+[!=]	 	 	 {
+                return NEQ;
+                 }
 
 \<\>	 	 	 {
 			    return NEQ;

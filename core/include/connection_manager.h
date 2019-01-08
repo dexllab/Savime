@@ -1,3 +1,5 @@
+#include <utility>
+
 #ifndef CONNECTION_MANAGER_H
 #define CONNECTION_MANAGER_H
 /*! \file */
@@ -111,7 +113,7 @@ public:
   */
   ConnectionManager(ConfigurationManagerPtr configurationManager,
                     SystemLoggerPtr systemLogger)
-      : SavimeModule("Connection Manager", configurationManager, systemLogger) {
+      : SavimeModule("Connection Manager", std::move(configurationManager), systemLogger) {
   }
 
   /**

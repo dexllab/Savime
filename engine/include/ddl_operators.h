@@ -21,75 +21,131 @@
 #include "../core/include/util.h"
 #include "../core/include/query_data_manager.h"
 #include "../core/include/storage_manager.h"
+#include "../core/include/symbols.h"
+#include "dml_operators.h"
+#include "create_tar.h"
+#include "load_subtar.h"
+#include <algorithm>
+#include <vector>
+#include <regex>
+#include <fstream>
+#include <iostream>
+#include <omp.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 
+class CreateTARS : public EngineOperator {
+public:
+    CreateTARS(OperationPtr operation, ConfigurationManagerPtr configurationManager,
+           QueryDataManagerPtr queryDataManager, MetadataManagerPtr metadataManager, StorageManagerPtr storageManager,
+           EnginePtr engine);
 
-/*----------------------------OPERATORS PROTOTYPES----------------------------*/
-int create_tars(SubTARIndex subtarIndex, OperationPtr operation,
-                ConfigurationManagerPtr configurationManager,
-                QueryDataManagerPtr queryDataManager,
-                MetadataManagerPtr metadataManager,
-                StorageManagerPtr storageManager, EnginePtr engine);
+    SavimeResult GenerateSubtar(SubTARIndex subtarIndex) override { return SAVIME_FAILURE; }
+    SavimeResult Run() override;
+};
 
-int create_tar(SubTARIndex subtarIndex, OperationPtr operation,
-               ConfigurationManagerPtr configurationManager,
-               QueryDataManagerPtr queryDataManager,
-               MetadataManagerPtr metadataManager,
-               StorageManagerPtr storageManager, EnginePtr engine);
+class CreateTAR : public EngineOperator {
+public:
+    CreateTAR(OperationPtr operation, ConfigurationManagerPtr configurationManager,
+               QueryDataManagerPtr queryDataManager, MetadataManagerPtr metadataManager, StorageManagerPtr storageManager,
+               EnginePtr engine);
 
-int create_type(SubTARIndex subtarIndex, OperationPtr operation,
-                ConfigurationManagerPtr configurationManager,
-                QueryDataManagerPtr queryDataManager,
-                MetadataManagerPtr metadataManager,
-                StorageManagerPtr storageManager, EnginePtr engine);
+    SavimeResult GenerateSubtar(SubTARIndex subtarIndex) override { return SAVIME_FAILURE; }
+    SavimeResult Run() override;
+};
 
-int create_dataset(SubTARIndex subtarIndex, OperationPtr operation,
-                   ConfigurationManagerPtr configurationManager,
-                   QueryDataManagerPtr queryDataManager,
-                   MetadataManagerPtr metadataManager,
-                   StorageManagerPtr storageManager, EnginePtr engine);
+class CreateType : public EngineOperator {
+public:
+    CreateType(OperationPtr operation, ConfigurationManagerPtr configurationManager,
+               QueryDataManagerPtr queryDataManager, MetadataManagerPtr metadataManager, StorageManagerPtr storageManager,
+               EnginePtr engine);
 
-int load_subtar(SubTARIndex subtarIndex, OperationPtr operation,
-                  ConfigurationManagerPtr configurationManager,
-                  QueryDataManagerPtr queryDataManager,
-                  MetadataManagerPtr metadataManager,
-                  StorageManagerPtr storageManager, EnginePtr engine);
+    SavimeResult GenerateSubtar(SubTARIndex subtarIndex) override { return SAVIME_FAILURE; }
+    SavimeResult Run() override;
+};
 
-int drop_tars(SubTARIndex subtarIndex, OperationPtr operation,
-              ConfigurationManagerPtr configurationManager,
-              QueryDataManagerPtr queryDataManager,
-              MetadataManagerPtr metadataManager,
-              StorageManagerPtr storageManager, EnginePtr engine);
+class CreateDataset : public EngineOperator {
+public:
+    CreateDataset(OperationPtr operation, ConfigurationManagerPtr configurationManager,
+               QueryDataManagerPtr queryDataManager, MetadataManagerPtr metadataManager, StorageManagerPtr storageManager,
+               EnginePtr engine);
 
-int drop_tar(SubTARIndex subtarIndex, OperationPtr operation,
-             ConfigurationManagerPtr configurationManager,
-             QueryDataManagerPtr queryDataManager,
-             MetadataManagerPtr metadataManager,
-             StorageManagerPtr storageManager, EnginePtr engine);
+    SavimeResult GenerateSubtar(SubTARIndex subtarIndex) override { return SAVIME_FAILURE; }
+    SavimeResult Run() override;
+};
 
-int drop_type(SubTARIndex subtarIndex, OperationPtr operation,
-              ConfigurationManagerPtr configurationManager,
-              QueryDataManagerPtr queryDataManager,
-              MetadataManagerPtr metadataManager,
-              StorageManagerPtr storageManager, EnginePtr engine);
+class LoadSubtar : public EngineOperator {
+public:
+    LoadSubtar(OperationPtr operation, ConfigurationManagerPtr configurationManager,
+                  QueryDataManagerPtr queryDataManager, MetadataManagerPtr metadataManager, StorageManagerPtr storageManager,
+                  EnginePtr engine);
 
-int drop_dataset(SubTARIndex subtarIndex, OperationPtr operation,
-                 ConfigurationManagerPtr configurationManager,
-                 QueryDataManagerPtr queryDataManager,
-                 MetadataManagerPtr metadataManager,
-                 StorageManagerPtr storageManager, EnginePtr engine);
+    SavimeResult GenerateSubtar(SubTARIndex subtarIndex) override { return SAVIME_FAILURE; }
+    SavimeResult Run() override;
+};
 
-int save(SubTARIndex subtarIndex, OperationPtr operation,
-                 ConfigurationManagerPtr configurationManager,
-                 QueryDataManagerPtr queryDataManager,
-                 MetadataManagerPtr metadataManager,
-                 StorageManagerPtr storageManager, EnginePtr engine);
+class DropTARS : public EngineOperator {
+public:
+    DropTARS(OperationPtr operation, ConfigurationManagerPtr configurationManager,
+               QueryDataManagerPtr queryDataManager, MetadataManagerPtr metadataManager, StorageManagerPtr storageManager,
+               EnginePtr engine);
 
-int show(SubTARIndex subtarIndex, OperationPtr operation,
-         ConfigurationManagerPtr configurationManager,
-         QueryDataManagerPtr queryDataManager,
-         MetadataManagerPtr metadataManager, StorageManagerPtr storageManager,
+    SavimeResult GenerateSubtar(SubTARIndex subtarIndex) override { return SAVIME_FAILURE; }
+    SavimeResult Run() override;
+};
+
+class DropTAR : public EngineOperator {
+public:
+    DropTAR(OperationPtr operation, ConfigurationManagerPtr configurationManager,
+             QueryDataManagerPtr queryDataManager, MetadataManagerPtr metadataManager, StorageManagerPtr storageManager,
+             EnginePtr engine);
+
+    SavimeResult GenerateSubtar(SubTARIndex subtarIndex) override { return SAVIME_FAILURE; }
+    SavimeResult Run() override;
+};
+
+class DropType : public EngineOperator {
+public:
+    DropType(OperationPtr operation, ConfigurationManagerPtr configurationManager,
+             QueryDataManagerPtr queryDataManager, MetadataManagerPtr metadataManager, StorageManagerPtr storageManager,
+             EnginePtr engine);
+
+    SavimeResult GenerateSubtar(SubTARIndex subtarIndex) override { return SAVIME_FAILURE; }
+    SavimeResult Run() override;
+};
+
+class DropDataset : public EngineOperator {
+public:
+    DropDataset(OperationPtr operation, ConfigurationManagerPtr configurationManager,
+      QueryDataManagerPtr queryDataManager, MetadataManagerPtr metadataManager, StorageManagerPtr storageManager,
+    EnginePtr engine);
+
+    SavimeResult GenerateSubtar(SubTARIndex subtarIndex) override { return SAVIME_FAILURE; }
+    SavimeResult Run() override;
+};
+
+class Save : public EngineOperator {
+public:
+    Save(OperationPtr operation, ConfigurationManagerPtr configurationManager,
+                QueryDataManagerPtr queryDataManager, MetadataManagerPtr metadataManager, StorageManagerPtr storageManager,
+                EnginePtr engine);
+
+    SavimeResult GenerateSubtar(SubTARIndex subtarIndex) override { return SAVIME_FAILURE; }
+    SavimeResult Run() override;
+};
+
+class Show : public EngineOperator {
+public:
+    Show(OperationPtr operation, ConfigurationManagerPtr configurationManager,
+         QueryDataManagerPtr queryDataManager, MetadataManagerPtr metadataManager, StorageManagerPtr storageManager,
          EnginePtr engine);
+
+    SavimeResult GenerateSubtar(SubTARIndex subtarIndex) override { return SAVIME_FAILURE; }
+    SavimeResult Run() override;
+};
+
 
 #endif /* DDL_OPERATORS_H */
 

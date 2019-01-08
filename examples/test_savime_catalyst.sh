@@ -17,7 +17,8 @@ savimec 'load_subtar("data",  "ordered, time, 0, 239| ordered, index, 0, 92539",
 
 #Creating vizualizations
 mkdir $(pwd)/viz
-savimec 'catalyze(subset(data, time, 0, 20), where(geo, coords:2 < -13.0 ), top, "'$(pwd)'/viz/", "'$(pwd)'/catalyst_grad.py");'
-#savimec 'catalyze(subset(data, time, 0, 20), where(geo, coords:2 < -13.0 ), top, "'$(pwd)'/viz/");'
-
+#savimec 'catalyze(subset(data, time, 0, 20), where(geo, coords:2 < -13.0 ), top, "'$(pwd)'/viz/", "'$(pwd)'/catalyst_grad.py");'
+savimec 'catalyze(subset(data, time, 0, 20), where(geo, coords:2 < -13.0 ), top, "'$(pwd)'/viz/");'
+#savimec 'scan(dimjoin(data, data, time, time, index, index));'
+#savimec 'scan(derive(data, p, (pressure-32)/5));'
 

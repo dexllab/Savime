@@ -62,7 +62,7 @@ const char *split_error =
 using namespace std;
 
 // UTIL FUNCTIONS
-void DefaultParser::SetMetadaManager(MetadataManagerPtr metadaManager) {
+void DefaultParser::SetMetadataManager(MetadataManagerPtr metadaManager) {
   _metadaManager = metadaManager;
 }
 
@@ -75,11 +75,11 @@ bool DefaultParser::ValidateNumericalFunction(QueryExpressionPtr expression,
   string functionName = GET_IDENTIFER_BODY(expression);
 
   if (!_configurationManager->GetBooleanValue(
-          NUMERICAL_FUNCTION(functionName.c_str())))
+      NUMERICAL_FUNCTION(functionName)))
     return false;
 
   int paramsNumber = _configurationManager->GetIntValue(
-      NUMERICAL_FUNCTION_PARAMS(functionName.c_str()));
+      NUMERICAL_FUNCTION_PARAMS(functionName));
   auto paramList = expression->_value_expression_list->ParamsToList();
 
   if (paramList.size() != paramsNumber)
@@ -106,11 +106,11 @@ bool DefaultParser::ValidateBoolFunction(QueryExpressionPtr expression,
   string functionName = GET_IDENTIFER_BODY(expression);
 
   if (!_configurationManager->GetBooleanValue(
-          BOOLEAN_FUNCTION(functionName.c_str())))
+      BOOLEAN_FUNCTION(functionName)))
     return false;
 
   int paramsNumber = _configurationManager->GetIntValue(
-      BOOLEAN_FUNCTION_PARAMS(functionName.c_str()));
+      BOOLEAN_FUNCTION_PARAMS(functionName));
   auto paramList = expression->_value_expression_list->ParamsToList();
 
   if (paramList.size() != paramsNumber)
@@ -143,11 +143,11 @@ TARPtr DefaultParser::ParseTAR(ValueExpressionPtr param, string errorMsg,
                                        GET_IDENTIFER_BODY(identifier));
     if (!tar) {
       throw std::runtime_error("Identifier " + GET_IDENTIFER_BODY(identifier) +
-                               " is not a valid TAR name.");
+          " is not a valid TAR name.");
     }
     return tar;
   } else if (queryExpression = PARSE(param, QueryExpression)) {
-    tar = ParseOperation(queryExpression, queryPlan, idCounter);
+    tar = ParseOperation(queryExpression, std::move(queryPlan), idCounter);
     if (tar == nullptr) {
       throw std::runtime_error(errorMsg);
     }
@@ -161,7 +161,7 @@ TARPtr DefaultParser::ParseTAR(ValueExpressionPtr param, string errorMsg,
 OperationPtr
 DefaultParser::ParseCreateTARS(QueryExpressionPtr queryExpressionNode,
                                QueryPlanPtr queryPlan, int &idCounter) {
-  OperationPtr operation = OperationPtr(new Operation(TAL_CREATE_TARS));
+  OperationPtr operation = std::make_shared<Operation>(TAL_CREATE_TARS);
   operation->SetResultingTAR(nullptr);
   CharacterStringLiteralPtr commandString;
   std::list<ValueExpressionPtr> params =
@@ -169,7 +169,9 @@ DefaultParser::ParseCreateTARS(QueryExpressionPtr queryExpressionNode,
 
   // Checking first parameter (domain)
   if (commandString = PARSE(params.front(), CharacterStringLiteral)) {
-    operation->AddParam(COMMAND, commandString->_literalString);
+    operation->AddParam(PARAM(TAL_CREATE_TARS, _COMMAND),
+                        commandString->_literalString);
+
   } else {
     throw std::runtime_error("Invalid parameters for create_tars operator.");
   }
@@ -180,7 +182,7 @@ DefaultParser::ParseCreateTARS(QueryExpressionPtr queryExpressionNode,
 OperationPtr
 DefaultParser::ParseCreateTAR(QueryExpressionPtr queryExpressionNode,
                               QueryPlanPtr queryPlan, int &idCounter) {
-  OperationPtr operation = OperationPtr(new Operation(TAL_CREATE_TAR));
+  OperationPtr operation = std::make_shared<Operation>(TAL_CREATE_TAR);
   operation->SetResultingTAR(nullptr);
   std::list<ValueExpressionPtr> params =
       queryExpressionNode->_value_expression_list->ParamsToList();
@@ -189,8 +191,9 @@ DefaultParser::ParseCreateTAR(QueryExpressionPtr queryExpressionNode,
   if (params.size() >= 4) {
     for (auto param : params) {
       if (CharacterStringLiteralPtr commandString =
-              CharacterStringLiteralPtr(PARSE(param, CharacterStringLiteral)))
-        operation->AddParam(COMMAND, commandString->_literalString);
+          CharacterStringLiteralPtr(PARSE(param, CharacterStringLiteral)))
+        operation->AddParam(PARAM(TAL_CREATE_TAR, _COMMAND),
+                            commandString->_literalString);
       else
         throw std::runtime_error("Invalid parameters for create_tar operator.");
     }
@@ -204,7 +207,7 @@ DefaultParser::ParseCreateTAR(QueryExpressionPtr queryExpressionNode,
 OperationPtr
 DefaultParser::ParseCreateType(QueryExpressionPtr queryExpressionNode,
                                QueryPlanPtr queryPlan, int &idCounter) {
-  OperationPtr operation = OperationPtr(new Operation(TAL_CREATE_TYPE));
+  OperationPtr operation = std::make_shared<Operation>(TAL_CREATE_TYPE);
   operation->SetResultingTAR(nullptr);
   CharacterStringLiteralPtr commandString;
   list<ValueExpressionPtr> params =
@@ -213,7 +216,8 @@ DefaultParser::ParseCreateType(QueryExpressionPtr queryExpressionNode,
   // Checking first parameter (domain)
   if (params.size() == 1 &&
       (commandString = PARSE(params.front(), CharacterStringLiteral))) {
-    operation->AddParam(COMMAND, commandString->_literalString);
+    operation->AddParam(PARAM(TAL_CREATE_TYPE, _COMMAND),
+                        commandString->_literalString);
   } else {
     throw std::runtime_error("Invalid parameters for create_type operator.");
   }
@@ -225,7 +229,7 @@ OperationPtr
 DefaultParser::ParseCreateDataset(QueryExpressionPtr queryExpressionNode,
                                   QueryPlanPtr queryPlan, int &idCounter) {
 #define LITERAL "literal"
-  OperationPtr operation = OperationPtr(new Operation(TAL_CREATE_DATASET));
+  OperationPtr operation = std::make_shared<Operation>(TAL_CREATE_DATASET);
   QueryExpressionPtr queryExpression;
   int32_t op_count = 1;
   CharacterStringLiteralPtr stringLiteral;
@@ -241,31 +245,36 @@ DefaultParser::ParseCreateDataset(QueryExpressionPtr queryExpressionNode,
   if (params.size() == 2 &&
       (commandString = PARSE(params.front(), CharacterStringLiteral)) &&
       (filler = PARSE(params.back(), CharacterStringLiteral))) {
-    operation->AddParam(COMMAND, commandString->_literalString);
-    operation->AddParam(OPERAND(0), filler->_literalString);
+    operation->AddParam(PARAM(TAL_CREATE_DATASET, _COMMAND),
+                        commandString->_literalString);
+    operation->AddParam(PARAM(TAL_CREATE_DATASET, _OPERAND, 0),
+                        filler->_literalString);
+
   } else if (params.size() == 2 &&
-             (commandString = PARSE(params.front(), CharacterStringLiteral)) &&
-             (queryExpression = PARSE(params.back(), QueryExpression))) {
-    operation->AddParam(COMMAND, commandString->_literalString);
+      (commandString = PARSE(params.front(), CharacterStringLiteral)) &&
+      (queryExpression = PARSE(params.back(), QueryExpression))) {
+    operation->AddParam(PARAM(TAL_CREATE_DATASET, _COMMAND),
+                        commandString->_literalString);
     string identifier = GET_IDENTIFER_BODY(queryExpression);
 
     if (identifier == LITERAL) {
-      operation->AddParam(OPERAND(0), LITERAL_FILLER_MARK);
+      operation->AddParam(PARAM(TAL_CREATE_DATASET, _OPERAND, 0),
+                          LITERAL_FILLER_MARK);
 
       list<ValueExpressionPtr> literalParams =
           queryExpression->_value_expression_list->ParamsToList();
-      while (literalParams.size() > 0) {
+      while (!literalParams.empty()) {
         ValueExpressionPtr param = literalParams.front();
 
         if (stringLiteral = PARSE(param, CharacterStringLiteral)) {
-          operation->AddParam(OPERAND(op_count++),
+          operation->AddParam(PARAM(TAL_CREATE_DATASET, _OPERAND, op_count++),
                               stringLiteral->_literalString);
         } else if (unsignedNumericLiteral =
                        PARSE(param, UnsignedNumericLiteral)) {
-          operation->AddParam(OPERAND(op_count++),
+          operation->AddParam(PARAM(TAL_CREATE_DATASET, _OPERAND, op_count++),
                               to_string(unsignedNumericLiteral->_doubleValue));
         } else if (signedNumericLiteral = PARSE(param, SignedNumericLiteral)) {
-          operation->AddParam(OPERAND(op_count++),
+          operation->AddParam(PARAM(TAL_CREATE_DATASET, _OPERAND, op_count++),
                               to_string(signedNumericLiteral->_doubleValue));
         } else {
           throw std::runtime_error("Invalid params for literal definition.");
@@ -275,7 +284,7 @@ DefaultParser::ParseCreateDataset(QueryExpressionPtr queryExpressionNode,
       }
     } else {
       throw std::runtime_error("Literal definition expected but " + identifier +
-                               " found.");
+          " found.");
     }
   } else {
     throw std::runtime_error("Invalid parameters for create_dataset operator.");
@@ -286,17 +295,19 @@ DefaultParser::ParseCreateDataset(QueryExpressionPtr queryExpressionNode,
 
 OperationPtr DefaultParser::ParseLoad(QueryExpressionPtr queryExpressionNode,
                                       QueryPlanPtr queryPlan, int &idCounter) {
-  OperationPtr operation = OperationPtr(new Operation(TAL_LOAD_SUBTAR));
+  OperationPtr operation = std::make_shared<Operation>(TAL_LOAD_SUBTAR);
   operation->SetResultingTAR(nullptr);
   list<ValueExpressionPtr> params =
       queryExpressionNode->_value_expression_list->ParamsToList();
 
   // Checking first parameter (domain)
   if (params.size() >= 3) {
-    for (auto param : params) {
+    for (const auto &param : params) {
       if (CharacterStringLiteralPtr commandString =
-              CharacterStringLiteralPtr(PARSE(param, CharacterStringLiteral)))
-        operation->AddParam(COMMAND, commandString->_literalString);
+          CharacterStringLiteralPtr(PARSE(param, CharacterStringLiteral)))
+        operation->AddParam(PARAM(TAL_LOAD_SUBTAR, _COMMAND),
+                            commandString->_literalString);
+
       else
         throw std::runtime_error(
             "Invalid parameters for load_subtar operator.");
@@ -308,10 +319,15 @@ OperationPtr DefaultParser::ParseLoad(QueryExpressionPtr queryExpressionNode,
   return operation;
 }
 
+OperationPtr DefaultParser::ParseDelete(QueryExpressionPtr queryExpressionNode,
+                                      QueryPlanPtr queryPlan, int &idCounter) {
+
+}
+
 OperationPtr
 DefaultParser::ParseDropTARS(QueryExpressionPtr queryExpressionNode,
                              QueryPlanPtr queryPlan, int &idCounter) {
-  OperationPtr operation = OperationPtr(new Operation(TAL_DROP_TARS));
+  OperationPtr operation = std::make_shared<Operation>(TAL_DROP_TARS);
   operation->SetResultingTAR(nullptr);
   CharacterStringLiteralPtr commandString;
   list<ValueExpressionPtr> params =
@@ -319,7 +335,8 @@ DefaultParser::ParseDropTARS(QueryExpressionPtr queryExpressionNode,
 
   // Checking first parameter (domain)
   if (params.size() == 1 && (PARSE(params.front(), CharacterStringLiteral))) {
-    operation->AddParam(COMMAND, commandString->_literalString);
+    operation->AddParam(PARAM(TAL_DROP_TARS, _COMMAND),
+                        commandString->_literalString);
   } else {
     throw std::runtime_error("Invalid parameters for drop_tars operator.");
   }
@@ -330,7 +347,7 @@ DefaultParser::ParseDropTARS(QueryExpressionPtr queryExpressionNode,
 OperationPtr DefaultParser::ParseDropTAR(QueryExpressionPtr queryExpressionNode,
                                          QueryPlanPtr queryPlan,
                                          int &idCounter) {
-  OperationPtr operation = OperationPtr(new Operation(TAL_DROP_TAR));
+  OperationPtr operation = std::make_shared<Operation>(TAL_DROP_TAR);
   operation->SetResultingTAR(nullptr);
   CharacterStringLiteralPtr commandString;
   list<ValueExpressionPtr> params =
@@ -339,7 +356,8 @@ OperationPtr DefaultParser::ParseDropTAR(QueryExpressionPtr queryExpressionNode,
   // Checking first parameter (domain)
   if (params.size() == 1 &&
       (commandString = PARSE(params.front(), CharacterStringLiteral))) {
-    operation->AddParam(COMMAND, commandString->_literalString);
+    operation->AddParam(PARAM(TAL_DROP_TAR, _COMMAND),
+                        commandString->_literalString);
   } else {
     throw std::runtime_error("Invalid parameters for drop_tar operator.");
   }
@@ -350,7 +368,7 @@ OperationPtr DefaultParser::ParseDropTAR(QueryExpressionPtr queryExpressionNode,
 OperationPtr
 DefaultParser::ParseDropType(QueryExpressionPtr queryExpressionNode,
                              QueryPlanPtr queryPlan, int &idCounter) {
-  OperationPtr operation = OperationPtr(new Operation(TAL_DROP_TYPE));
+  OperationPtr operation = std::make_shared<Operation>(TAL_DROP_TYPE);
   operation->SetResultingTAR(nullptr);
   CharacterStringLiteralPtr commandString;
   list<ValueExpressionPtr> params =
@@ -359,7 +377,8 @@ DefaultParser::ParseDropType(QueryExpressionPtr queryExpressionNode,
   // Checking first parameter (domain)
   if (params.size() == 1 &&
       (commandString = PARSE(params.front(), CharacterStringLiteral))) {
-    operation->AddParam(COMMAND, commandString->_literalString);
+    operation->AddParam(PARAM(TAL_DROP_TYPE, _COMMAND),
+                        commandString->_literalString);
   } else {
     throw std::runtime_error("Invalid parameters for drop_type operator.");
   }
@@ -370,7 +389,7 @@ DefaultParser::ParseDropType(QueryExpressionPtr queryExpressionNode,
 OperationPtr
 DefaultParser::ParseDropDataset(QueryExpressionPtr queryExpressionNode,
                                 QueryPlanPtr queryPlan, int &idCounter) {
-  OperationPtr operation = OperationPtr(new Operation(TAL_DROP_DATASET));
+  OperationPtr operation = std::make_shared<Operation>(TAL_DROP_DATASET);
   operation->SetResultingTAR(nullptr);
   CharacterStringLiteralPtr commandString;
   list<ValueExpressionPtr> params =
@@ -379,17 +398,18 @@ DefaultParser::ParseDropDataset(QueryExpressionPtr queryExpressionNode,
   // Checking first parameter (domain)
   if (params.size() == 1 &&
       (commandString = PARSE(params.front(), CharacterStringLiteral))) {
-    operation->AddParam(COMMAND, commandString->_literalString);
+    operation->AddParam(PARAM(TAL_DROP_DATASET, _COMMAND),
+                        commandString->_literalString);
   } else {
     throw std::runtime_error("Invalid parameters for create_type operator.");
   }
 
   return operation;
 }
-OperationPtr
-DefaultParser::ParseSave(QueryExpressionPtr queryExpressionNode,
-                                QueryPlanPtr queryPlan, int &idCounter) {
-  OperationPtr operation = OperationPtr(new Operation(TAL_SAVE));
+
+OperationPtr DefaultParser::ParseSave(QueryExpressionPtr queryExpressionNode,
+                                      QueryPlanPtr queryPlan, int &idCounter) {
+  OperationPtr operation = std::make_shared<Operation>(TAL_SAVE);
   operation->SetResultingTAR(nullptr);
   CharacterStringLiteralPtr commandString;
   list<ValueExpressionPtr> params =
@@ -398,7 +418,8 @@ DefaultParser::ParseSave(QueryExpressionPtr queryExpressionNode,
   // Checking first parameter (domain)
   if (params.size() == 1 &&
       (commandString = PARSE(params.front(), CharacterStringLiteral))) {
-    operation->AddParam(COMMAND, commandString->_literalString);
+    operation->AddParam(PARAM(TAL_SAVE, _COMMAND),
+                        commandString->_literalString);
   } else {
     throw std::runtime_error("Invalid parameters for save operator.");
   }
@@ -408,7 +429,7 @@ DefaultParser::ParseSave(QueryExpressionPtr queryExpressionNode,
 
 OperationPtr DefaultParser::ParseShow(QueryExpressionPtr queryExpressionNode,
                                       QueryPlanPtr queryPlan, int &idCounter) {
-  OperationPtr operation = OperationPtr(new Operation(TAL_SHOW));
+  OperationPtr operation = std::make_shared<Operation>(TAL_SHOW);
   operation->SetResultingTAR(nullptr);
   list<ValueExpressionPtr> params =
       queryExpressionNode->_value_expression_list->ParamsToList();
@@ -428,11 +449,11 @@ OperationPtr DefaultParser::ParseBatch(QueryExpressionPtr queryExpressionNode,
       queryExpressionNode->_value_expression_list->ParamsToList();
 
   // Checking first parameter (domain)
-  if (params.size() == 0) {
+  if (params.empty()) {
     throw std::runtime_error("Invalid parameters for batch operator.");
   }
 
-  for (ValueExpressionPtr expression : params) {
+  for (const ValueExpressionPtr &expression : params) {
     if (subexpression = PARSE(expression, QueryExpression)) {
       ParseDMLOperation(subexpression, queryPlan, idCounter);
     } else {
@@ -457,22 +478,22 @@ OperationPtr DefaultParser::ParseLogical(ValueExpressionPtr valueExpression,
   ValueExpressionPtr operands[2];
   int opCount = 0;
 
-  OperationPtr operation = OperationPtr(new Operation(TAL_LOGICAL));
-  operation->AddParam(INPUT_TAR, inputTAR);
+  OperationPtr operation = std::make_shared<Operation>(TAL_LOGICAL);
+  operation->AddParam(PARAM(TAL_LOGICAL, _INPUT_TAR), inputTAR);
 
   if (logicalConjuction = PARSE(valueExpression, LogicalConjunction)) {
-    operation->AddParam(OP, std::string(_OR));
+    operation->AddParam(PARAM(TAL_LOGICAL, _OPERATOR), std::string(_OR));
     operands[0] = ValueExpressionPtr(logicalConjuction->_leftOperand);
     operands[1] = ValueExpressionPtr(logicalConjuction->_rightOperand);
     opCount = 2;
   } else if (logicalDisjunction = PARSE(valueExpression, LogicalDisjunction)) {
-    operation->AddParam(OP, std::string(_AND));
+    operation->AddParam(PARAM(TAL_LOGICAL, _OPERATOR), std::string(_AND));
     operands[0] = ValueExpressionPtr(logicalDisjunction->_leftOperand);
     operands[1] = ValueExpressionPtr(logicalDisjunction->_rightOperand);
     opCount = 2;
   } else if (booleanValueExpression =
                  PARSE(valueExpression, BooleanValueExpression)) {
-    operation->AddParam(OP, std::string(_NOT));
+    operation->AddParam(PARAM(TAL_LOGICAL, _OPERATOR), std::string(_NOT));
     operands[0] =
         ValueExpressionPtr(booleanValueExpression->_notValueExpression);
     opCount = 1;
@@ -487,14 +508,21 @@ OperationPtr DefaultParser::ParseLogical(ValueExpressionPtr valueExpression,
     } else if (PARSE(operands[i], ComparisonPredicate)) {
       OperationPtr comparison =
           ParseComparison(operands[i], inputTAR, queryPlan, idCounter);
-      operation->AddParam("", comparison->GetResultingTAR());
+      // operation->AddParam("", comparison->GetResultingTAR());
+      operation->AddParam(PARAM(TAL_LOGICAL, _OPERAND, i),
+                          comparison->GetResultingTAR());
+
       queryPlan->AddOperation(comparison, idCounter);
     } else if (PARSE(operands[i], LogicalConjunction) ||
-               PARSE(operands[i], LogicalDisjunction) ||
-               PARSE(operands[i], BooleanValueExpression)) {
+        PARSE(operands[i], LogicalDisjunction) ||
+        PARSE(operands[i], BooleanValueExpression)) {
+
       OperationPtr logicalOperation =
           ParseLogical(operands[i], inputTAR, queryPlan, idCounter);
-      operation->AddParam(AUX_TAR, logicalOperation->GetResultingTAR());
+
+      operation->AddParam(PARAM(TAL_LOGICAL, _OPERAND, i),
+                          logicalOperation->GetResultingTAR());
+
       queryPlan->AddOperation(logicalOperation, idCounter);
     } else {
       throw std::runtime_error("Invalid operators for logic operation.");
@@ -510,8 +538,8 @@ OperationPtr DefaultParser::ParseComparison(ValueExpressionPtr valueExpression,
                                             QueryPlanPtr queryPlan,
                                             int &idCounter) {
   ComparisonPredicatePtr comparisonPredicate;
-  OperationPtr operation = OperationPtr(new Operation(TAL_COMPARISON));
-  IdentifierChainPtr identifier;
+  OperationPtr operation = std::make_shared<Operation>(TAL_COMPARISON);
+  IdentifierChainPtr identifier; std::string symbol;
 
   // Expression can be either numeric or string
   string strVals[] = {"", ""};
@@ -520,10 +548,10 @@ OperationPtr DefaultParser::ParseComparison(ValueExpressionPtr valueExpression,
   OperandsType operandsType[] = {__LITERAL, __LITERAL};
   ValueExpressionPtr operands[2];
 
-  // Defining type of comparison: >, >=, <, <=, =, <>
+  // Defining type of comparison: >, >=, <, <=, =, <>, like
   if (comparisonPredicate = PARSE(valueExpression, ComparisonPredicate)) {
-    std::string symbol = comparisonPredicate->_comparisonOperator->toString();
-    operation->AddParam(OP, symbol);
+    symbol = comparisonPredicate->_comparisonOperator->toString();
+    operation->AddParam(PARAM(TAL_COMPARISON, _OPERATOR), symbol);
     operands[0] = ValueExpressionPtr(comparisonPredicate->_leftOperand);
     operands[1] = ValueExpressionPtr(comparisonPredicate->_rightOperand);
   } else {
@@ -535,20 +563,20 @@ OperationPtr DefaultParser::ParseComparison(ValueExpressionPtr valueExpression,
     if (identifier = PARSE(operands[i], IdentifierChain)) {
       if (inputTAR->HasDataElement(GET_IDENTIFER_BODY(identifier))) {
         isNumeric[i] = inputTAR->GetDataElement(GET_IDENTIFER_BODY(identifier))
-                           ->IsNumeric();
+                               ->IsNumeric();
         operandsType[i] = __IDENTIFIER;
         strVals[i] = identifier->_identifier->_identifierBody;
       } else {
         throw std::runtime_error("Data element " +
-                                 GET_IDENTIFER_BODY(identifier) +
-                                 " is not a valid member.");
+            GET_IDENTIFER_BODY(identifier) +
+            " is not a valid member.");
       }
     } else if (PARSE(operands[i], SummationNumericExpression) ||
-               PARSE(operands[i], SubtractionNumericalExpression) ||
-               PARSE(operands[i], ProductNumericalExpression) ||
-               PARSE(operands[i], DivisonNumericalExpression) ||
-               PARSE(operands[i], ModulusNumericalExpression) ||
-               PARSE(operands[i], PowerNumericalExpression)) {
+        PARSE(operands[i], SubtractionNumericalExpression) ||
+        PARSE(operands[i], ProductNumericalExpression) ||
+        PARSE(operands[i], DivisonNumericalExpression) ||
+        PARSE(operands[i], ModulusNumericalExpression) ||
+        PARSE(operands[i], PowerNumericalExpression)) {
       isNumeric[i] = true;
       operandsType[i] = __EXPRESSION;
     } else if (PARSE(operands[i], UnsignedNumericLiteral)) {
@@ -571,68 +599,82 @@ OperationPtr DefaultParser::ParseComparison(ValueExpressionPtr valueExpression,
     }
   }
 
-  // Checking is types are valid
+  // Checking if types are valid
   if (isNumeric[0] != isNumeric[1]) {
     throw std::runtime_error("Invalid input types for comparison operation.");
   }
 
+  if(symbol == _LIKE && isNumeric[0]) {
+    throw std::runtime_error("Invalid LIKE operator usage with numeric types.");
+  }
+
   // Continuing parsing according to input operators
   if (operandsType[0] == __LITERAL && operandsType[1] == __LITERAL) {
-    operation->AddParam(INPUT_TAR, inputTAR);
+    operation->AddParam(PARAM(TAL_COMPARISON, _INPUT_TAR), inputTAR);
 
     if (isNumeric[0]) {
-      operation->AddParam(LITERAL, numVals[0]);
+      operation->AddParam(PARAM(TAL_COMPARISON, _OPERAND, 0), numVals[0]);
     } else {
-      operation->AddParam(LITERAL, strVals[0]);
+      operation->AddParam(PARAM(TAL_COMPARISON, _OPERAND, 0), strVals[0]);
     }
 
     if (isNumeric[1]) {
-      operation->AddParam(LITERAL, numVals[1]);
+      operation->AddParam(PARAM(TAL_COMPARISON, _OPERAND, 1), numVals[1]);
     } else {
-      operation->AddParam(LITERAL, strVals[1]);
+      operation->AddParam(PARAM(TAL_COMPARISON, _OPERAND, 1), strVals[1]);
     }
   } else if (operandsType[0] == __LITERAL && operandsType[1] == __EXPRESSION) {
+
     std::string newMember = DEFAULT_TEMP_MEMBER + std::to_string(idCounter++);
     OperationPtr expression =
         ParseArithmetic(operands[1], inputTAR, newMember, queryPlan, idCounter);
     queryPlan->AddOperation(expression, idCounter);
-    operation->AddParam(INPUT_TAR, expression->GetResultingTAR());
+    operation->AddParam(PARAM(TAL_COMPARISON, _INPUT_TAR),
+                        expression->GetResultingTAR());
 
     if (isNumeric[0]) {
-      operation->AddParam(LITERAL, numVals[0]);
+      operation->AddParam(PARAM(TAL_COMPARISON, _OPERAND, 0), numVals[0]);
     } else {
-      operation->AddParam(LITERAL, strVals[0]);
+      operation->AddParam(PARAM(TAL_COMPARISON, _OPERAND, 0), strVals[0]);
     }
 
     // param is last attribute added to schema for resulting domain
-    operation->AddParam(IDENTIFIER, newMember);
+    // operation->AddParam(IDENTIFIER, newMember);
+    operation->AddIdentifierParam(PARAM(TAL_COMPARISON, _OPERAND, 1),
+                                  newMember);
+
   } else if (operandsType[0] == __LITERAL && operandsType[1] == __IDENTIFIER) {
-    operation->AddParam(INPUT_TAR, inputTAR);
+    operation->AddParam(PARAM(TAL_COMPARISON, _INPUT_TAR), inputTAR);
 
     if (isNumeric[0]) {
-      operation->AddParam(LITERAL, numVals[0]);
+      operation->AddParam(PARAM(TAL_COMPARISON, _OPERAND, 0), numVals[0]);
     } else {
-      operation->AddParam(LITERAL, strVals[0]);
+      operation->AddParam(PARAM(TAL_COMPARISON, _OPERAND, 0), strVals[0]);
     }
 
-    operation->AddParam(IDENTIFIER, strVals[1]);
+    // operation->AddParam(IDENTIFIER, strVals[1]);
+    operation->AddIdentifierParam(PARAM(TAL_COMPARISON, _OPERAND, 1),
+                                  strVals[1]);
+
   } else if (operandsType[0] == __EXPRESSION && operandsType[1] == __LITERAL) {
     std::string newMember = DEFAULT_TEMP_MEMBER + std::to_string(idCounter++);
     OperationPtr expression =
         ParseArithmetic(operands[0], inputTAR, newMember, queryPlan, idCounter);
     queryPlan->AddOperation(expression, idCounter);
-    operation->AddParam(INPUT_TAR, expression->GetResultingTAR());
+    operation->AddParam(PARAM(TAL_COMPARISON, _INPUT_TAR),
+                        expression->GetResultingTAR());
 
     // param is last attribute added to schema for resulting domain
-    operation->AddParam(IDENTIFIER, newMember);
+    operation->AddIdentifierParam(PARAM(TAL_COMPARISON, _OPERAND, 0),
+                                  newMember);
 
     if (isNumeric[1]) {
-      operation->AddParam(LITERAL, numVals[1]);
+      operation->AddParam(PARAM(TAL_COMPARISON, _OPERAND, 1), numVals[1]);
     } else {
-      operation->AddParam(LITERAL, strVals[1]);
+      operation->AddParam(PARAM(TAL_COMPARISON, _OPERAND, 1), strVals[1]);
     }
   } else if (operandsType[0] == __EXPRESSION &&
-             operandsType[1] == __EXPRESSION) {
+      operandsType[1] == __EXPRESSION) {
     std::string newMember1 = DEFAULT_TEMP_MEMBER + std::to_string(idCounter++);
     std::string newMember2 = DEFAULT_TEMP_MEMBER + std::to_string(idCounter++);
 
@@ -644,49 +686,68 @@ OperationPtr DefaultParser::ParseComparison(ValueExpressionPtr valueExpression,
         ParseArithmetic(operands[1], expression1->GetResultingTAR(), newMember2,
                         queryPlan, idCounter);
     queryPlan->AddOperation(expression2, idCounter);
-    operation->AddParam(INPUT_TAR, expression2->GetResultingTAR());
-    operation->AddParam(IDENTIFIER, newMember1);
-    operation->AddParam(IDENTIFIER, newMember2);
+    operation->AddParam(PARAM(TAL_COMPARISON, _INPUT_TAR),
+                        expression2->GetResultingTAR());
+    operation->AddIdentifierParam(PARAM(TAL_COMPARISON, _OPERAND, 0),
+                                  newMember1);
+    operation->AddIdentifierParam(PARAM(TAL_COMPARISON, _OPERAND, 1),
+                                  newMember2);
 
   } else if (operandsType[0] == __EXPRESSION &&
-             operandsType[1] == __IDENTIFIER) {
+      operandsType[1] == __IDENTIFIER) {
     std::string newMember = DEFAULT_TEMP_MEMBER + std::to_string(idCounter++);
     OperationPtr expression =
         ParseArithmetic(operands[0], inputTAR, newMember, queryPlan, idCounter);
     queryPlan->AddOperation(expression, idCounter);
-    operation->AddParam(INPUT_TAR, expression->GetResultingTAR());
+    operation->AddParam(PARAM(TAL_COMPARISON, _INPUT_TAR),
+                        expression->GetResultingTAR());
 
     // param is last attribute added to schema for resulting domain
-    operation->AddParam(IDENTIFIER, newMember);
-    operation->AddParam(IDENTIFIER, strVals[1]);
+    // operation->AddParam(IDENTIFIER, newMember);
+    operation->AddIdentifierParam(PARAM(TAL_COMPARISON, _OPERAND, 0),
+                                  newMember);
+    operation->AddIdentifierParam(PARAM(TAL_COMPARISON, _OPERAND, 1),
+                                  strVals[1]);
 
   } else if (operandsType[0] == __IDENTIFIER && operandsType[1] == __LITERAL) {
-    operation->AddParam(INPUT_TAR, inputTAR);
-    operation->AddParam(IDENTIFIER, strVals[0]);
+    operation->AddParam(PARAM(TAL_COMPARISON, _INPUT_TAR), inputTAR);
+    operation->AddIdentifierParam(PARAM(TAL_COMPARISON, _OPERAND, 0),
+                                  strVals[0]);
 
     if (isNumeric[1]) {
-      operation->AddParam(LITERAL, numVals[1]);
+      // operation->AddParam(LITERAL, numVals[1]);
+      operation->AddParam(PARAM(TAL_COMPARISON, _OPERAND, 1), numVals[1]);
     } else {
-      operation->AddParam(LITERAL, strVals[1]);
+      // operation->AddParam(LITERAL, strVals[1]);
+      operation->AddParam(PARAM(TAL_COMPARISON, _OPERAND, 1), strVals[1]);
     }
   } else if (operandsType[0] == __IDENTIFIER &&
-             operandsType[1] == __EXPRESSION) {
+      operandsType[1] == __EXPRESSION) {
     std::string newMember = DEFAULT_TEMP_MEMBER + std::to_string(idCounter++);
     OperationPtr expression =
         ParseArithmetic(operands[1], inputTAR, newMember, queryPlan, idCounter);
 
     queryPlan->AddOperation(expression, idCounter);
-    operation->AddParam(INPUT_TAR, expression->GetResultingTAR());
+    operation->AddParam(PARAM(TAL_COMPARISON, _INPUT_TAR),
+                        expression->GetResultingTAR());
 
     // param is last attribute added to schema for resulting domain
-    operation->AddParam(IDENTIFIER, strVals[0]);
-    operation->AddParam(IDENTIFIER, newMember);
+    // operation->AddParam(IDENTIFIER, strVals[0]);
+    operation->AddIdentifierParam(PARAM(TAL_COMPARISON, _OPERAND, 0),
+                                  strVals[0]);
+    // operation->AddParam(IDENTIFIER, newMember);
+    operation->AddIdentifierParam(PARAM(TAL_COMPARISON, _OPERAND, 1),
+                                  newMember);
 
   } else if (operandsType[0] == __IDENTIFIER &&
-             operandsType[1] == __IDENTIFIER) {
-    operation->AddParam(INPUT_TAR, inputTAR);
-    operation->AddParam(IDENTIFIER, strVals[0]);
-    operation->AddParam(IDENTIFIER, strVals[1]);
+      operandsType[1] == __IDENTIFIER) {
+    operation->AddParam(PARAM(TAL_COMPARISON, _INPUT_TAR), inputTAR);
+    // operation->AddParam(IDENTIFIER, strVals[0]);
+    operation->AddIdentifierParam(PARAM(TAL_COMPARISON, _OPERAND, 0),
+                                  strVals[0]);
+    // operation->AddParam(IDENTIFIER, strVals[1]);
+    operation->AddIdentifierParam(PARAM(TAL_COMPARISON, _OPERAND, 1),
+                                  strVals[1]);
   }
 
   operation->SetResultingTAR(_schemaBuilder->InferSchema(operation));
@@ -700,15 +761,16 @@ OperationPtr DefaultParser::ParseArithmetic(ValueExpressionPtr valueExpression,
                                             int &idCounter) {
 #define MAX_FUNC_PARAMS 100
 
-  OperationPtr operation = OperationPtr(new Operation(TAL_ARITHMETIC));
+  OperationPtr operation = std::make_shared<Operation>(TAL_ARITHMETIC);
   std::vector<std::string> strVals(MAX_FUNC_PARAMS);
   std::vector<double> numVals(MAX_FUNC_PARAMS);
   std::vector<OperandsType> operandsType(MAX_FUNC_PARAMS);
   std::vector<ValueExpressionPtr> operands(2);
 
   if (std::shared_ptr<SummationNumericExpression> expression =
-          PARSE(valueExpression, SummationNumericExpression)) {
-    operation->AddParam(OP, std::string(_ADDITION));
+      PARSE(valueExpression, SummationNumericExpression)) {
+    operation->AddParam(PARAM(TAL_ARITHMETIC, _OPERATOR),
+                        std::string(_ADDITION));
     operands[0] = ValueExpressionPtr(expression->_leftOperand);
     operands[1] = ValueExpressionPtr(expression->_rightOperand);
 
@@ -717,42 +779,47 @@ OperationPtr DefaultParser::ParseArithmetic(ValueExpressionPtr valueExpression,
           new SignedNumericLiteral(expression->_literalNumericalOperand));
     }
   } else if (std::shared_ptr<SubtractionNumericalExpression> expression =
-                 PARSE(valueExpression, SubtractionNumericalExpression)) {
-    operation->AddParam(OP, std::string(_SUBTRACTION));
+      PARSE(valueExpression, SubtractionNumericalExpression)) {
+    operation->AddParam(PARAM(TAL_ARITHMETIC, _OPERATOR),
+                        std::string(_SUBTRACTION));
     operands[0] = ValueExpressionPtr(expression->_leftOperand);
     operands[1] = ValueExpressionPtr(expression->_rightOperand);
   } else if (std::shared_ptr<ProductNumericalExpression> expression =
-                 PARSE(valueExpression, ProductNumericalExpression)) {
-    operation->AddParam(OP, std::string(_MULTIPLICATION));
+      PARSE(valueExpression, ProductNumericalExpression)) {
+    operation->AddParam(PARAM(TAL_ARITHMETIC, _OPERATOR),
+                        std::string(_MULTIPLICATION));
     operands[0] = ValueExpressionPtr(expression->_leftOperand);
     operands[1] = ValueExpressionPtr(expression->_rightOperand);
   } else if (std::shared_ptr<DivisonNumericalExpression> expression =
-                 PARSE(valueExpression, DivisonNumericalExpression)) {
-    operation->AddParam(OP, std::string(_DIVISION));
+      PARSE(valueExpression, DivisonNumericalExpression)) {
+    operation->AddParam(PARAM(TAL_ARITHMETIC, _OPERATOR),
+                        std::string(_DIVISION));
     operands[0] = ValueExpressionPtr(expression->_leftOperand);
     operands[1] = ValueExpressionPtr(expression->_rightOperand);
   } else if (std::shared_ptr<ModulusNumericalExpression> expression =
-                 PARSE(valueExpression, ModulusNumericalExpression)) {
-    operation->AddParam(OP, std::string(_MODULUS));
+      PARSE(valueExpression, ModulusNumericalExpression)) {
+    operation->AddParam(PARAM(TAL_ARITHMETIC, _OPERATOR),
+                        std::string(_MODULUS));
     operands[0] = ValueExpressionPtr(expression->_leftOperand);
     operands[1] = ValueExpressionPtr(expression->_rightOperand);
   } else if (std::shared_ptr<PowerNumericalExpression> expression =
-                 PARSE(valueExpression, PowerNumericalExpression)) {
-    operation->AddParam(OP, std::string("pow"));
+      PARSE(valueExpression, PowerNumericalExpression)) {
+    operation->AddParam(PARAM(TAL_ARITHMETIC, _OPERATOR), std::string("pow"));
     operands[0] = ValueExpressionPtr(expression->_leftOperand);
     operands[1] = ValueExpressionPtr(expression->_rightOperand);
   } else if (QueryExpressionPtr expression =
-                 PARSE(valueExpression, QueryExpression)) {
+      PARSE(valueExpression, QueryExpression)) {
     if (!ValidateNumericalFunction(expression, inputTAR))
       throw std::runtime_error("Unsupported function: " +
-                               GET_IDENTIFER_BODY(expression) +
-                               " with given parameters.");
+          GET_IDENTIFER_BODY(expression) +
+          " with given parameters.");
 
-    operation->AddParam(OP, GET_IDENTIFER_BODY(expression));
+    operation->AddParam(PARAM(TAL_ARITHMETIC, _OPERATOR),
+                        GET_IDENTIFER_BODY(expression));
     operands.clear();
 
-    for (auto valueExpression :
-         expression->_value_expression_list->ParamsToList()) {
+    for (const auto &valueExpression :
+        expression->_value_expression_list->ParamsToList()) {
       operands.push_back(valueExpression);
     }
   } else {
@@ -765,25 +832,25 @@ OperationPtr DefaultParser::ParseArithmetic(ValueExpressionPtr valueExpression,
     if (IdentifierChainPtr identifier = PARSE(operands[i], IdentifierChain)) {
       if (inputTAR->HasDataElement(GET_IDENTIFER_BODY(identifier))) {
         if (!inputTAR->GetDataElement(GET_IDENTIFER_BODY(identifier))
-                 ->IsNumeric()) {
+                     ->IsNumeric()) {
           throw std::runtime_error(
               "Data element: " + GET_IDENTIFER_BODY(identifier) +
-              " is not numeric and cannot be part of numerical expression.");
+                  " is not numeric and cannot be part of numerical expression.");
         }
 
         operandsType[i] = __IDENTIFIER;
         strVals[i] = identifier->_identifier->_identifierBody;
       } else {
         throw std::runtime_error("Data element " +
-                                 GET_IDENTIFER_BODY(identifier) +
-                                 " is not a valid member.");
+            GET_IDENTIFER_BODY(identifier) +
+            " is not a valid member.");
       }
     } else if (PARSE(operands[i], SummationNumericExpression) ||
-               PARSE(operands[i], SubtractionNumericalExpression) ||
-               PARSE(operands[i], ProductNumericalExpression) ||
-               PARSE(operands[i], DivisonNumericalExpression) ||
-               PARSE(operands[i], ModulusNumericalExpression) ||
-               PARSE(operands[i], PowerNumericalExpression)) {
+        PARSE(operands[i], SubtractionNumericalExpression) ||
+        PARSE(operands[i], ProductNumericalExpression) ||
+        PARSE(operands[i], DivisonNumericalExpression) ||
+        PARSE(operands[i], ModulusNumericalExpression) ||
+        PARSE(operands[i], PowerNumericalExpression)) {
       operandsType[i] = __EXPRESSION;
     } else if (PARSE(operands[i], UnsignedNumericLiteral)) {
       operandsType[i] = __LITERAL;
@@ -792,7 +859,7 @@ OperationPtr DefaultParser::ParseArithmetic(ValueExpressionPtr valueExpression,
       operandsType[i] = __LITERAL;
       numVals[i] = PARSE(operands[i], SignedNumericLiteral)->_doubleValue;
     } else if (QueryExpressionPtr expression =
-                   PARSE(operands[i], QueryExpression)) {
+        PARSE(operands[i], QueryExpression)) {
       operandsType[i] = ___FUNCTION;
     } else {
       throw std::runtime_error("Invalid operators for arithmetic operation.");
@@ -803,22 +870,30 @@ OperationPtr DefaultParser::ParseArithmetic(ValueExpressionPtr valueExpression,
 
   for (int i = 0; i < operands.size(); i++) {
     if (operandsType[i] == __LITERAL) {
-      operation->AddParam(OPERAND(i), numVals[i]);
+      // operation->AddParam(OPERAND(i), numVals[i]);
+      operation->AddParam(PARAM(TAL_ARITHMETIC, _OPERAND, i), numVals[i]);
     } else if (operandsType[i] == __IDENTIFIER) {
-      operation->AddParam(OPERAND(i), strVals[i]);
+      // operation->AddParam(OPERAND(i), strVals[i]);
+      operation->AddIdentifierParam(PARAM(TAL_ARITHMETIC, _OPERAND, i),
+                                    strVals[i]);
     } else if (operandsType[i] == __EXPRESSION ||
-               operandsType[i] == ___FUNCTION) {
+        operandsType[i] == ___FUNCTION) {
       std::string newMember = DEFAULT_TEMP_MEMBER + std::to_string(idCounter++);
       OperationPtr expression = ParseArithmetic(
           operands[i], currentInputTAR, newMember, queryPlan, idCounter);
       queryPlan->AddOperation(expression, idCounter);
       currentInputTAR = expression->GetResultingTAR();
-      operation->AddParam(OPERAND(i), newMember);
+      // operation->AddParam(OPERAND(i), newMember);
+      operation->AddIdentifierParam(PARAM(TAL_ARITHMETIC, _OPERAND, i),
+                                    newMember);
     }
   }
 
-  operation->AddParam(INPUT_TAR, currentInputTAR);
-  operation->AddParam(NEW_MEMBER, newMember);
+  // operation->AddParam(INPUT_TAR, currentInputTAR);
+  operation->AddParam(PARAM(TAL_ARITHMETIC, _INPUT_TAR), currentInputTAR);
+  // operation->AddParam(NEW_MEMBER, newMember);
+  // operation->AddParam( PARAM(TAL_ARITHMETIC, _NEW_MEMBER), newMember);
+  operation->AddIdentifierParam(PARAM(TAL_ARITHMETIC, _NEW_MEMBER), newMember);
 
   operation->SetResultingTAR(_schemaBuilder->InferSchema(operation));
   return operation;
@@ -826,10 +901,10 @@ OperationPtr DefaultParser::ParseArithmetic(ValueExpressionPtr valueExpression,
 
 OperationPtr DefaultParser::ParseScan(QueryExpressionPtr queryExpressionNode,
                                       QueryPlanPtr queryPlan, int &idCounter) {
-  OperationPtr operation = OperationPtr(new Operation(TAL_SCAN));
+  OperationPtr operation = std::make_shared<Operation>(TAL_SCAN);
   auto params = queryExpressionNode->_value_expression_list->ParamsToList();
   TARPtr inputTAR = ParseTAR(params.front(), scan_error, queryPlan, idCounter);
-  operation->AddParam(INPUT_TAR, inputTAR);
+  operation->AddParam(PARAM(TAL_SCAN, _INPUT_TAR), inputTAR);
   operation->SetResultingTAR(_schemaBuilder->InferSchema(operation));
   return operation;
 }
@@ -837,24 +912,27 @@ OperationPtr DefaultParser::ParseScan(QueryExpressionPtr queryExpressionNode,
 OperationPtr DefaultParser::ParseSelect(QueryExpressionPtr queryExpressionNode,
                                         QueryPlanPtr queryPlan,
                                         int &idCounter) {
-  OperationPtr operation = OperationPtr(new Operation(TAL_SELECT));
-  IdentifierChainPtr identifier;
+  OperationPtr operation = std::make_shared<Operation>(TAL_SELECT);
+  IdentifierChainPtr identifier; int32_t identifierCount = 0;
   auto params = queryExpressionNode->_value_expression_list->ParamsToList();
 
   TARPtr inputTAR =
       ParseTAR(params.front(), select_error, queryPlan, idCounter);
-  operation->AddParam(INPUT_TAR, inputTAR);
+  operation->AddParam(PARAM(TAL_SELECT, _INPUT_TAR), inputTAR);
   params.pop_front();
 
   // Checking following parameters (identifiers)
   for (auto &param : params) {
     if (identifier = PARSE(param, IdentifierChain)) {
       if (inputTAR->HasDataElement(GET_IDENTIFER_BODY(identifier))) {
-        operation->AddParam(IDENTIFIER, GET_IDENTIFER_BODY(identifier));
+        // operation->AddParam(IDENTIFIER, GET_IDENTIFER_BODY(identifier));
+        operation->AddIdentifierParam(PARAM(TAL_SELECT, _IDENTIFIER, identifierCount++),
+                                      GET_IDENTIFER_BODY(identifier));
+
       } else {
         throw std::runtime_error("Schema element " +
-                                 GET_IDENTIFER_BODY(identifier) +
-                                 " is not a valid member.");
+            GET_IDENTIFER_BODY(identifier) +
+            " is not a valid member.");
       }
     } else {
       throw std::runtime_error(select_error);
@@ -869,14 +947,14 @@ OperationPtr DefaultParser::ParseFilter(QueryExpressionPtr queryExpressionNode,
                                         QueryPlanPtr queryPlan,
                                         int &idCounter) {
 #define EXPECTED_FILTER_PARAMS_NUM 2
-  OperationPtr operation = OperationPtr(new Operation(TAL_FILTER));
+  OperationPtr operation = std::make_shared<Operation>(TAL_FILTER);
   std::list<ValueExpressionPtr> params;
   params = queryExpressionNode->_value_expression_list->ParamsToList();
 
   if (params.size() == EXPECTED_FILTER_PARAMS_NUM) {
     TARPtr inputTAR =
         ParseTAR(params.front(), filter_error, queryPlan, idCounter);
-    operation->AddParam(INPUT_TAR, inputTAR);
+    operation->AddParam(PARAM(TAL_FILTER, _INPUT_TAR), inputTAR);
 
     // Check second parameter (logical expression)
     if (PARSE(params.back(), LogicalConjunction) ||
@@ -885,13 +963,15 @@ OperationPtr DefaultParser::ParseFilter(QueryExpressionPtr queryExpressionNode,
       OperationPtr logicalOperation =
           ParseLogical(params.back(), inputTAR, queryPlan, idCounter);
 
-      operation->AddParam(AUX_TAR, logicalOperation->GetResultingTAR());
+      operation->AddParam(PARAM(TAL_FILTER, _AUX_TAR),
+                          logicalOperation->GetResultingTAR());
       queryPlan->AddOperation(logicalOperation, idCounter);
     } else if (PARSE(params.back(), ComparisonPredicate)) {
       OperationPtr comparison =
           ParseComparison(params.back(), inputTAR, queryPlan, idCounter);
 
-      operation->AddParam(AUX_TAR, comparison->GetResultingTAR());
+      operation->AddParam(PARAM(TAL_FILTER, _AUX_TAR),
+                          comparison->GetResultingTAR());
       queryPlan->AddOperation(comparison, idCounter);
     } else if (PARSE(params.back(), IdentifierChain)) {
       throw std::runtime_error(
@@ -964,7 +1044,7 @@ OperationPtr DefaultParser::ParseSubset(QueryExpressionPtr queryExpressionNode,
       if (dataElement == nullptr ||
           dataElement->GetType() != DIMENSION_SCHEMA_ELEMENT)
         throw std::runtime_error("Schema element " + strIdentifier +
-                                 " is not a valid dimension.");
+            " is not a valid dimension.");
 
       range.dimName = strIdentifier;
       dim = dataElement->GetDimension();
@@ -981,11 +1061,12 @@ OperationPtr DefaultParser::ParseSubset(QueryExpressionPtr queryExpressionNode,
       }
 
       if (!hasExplicitDimensions &&
-          !IN_RANGE(range.bounds[i], dim->GetLowerBound(), dim->GetUpperBound()))
+          !IN_RANGE(range.bounds[i], dim->GetLowerBound(),
+                    dim->GetUpperBound()))
         throw std::runtime_error("Lower and upper bounds for dimension " +
-                                 dim->GetName() + " must be between " +
-                                 to_string(dim->GetLowerBound()) + " and " +
-                                 to_string(dim->GetUpperBound()));
+            dim->GetName() + " must be between " +
+            to_string(dim->GetLowerBound()) + " and " +
+            to_string(dim->GetUpperBound()));
     }
 
     if (range.bounds[0] > range.bounds[1])
@@ -994,13 +1075,13 @@ OperationPtr DefaultParser::ParseSubset(QueryExpressionPtr queryExpressionNode,
 
     if (ranges.find(range.dimName) != ranges.end())
       throw std::runtime_error("Duplicated range definition for dimension " +
-                               range.dimName + ".");
+          range.dimName + ".");
 
     ranges[range.dimName] = range;
   }
 
   if (hasExplicitDimensions)
-  // if(false)
+    // if(false)
   {
     vector<OperationPtr> comparisonOperations;
     TARPtr andEDFilter = nullptr;
@@ -1008,21 +1089,27 @@ OperationPtr DefaultParser::ParseSubset(QueryExpressionPtr queryExpressionNode,
     for (auto entry : ranges) {
       Range range = entry.second;
       OperationPtr compGreaterOrEqual =
-          OperationPtr(new Operation(TAL_COMPARISON));
-      compGreaterOrEqual->AddParam(OP, string(_GEQ));
-      compGreaterOrEqual->AddParam(INPUT_TAR, inputTAR);
-      compGreaterOrEqual->AddParam(IDENTIFIER, range.dimName);
-      compGreaterOrEqual->AddParam(LITERAL, range.bounds[0]);
+        std::make_shared<Operation>(TAL_COMPARISON);
+
+      compGreaterOrEqual->AddParam(PARAM(TAL_COMPARISON, _OPERATOR),
+                                   string(_GEQ));
+      compGreaterOrEqual->AddParam(PARAM(TAL_COMPARISON, _INPUT_TAR), inputTAR);
+      compGreaterOrEqual->AddIdentifierParam(PARAM(TAL_COMPARISON, _IDENTIFIER),
+                                             range.dimName);
+      compGreaterOrEqual->AddParam(PARAM(TAL_COMPARISON, _LITERAL),
+                                   range.bounds[0]);
       compGreaterOrEqual->SetResultingTAR(
           _schemaBuilder->InferSchema(compGreaterOrEqual));
       queryPlan->AddOperation(compGreaterOrEqual, idCounter);
 
       OperationPtr compLessOrEqual =
-          OperationPtr(new Operation(TAL_COMPARISON));
-      compLessOrEqual->AddParam(OP, string(_LEQ));
-      compLessOrEqual->AddParam(INPUT_TAR, inputTAR);
-      compLessOrEqual->AddParam(IDENTIFIER, range.dimName);
-      compLessOrEqual->AddParam(LITERAL, range.bounds[1]);
+        std::make_shared<Operation>(TAL_COMPARISON);
+      compLessOrEqual->AddParam(PARAM(TAL_COMPARISON, _OPERATOR), string(_LEQ));
+      compLessOrEqual->AddParam(PARAM(TAL_COMPARISON, _INPUT_TAR), inputTAR);
+      compLessOrEqual->AddIdentifierParam(PARAM(TAL_COMPARISON, _IDENTIFIER),
+                                          range.dimName);
+      compLessOrEqual->AddParam(PARAM(TAL_COMPARISON, _LITERAL),
+                                range.bounds[1]);
       compLessOrEqual->SetResultingTAR(
           _schemaBuilder->InferSchema(compLessOrEqual));
       queryPlan->AddOperation(compLessOrEqual, idCounter);
@@ -1033,34 +1120,37 @@ OperationPtr DefaultParser::ParseSubset(QueryExpressionPtr queryExpressionNode,
 
     andEDFilter = comparisonOperations[0]->GetResultingTAR();
     for (int i = 1; i < comparisonOperations.size(); i++) {
-      OperationPtr andOperation = OperationPtr(new Operation(TAL_LOGICAL));
-      andOperation->AddParam(OP, string(_AND));
-      andOperation->AddParam(INPUT_TAR, inputTAR);
-      andOperation->AddParam(AUX_TAR, andEDFilter);
-      andOperation->AddParam(AUX_TAR,
+      OperationPtr andOperation = std::make_shared<Operation>(TAL_LOGICAL);
+      andOperation->AddParam(PARAM(TAL_LOGICAL, _OPERATOR), string(_AND));
+      andOperation->AddParam(PARAM(TAL_LOGICAL, _INPUT_TAR), inputTAR);
+      andOperation->AddParam(PARAM(TAL_LOGICAL, _OPERAND, 0), andEDFilter);
+      andOperation->AddParam(PARAM(TAL_LOGICAL, _OPERAND, 1),
                              comparisonOperations[i]->GetResultingTAR());
       andOperation->SetResultingTAR(_schemaBuilder->InferSchema(andOperation));
       queryPlan->AddOperation(andOperation, idCounter);
       andEDFilter = andOperation->GetResultingTAR();
     }
 
-    OperationPtr filterOperation = OperationPtr(new Operation(TAL_FILTER));
-    filterOperation->AddParam(INPUT_TAR, inputTAR);
-    filterOperation->AddParam(AUX_TAR, andEDFilter);
+    OperationPtr filterOperation = std::make_shared<Operation>(TAL_FILTER);
+    filterOperation->AddParam(PARAM(TAL_LOGICAL, _INPUT_TAR), inputTAR);
+    filterOperation->AddParam(PARAM(TAL_LOGICAL, _AUX_TAR), andEDFilter);
     filterOperation->SetResultingTAR(
         _schemaBuilder->InferSchema(filterOperation));
     return filterOperation;
   } else // if there are no explicit dimensions, call subset operator with
-         // subtars clipping
+    // subtars clipping
   {
-    OperationPtr operation = OperationPtr(new Operation(TAL_SUBSET));
-    operation->AddParam(INPUT_TAR, inputTAR);
+    OperationPtr operation = std::make_shared<Operation>(TAL_SUBSET);
+    operation->AddParam(PARAM(TAL_SUBSET, _INPUT_TAR), inputTAR);
 
     for (auto entry : ranges) {
       Range range = entry.second;
-      operation->AddParam(DIM(paramCount), range.dimName);
-      operation->AddParam(LB(paramCount), range.bounds[0]);
-      operation->AddParam(UP(paramCount), range.bounds[1]);
+      operation->AddParam(PARAM(TAL_SUBSET, _DIMENSION, paramCount),
+                          range.dimName);
+      operation->AddParam(PARAM(TAL_SUBSET, _LOWER_BOUND, paramCount),
+                          range.bounds[0]);
+      operation->AddParam(PARAM(TAL_SUBSET, _UPPER_BOUND, paramCount),
+                          range.bounds[1]);
       paramCount++;
     }
 
@@ -1089,8 +1179,8 @@ OperationPtr DefaultParser::ParseDerive(QueryExpressionPtr queryExpressionNode,
     if (identifier = PARSE(*paramsFront, IdentifierChain)) {
       if (inputTAR->HasDataElement(GET_IDENTIFER_BODY(identifier))) {
         throw std::runtime_error("Schema element " +
-                                 GET_IDENTIFER_BODY(identifier) +
-                                 " is already defined.");
+            GET_IDENTIFER_BODY(identifier) +
+            " is already defined.");
       }
     } else {
       throw std::runtime_error(derive_error);
@@ -1114,7 +1204,7 @@ OperationPtr DefaultParser::ParseDerive(QueryExpressionPtr queryExpressionNode,
 OperationPtr DefaultParser::ParseCross(QueryExpressionPtr queryExpressionNode,
                                        QueryPlanPtr queryPlan, int &idCounter) {
 #define EXPECTED_CROSS_PARAMS_NUM 2
-  OperationPtr operation = OperationPtr(new Operation(TAL_CROSS));
+  OperationPtr operation = std::make_shared<Operation>(TAL_CROSS);
   list<ValueExpressionPtr> params;
   params = queryExpressionNode->_value_expression_list->ParamsToList();
 
@@ -1123,8 +1213,9 @@ OperationPtr DefaultParser::ParseCross(QueryExpressionPtr queryExpressionNode,
         ParseTAR(params.front(), cross_error, queryPlan, idCounter);
     TARPtr rightTAR =
         ParseTAR(params.back(), cross_error, queryPlan, idCounter);
-    operation->AddParam(OPERAND(0), leftTAR);
-    operation->AddParam(OPERAND(1), rightTAR);
+
+    operation->AddParam(PARAM(TAL_CROSS, _OPERAND, 0), leftTAR);
+    operation->AddParam(PARAM(TAL_CROSS, _OPERAND, 1), rightTAR);
   } else {
     throw std::runtime_error(cross_error);
   }
@@ -1136,7 +1227,7 @@ OperationPtr DefaultParser::ParseCross(QueryExpressionPtr queryExpressionNode,
 OperationPtr DefaultParser::ParseDimJoin(QueryExpressionPtr queryExpressionNode,
                                          QueryPlanPtr queryPlan,
                                          int &idCounter) {
-  OperationPtr operation = OperationPtr(new Operation(TAL_DIMJOIN));
+  OperationPtr operation = std::make_shared<Operation>(TAL_DIMJOIN);
   IdentifierChainPtr identifier;
   list<ValueExpressionPtr> params;
   int32_t dimsCount = 0;
@@ -1148,20 +1239,27 @@ OperationPtr DefaultParser::ParseDimJoin(QueryExpressionPtr queryExpressionNode,
   TARPtr rightTAR =
       ParseTAR(params.front(), dimjoin_error, queryPlan, idCounter);
   params.pop_front();
-  operation->AddParam(OPERAND(0), leftTAR);
-  operation->AddParam(OPERAND(1), rightTAR);
+  operation->AddParam(PARAM(TAL_DIMJOIN, _OPERAND, 0), leftTAR);
+  operation->AddParam(PARAM(TAL_DIMJOIN, _OPERAND, 1), rightTAR);
 
-  if (params.size() == 0)
+  if (params.empty())
     throw std::runtime_error(dimjoin_error);
 
-  while (params.size() > 0) {
+  while (!params.empty()) {
     if (identifier = PARSE(params.front(), IdentifierChain)) {
       if (leftTAR->HasDataElement(GET_IDENTIFER_BODY(identifier))) {
-        operation->AddParam(DIM(dimsCount++), GET_IDENTIFER_BODY(identifier));
+        auto dim = leftTAR->GetDataElement(GET_IDENTIFER_BODY(identifier))->GetDimension();
+        if(dim == nullptr)
+          throw std::runtime_error("Schema element " +
+              GET_IDENTIFER_BODY(identifier) +
+              " is not a dimension.");
+
+        operation->AddParam(PARAM(TAL_DIMJOIN, _DIMENSION, dimsCount++),
+                            GET_IDENTIFER_BODY(identifier));
       } else {
         throw std::runtime_error("Schema element " +
-                                 GET_IDENTIFER_BODY(identifier) +
-                                 " is not a valid member.");
+            GET_IDENTIFER_BODY(identifier) +
+            " is not a valid member.");
       }
     } else {
       throw std::runtime_error(dimjoin_error);
@@ -1170,11 +1268,19 @@ OperationPtr DefaultParser::ParseDimJoin(QueryExpressionPtr queryExpressionNode,
 
     if (identifier = PARSE(params.front(), IdentifierChain)) {
       if (rightTAR->HasDataElement(GET_IDENTIFER_BODY(identifier))) {
-        operation->AddParam(DIM(dimsCount++), GET_IDENTIFER_BODY(identifier));
+
+        auto dim = rightTAR->GetDataElement(GET_IDENTIFER_BODY(identifier))->GetDimension();
+        if(dim == nullptr)
+          throw std::runtime_error("Schema element " +
+              GET_IDENTIFER_BODY(identifier) +
+              " is not a dimension.");
+
+        operation->AddParam(PARAM(TAL_DIMJOIN, _DIMENSION, dimsCount++),
+                            GET_IDENTIFER_BODY(identifier));
       } else {
         throw std::runtime_error("Schema element " +
-                                 GET_IDENTIFER_BODY(identifier) +
-                                 " is not a valid member.");
+            GET_IDENTIFER_BODY(identifier) +
+            " is not a valid member.");
       }
     } else {
       throw std::runtime_error(dimjoin_error);
@@ -1186,10 +1292,35 @@ OperationPtr DefaultParser::ParseDimJoin(QueryExpressionPtr queryExpressionNode,
   return operation;
 }
 
+OperationPtr DefaultParser::ParseEquiJoin(QueryExpressionPtr queryExpressionNode,
+                                          QueryPlanPtr queryPlan, int &idCounter) {
+
+}
+
+OperationPtr DefaultParser::ParseSlice(QueryExpressionPtr queryExpressionNode,
+                                       QueryPlanPtr queryPlan, int &idCounter) {
+
+}
+
+OperationPtr DefaultParser::ParseAtt2Dim(QueryExpressionPtr queryExpressionNode,
+                          QueryPlanPtr queryPlan, int &idCounter) {
+
+}
+
+OperationPtr DefaultParser::ParseUnion(QueryExpressionPtr queryExpressionNode,
+                        QueryPlanPtr queryPlan, int &idCounter) {
+
+}
+
+OperationPtr DefaultParser::ParseTranslate(QueryExpressionPtr queryExpressionNode,
+                            QueryPlanPtr queryPlan, int &idCounter) {
+
+}
+
 OperationPtr
 DefaultParser::ParseAggregate(QueryExpressionPtr queryExpressionNode,
                               QueryPlanPtr queryPlan, int &idCounter) {
-  OperationPtr operation = OperationPtr(new Operation(TAL_AGGREGATE));
+  OperationPtr operation = std::make_shared<Operation>(TAL_AGGREGATE);
   IdentifierChainPtr identifier;
   int32_t opCount = 0, aggr_dim_count = 0;
   list<ValueExpressionPtr> params;
@@ -1197,8 +1328,9 @@ DefaultParser::ParseAggregate(QueryExpressionPtr queryExpressionNode,
   params = queryExpressionNode->_value_expression_list->ParamsToList();
 
   TARPtr inputTAR =
-      ParseTAR(params.front(), aggregation_error, queryPlan, idCounter);
-  operation->AddParam(INPUT_TAR, inputTAR);
+      ParseTAR(params.front(), aggregation_error, std::move(queryPlan), idCounter);
+  operation->AddParam(PARAM(TAL_AGGREGATE, _INPUT_TAR), inputTAR);
+
   params.pop_front();
 
   for (DataElementPtr de : inputTAR->GetDataElements()) {
@@ -1206,7 +1338,7 @@ DefaultParser::ParseAggregate(QueryExpressionPtr queryExpressionNode,
     dataElementsList[name] = name;
   }
 
-  while (params.size() > 0) {
+  while (!params.empty()) {
 
     if (identifier = PARSE(params.front(), IdentifierChain)) {
       auto aggregationFunction = GET_IDENTIFER_BODY(identifier);
@@ -1214,29 +1346,32 @@ DefaultParser::ParseAggregate(QueryExpressionPtr queryExpressionNode,
                 aggregationFunction.begin(), ::tolower);
 
       if (!_configurationManager->GetBooleanValue(
-              AGGREGATION_FUNCTION(aggregationFunction)) &&
+          AGGREGATION_FUNCTION(aggregationFunction)) &&
           opCount == 0) {
         throw std::runtime_error("Invalid aggregation function " +
-                                 aggregationFunction + ".");
+            aggregationFunction + ".");
       } else if (!_configurationManager->GetBooleanValue(
-                     AGGREGATION_FUNCTION(aggregationFunction))) {
+          AGGREGATION_FUNCTION(aggregationFunction))) {
         break;
       }
 
-      operation->AddParam(OPERAND(opCount++), aggregationFunction);
+      // operation->AddParam(OPERAND(opCount++), aggregationFunction);
+      operation->AddParam(PARAM(TAL_AGGREGATE, _OPERAND, opCount++),
+                          aggregationFunction);
+
     } else {
       throw std::runtime_error(aggregation_error);
     }
     params.pop_front();
 
     if (identifier = PARSE(params.front(), IdentifierChain)) {
-      if (inputTAR->HasDataElement(GET_IDENTIFER_BODY(identifier))) {
-        operation->AddParam(OPERAND(opCount++), GET_IDENTIFER_BODY(identifier));
-      } else {
+      if (!inputTAR->HasDataElement(GET_IDENTIFER_BODY(identifier)))
         throw std::runtime_error("Schema element " +
-                                 GET_IDENTIFER_BODY(identifier) +
-                                 " is not a valid member.");
-      }
+            GET_IDENTIFER_BODY(identifier) +
+            " is not a valid member.");
+
+      operation->AddParam(PARAM(TAL_AGGREGATE, _OPERAND, opCount++),
+                          GET_IDENTIFER_BODY(identifier));
     } else {
       throw std::runtime_error(aggregation_error);
     }
@@ -1246,29 +1381,45 @@ DefaultParser::ParseAggregate(QueryExpressionPtr queryExpressionNode,
       if (dataElementsList.find(GET_IDENTIFER_BODY(identifier)) !=
           dataElementsList.end()) {
         throw std::runtime_error("Schema element " +
-                                 GET_IDENTIFER_BODY(identifier) +
-                                 " already defined.");
+            GET_IDENTIFER_BODY(identifier) +
+            " already defined.");
       } else {
         dataElementsList[GET_IDENTIFER_BODY(identifier)] =
             GET_IDENTIFER_BODY(identifier);
       }
 
-      operation->AddParam(OPERAND(opCount++), GET_IDENTIFER_BODY(identifier));
+      // operation->AddParam(OPERAND(opCount++),
+      // GET_IDENTIFER_BODY(identifier));
+      operation->AddParam(PARAM(TAL_AGGREGATE, _OPERAND, opCount++),
+                          GET_IDENTIFER_BODY(identifier));
+
     } else {
       throw std::runtime_error(aggregation_error);
     }
     params.pop_front();
   }
 
-  for (auto dataElement : params) {
+  for (const auto &dataElement : params) {
     if (identifier = PARSE(dataElement, IdentifierChain)) {
       if (inputTAR->HasDataElement(GET_IDENTIFER_BODY(identifier))) {
-        operation->AddParam(DIM(aggr_dim_count++),
+        // operation->AddParam(DIM(aggr_dim_count++),
+        //                    GET_IDENTIFER_BODY(identifier));
+
+        auto aggregateDimension =
+            inputTAR->GetDataElement(GET_IDENTIFER_BODY(identifier))
+                    ->GetDimension();
+
+        if (aggregateDimension == nullptr)
+          throw std::runtime_error("Schema element " +
+              GET_IDENTIFER_BODY(identifier) +
+              " is not a dimension.");
+
+        operation->AddParam(PARAM(TAL_AGGREGATE, _DIMENSION, aggr_dim_count++),
                             GET_IDENTIFER_BODY(identifier));
       } else {
         throw std::runtime_error("Schema element " +
-                                 GET_IDENTIFER_BODY(identifier) +
-                                 " is not a valid member.");
+            GET_IDENTIFER_BODY(identifier) +
+            " is not a valid member.");
       }
     } else {
       throw std::runtime_error(aggregation_error);
@@ -1279,26 +1430,10 @@ DefaultParser::ParseAggregate(QueryExpressionPtr queryExpressionNode,
   return operation;
 }
 
-OperationPtr DefaultParser::ParseSplit(QueryExpressionPtr queryExpressionNode,
-                                       QueryPlanPtr queryPlan, int &idCounter) {
-  OperationPtr operation = OperationPtr(new Operation(TAL_SPLIT));
-  list<ValueExpressionPtr> params;
-  params = queryExpressionNode->_value_expression_list->ParamsToList();
-
-  if (params.size() != 1)
-    throw std::runtime_error(split_error);
-
-  TARPtr inputTAR = ParseTAR(params.front(), split_error, queryPlan, idCounter);
-  operation->AddParam(INPUT_TAR, inputTAR);
-  operation->SetResultingTAR(_schemaBuilder->InferSchema(operation));
-
-  return operation;
-}
-
 OperationPtr
 DefaultParser::ParseUserDefined(QueryExpressionPtr queryExpressionNode,
                                 QueryPlanPtr queryPlan, int &idCounter) {
-  OperationPtr operation = OperationPtr(new Operation(TAL_USER_DEFINED));
+  OperationPtr operation = std::make_shared<Operation>(TAL_USER_DEFINED);
   TARPtr inputTAR;
   list<ValueExpressionPtr> params;
   IdentifierChainPtr identifier;
@@ -1312,7 +1447,7 @@ DefaultParser::ParseUserDefined(QueryExpressionPtr queryExpressionNode,
   operation->AddParam(OPERATOR_NAME,
                       queryExpressionNode->_identifier->_identifierBody);
 
-  for (auto param : params) {
+  for (const auto &param : params) {
     // Check first parameter (tar)
     if (identifier = PARSE(param, IdentifierChain)) {
       inputTAR = _metadaManager->GetTARByName(_currentTARS,
@@ -1352,33 +1487,34 @@ DefaultParser::ParseDMLOperation(QueryExpressionPtr queryExpressionNode,
 
   OperationPtr operation;
 
-  if (!functionName.compare(_CREATE_TARS)) {
+  if (functionName == _CREATE_TARS) {
     operation = ParseCreateTARS(queryExpressionNode, queryPlan, idCounter);
-  } else if (!functionName.compare(_CREATE_TAR)) {
+  } else if (functionName == _CREATE_TAR) {
     operation = ParseCreateTAR(queryExpressionNode, queryPlan, idCounter);
-  } else if (!functionName.compare(_CREATE_TYPE)) {
+  } else if (functionName == _CREATE_TYPE) {
     operation = ParseCreateType(queryExpressionNode, queryPlan, idCounter);
-  } else if (!functionName.compare(_CREATE_DATASET)) {
+  } else if (functionName == _CREATE_DATASET) {
     operation = ParseCreateDataset(queryExpressionNode, queryPlan, idCounter);
-  } else if (!functionName.compare(_LOAD_SUBTAR)) {
+  } else if (functionName == _LOAD_SUBTAR) {
     operation = ParseLoad(queryExpressionNode, queryPlan, idCounter);
-  } else if (!functionName.compare(_DROP_TARS)) {
+  } else if (functionName == _DELETE) {
+    operation = ParseDelete(queryExpressionNode, queryPlan, idCounter);
+  } else if (functionName == _DROP_TARS) {
     operation = ParseDropTARS(queryExpressionNode, queryPlan, idCounter);
-  } else if (!functionName.compare(_DROP_TAR)) {
+  } else if (functionName == _DROP_TAR) {
     operation = ParseDropTAR(queryExpressionNode, queryPlan, idCounter);
-  } else if (!functionName.compare(_DROP_TYPE)) {
+  } else if (functionName == _DROP_TYPE) {
     operation = ParseDropType(queryExpressionNode, queryPlan, idCounter);
-  } else if (!functionName.compare(_DROP_DATASET)) {
+  } else if (functionName == _DROP_DATASET) {
     operation = ParseDropDataset(queryExpressionNode, queryPlan, idCounter);
-  } else if (!functionName.compare(_SAVE)) {
+  } else if (functionName == _SAVE) {
     operation = ParseSave(queryExpressionNode, queryPlan, idCounter);
-  } else if (!functionName.compare(_SHOW)) {
+  } else if (functionName == _SHOW) {
     operation = ParseShow(queryExpressionNode, queryPlan, idCounter);
-  } else if (!functionName.compare(_BATCH)) {
+  } else if (functionName == _BATCH) {
     operation = ParseBatch(queryExpressionNode, queryPlan, idCounter);
   } else {
-    throw std::runtime_error("Unknown or invalid operator: " + functionName +
-                             ".");
+    throw std::runtime_error("Unknown or invalid operator: " + functionName + ".");
   }
 
   queryPlan->AddOperation(operation, idCounter);
@@ -1393,30 +1529,38 @@ TARPtr DefaultParser::ParseOperation(QueryExpressionPtr queryExpressionNode,
 
   OperationPtr operation;
 
-  if (!functionName.compare(_SELECT)) {
+  if (functionName == _SELECT) {
     operation = ParseSelect(queryExpressionNode, queryPlan, idCounter);
-  } else if (!functionName.compare(_WHERE)) {
+  } else if (functionName == (_WHERE)) {
     operation = ParseFilter(queryExpressionNode, queryPlan, idCounter);
-  } else if (!functionName.compare(_DERIVE)) {
+  } else if (functionName == (_DERIVE)) {
     operation = ParseDerive(queryExpressionNode, queryPlan, idCounter);
-  } else if (!functionName.compare(_SCAN)) {
+  } else if (functionName == (_SCAN)) {
     operation = ParseScan(queryExpressionNode, queryPlan, idCounter);
-  } else if (!functionName.compare(_SUBSET)) {
+  } else if (functionName == (_SUBSET)) {
     operation = ParseSubset(queryExpressionNode, queryPlan, idCounter);
-  } else if (!functionName.compare(_CROSS_PRODUCT)) {
+  } else if (functionName == (_CROSS_PRODUCT)) {
     operation = ParseCross(queryExpressionNode, queryPlan, idCounter);
-  } else if (!functionName.compare(_DIMJOIN)) {
+  } else if (functionName == (_EQUIJOIN)) {
+    operation = ParseEquiJoin(queryExpressionNode, queryPlan, idCounter);
+  } else if (functionName == (_DIMJOIN)) {
     operation = ParseDimJoin(queryExpressionNode, queryPlan, idCounter);
-  } else if (!functionName.compare(_AGGREGATE)) {
+  } else if (functionName == (_ATT2DIM)) {
+    operation = ParseAtt2Dim(queryExpressionNode, queryPlan, idCounter);
+  } else if (functionName == (_AGGREGATE)) {
     operation = ParseAggregate(queryExpressionNode, queryPlan, idCounter);
-  } else if (!functionName.compare(_SPLIT)) {
-    operation = ParseSplit(queryExpressionNode, queryPlan, idCounter);
+  } else if (functionName == (_SLICE)) {
+    operation = ParseSlice(queryExpressionNode, queryPlan, idCounter);
+  } else if (functionName == (_UNION)) {
+    operation = ParseUnion(queryExpressionNode, queryPlan, idCounter);
+  } else if (functionName == (_TRANSLATE)) {
+    operation = ParseTranslate(queryExpressionNode, queryPlan, idCounter);
   } else if (_configurationManager->GetBooleanValue(
-                 OPERATOR(functionName.c_str()))) {
+      OPERATOR(functionName))) {
     operation = ParseUserDefined(queryExpressionNode, queryPlan, idCounter);
   } else {
     throw std::runtime_error("Unknown or invalid operator: " + functionName +
-                             ".");
+        ".");
   }
 
   queryPlan->AddOperation(operation, idCounter);
@@ -1427,7 +1571,7 @@ int DefaultParser::CreateQueryPlan(ParseTreeNodePtr root,
                                    QueryDataManagerPtr queryDataManager) {
   try {
     int idCounter = 1;
-    QueryPlanPtr queryPlan = QueryPlanPtr(new QueryPlan());
+    QueryPlanPtr queryPlan = std::make_shared<QueryPlan>();
     QueryExpressionPtr queryExpression = PARSE(root, QueryExpression);
 
     if (queryExpression) {
@@ -1440,6 +1584,7 @@ int DefaultParser::CreateQueryPlan(ParseTreeNodePtr root,
           !functionName.compare(0, 4, "load") ||
           !functionName.compare(0, 4, "show") ||
           !functionName.compare(0, 4, "save") ||
+          !functionName.compare(0, 6, "delete") ||
           !functionName.compare(0, 7, "restore") ||
           !functionName.compare(0, 5, "batch")) {
         ParseDMLOperation(queryExpression, queryPlan, idCounter);
@@ -1462,13 +1607,17 @@ int DefaultParser::CreateQueryPlan(ParseTreeNodePtr root,
   }
 }
 
+TARPtr DefaultParser::InferOutputTARSchema(OperationPtr operation) {
+  return _schemaBuilder->InferSchema(operation);
+}
+
 SavimeResult DefaultParser::Parse(QueryDataManagerPtr queryDataManager) {
   ParseTreeNodePtr node;
   void *scanner, *ret;
   int error;
   if (_schemaBuilder == nullptr) {
-    _schemaBuilder = std::shared_ptr<SchemaBuilder>(new SchemaBuilder(
-        _configurationManager, _metadaManager, _storageManager));
+    _schemaBuilder = std::make_shared<SchemaBuilder>(_configurationManager,
+      _metadaManager, _storageManager);
   }
 
   try {
@@ -1495,10 +1644,10 @@ SavimeResult DefaultParser::Parse(QueryDataManagerPtr queryDataManager) {
     if (error != 0) {
       queryDataManager->SetErrorResponseText((char *)ret);
       throw std::runtime_error("Error during query parse: " +
-                               std::string((char *)ret));
+          std::string((char *)ret));
     } else {
       // Convert ret to QueryExpression shared_ptr pointer
-      QueryExpressionPtr *queryExpression = (QueryExpressionPtr *)ret;
+      auto *queryExpression = (QueryExpressionPtr *)ret;
       node = PARSE(*queryExpression, ParseTreeNode);
 
       // Removing the node dynamically created during yyparse
@@ -1511,15 +1660,10 @@ SavimeResult DefaultParser::Parse(QueryDataManagerPtr queryDataManager) {
 
 #ifdef DEBUG
     // node->printTreeNode(1);
-    std::string queryplanStr = "";
-    for (auto op : queryDataManager->GetQueryPlan()->GetOperations()) {
-      if(!queryplanStr.empty()) queryplanStr = queryplanStr + "\n";
-      queryplanStr += ("\t\t\t\t" + op->toString()).c_str();
-      TARPtr resultingTar = op->GetResultingTAR();
-      if(resultingTar != nullptr)
-        queryplanStr += "\n with "+ resultingTar->toString();
+    if(queryDataManager->GetQueryPlan() != nullptr) {
+      auto queryplanStr = queryDataManager->GetQueryPlan()->toString();
+      _systemLogger->LogEvent(_moduleName, "Query Plan:\n" + queryplanStr);
     }
-    _systemLogger->LogEvent(_moduleName, "Query Plan:\n"+queryplanStr);
 #endif
 
     yylex_destroy(scanner);

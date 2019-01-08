@@ -33,13 +33,13 @@
  * If it is an explicity, then the upper and lower bounds must be integer/long
  * indexes that will be mapped to values in the dataset.
  */
-inline std::list<DimensionPtr> create_dimensions(std::string dimBlock,
-                                          MetadataManagerPtr metadataManager,
-                                          StorageManagerPtr storageManager) {
+inline std::list<DimensionPtr> create_dimensions(const std::string &dimBlock,
+                                                 const MetadataManagerPtr &metadataManager,
+                                                 const StorageManagerPtr &storageManager) {
   std::list<DimensionPtr> dimensions;
   std::vector<std::string> dimensionsSpecification = split(dimBlock, '|');
 
-  for (std::string dimSpecs : dimensionsSpecification) {
+  for (const std::string &dimSpecs : dimensionsSpecification) {
 
     std::vector<std::string> params = split(dimSpecs, ',');
     //DimensionPtr dimension = DimensionPtr(new Dimension);
@@ -63,7 +63,7 @@ inline std::list<DimensionPtr> create_dimensions(std::string dimBlock,
         throw std::runtime_error("Invalid type in dimension specification: " +
                                  params[2]);
 
-      lower_bound = strtod(trim(params[3]).c_str(), NULL);
+      lower_bound = strtod(trim(params[3]).c_str(), nullptr);
 
       if (trim(params[4])[0] == _UNBOUNDED_DIMENSION_MARK) {
         if (!type.isIntegerType()) {
@@ -111,7 +111,7 @@ inline std::list<DimensionPtr> create_dimensions(std::string dimBlock,
         }
 
       } else {
-        upper_bound = strtod(trim(params[4]).c_str(), NULL);
+        upper_bound = strtod(trim(params[4]).c_str(), nullptr);
       }
 
       if (upper_bound <= lower_bound)
@@ -119,7 +119,7 @@ inline std::list<DimensionPtr> create_dimensions(std::string dimBlock,
             "Dimension " + dimensionName +
             " upper bound must be greater than the lower bound.");
 
-      spacing = strtod((trim(params[5]).c_str()), NULL);
+      spacing = strtod((trim(params[5]).c_str()), nullptr);
 
       if (spacing <= 0)
         throw std::runtime_error("Spacing for dimension " + dimensionName +
@@ -167,12 +167,12 @@ inline std::list<DimensionPtr> create_dimensions(std::string dimBlock,
   return dimensions;
 }
 
-inline std::list<AttributePtr> create_attributes(std::string attBlock) {
+inline std::list<AttributePtr> create_attributes(const std::string &attBlock) {
   std::list<AttributePtr> attributes;
   int32_t vectorLen = 0;
   std::vector<std::string> attributeSpecification = split(attBlock, _PIPE[0]);
 
-  for (std::string attSpecs : attributeSpecification) {
+  for (const std::string &attSpecs : attributeSpecification) {
     std::vector<std::string> params = split(attSpecs, _COMMA[0]);
 
     if (params.size() != 2)
@@ -185,7 +185,7 @@ inline std::list<AttributePtr> create_attributes(std::string attBlock) {
     if(vectorLen > MAX_VECTOR_ATT_LEN)
       throw std::runtime_error("Vector attribute "+attName+" is too large.");
 
-    auto attType = DataType(type, vectorLen);
+    auto attType = DataType(type, static_cast<uint32_t>(vectorLen));
 
     if (attType == NO_TYPE || attType.vectorLength() == 0)
       throw std::runtime_error("Invalid type in attribute specification: " +
@@ -198,8 +198,8 @@ inline std::list<AttributePtr> create_attributes(std::string attBlock) {
   return attributes;
 }
 
-inline std::map<std::string, RolePtr> create_roles(TARPtr tar, TypePtr type,
-                                            std::string rolesBlock) {
+inline std::map<std::string, RolePtr> create_roles(const TARPtr &tar, const TypePtr &type,
+                                                   const std::string &rolesBlock) {
   if (rolesBlock.empty())
     throw std::runtime_error("Invalid roles definition.");
 

@@ -40,11 +40,19 @@
 #include "../metada/default_metada_manager.h"
 #include "../connection/default_connection_manager.h"
 #include "../configuration/default_config_manager.h"
+#include "../core/include/builder.h"
+#include "../core/include/config_manager.h"
+#include "../core/include/system_logger.h"
+#include "../core/include/session.h"
+#include "../core/include/engine.h"
+#include "../core/include/parser.h"
+#include "../core/include/optimizer.h"
+#include "../core/include/metadata.h"
 #include "../engine/include/default_engine.h"
 #include "../query/default_query_data_manager.h"
 #include "../storage/default_storage_manager.h"
 
-#define STARTUP_MSG(DAEMON, THREADS, PORT, SHM, SEC, CAT, RDMA, TYPE)          \
+#define STARTUP_MSG(DAEMON, THREADS, PORT, SHM, SEC, CAT, RDMA, TYPE, TBB)     \
   "\nDAEMON MODE:      " + DAEMON + "\n"                                       \
                                     "MAX CORES USAGE:  " +                     \
       std::to_string(THREADS) + "\n"                                           \
@@ -59,41 +67,37 @@
             "RDMA ENABLED:     " +                                             \
       RDMA + "\n"                                                              \
             "TYPE SUPPORT:     " +                                             \
-      TYPE + "\n"
-
-string SAVIME_ASCII_LOGO = string("\n   _____             _              \n"
-                                  "  / ___/____ __   __(_)___ ___  ___ \n"
-                                  "  \\__ \\/ __ `/ | / / / __ `__ \\/ _ \\\n"
-                                  " ___/ / /_/ /| |/ / / / / / / /  __/\n"
-                                  "/____/\\__,_/ |___/_/_/ /_/ /_/\\___/  v" +
-    string(PACKAGE_VERSION) + "\n");
-
+      TYPE + "\n"                                                              \
+            "TBB SUPPORT:      " +                                             \
+      TBB + "\n"
+      
+      
 ModulesBuilder::ModulesBuilder(int argc, char **args) {
 #define BOOT_QUERY_FILE "boot_query_file"
 
   char c;
-  int32_t threads, subtars;
-  string bootFile = "";
+  int64_t threads, subtars;
+  string bootFile;
   BuildConfigurationManager();
 
-  struct option longopts[] = {{DAEMON_MODE, no_argument, NULL, 'D'},
-                              {MAX_THREADS, required_argument, NULL, 'm'},
-                              {MAX_PARA_SUBTARS, required_argument, NULL, 'n'},
-                              {SHM_STORAGE_DIR, required_argument, NULL, 's'},
-                              {SEC_STORAGE_DIR, required_argument, NULL, 'd'},
-                              {CONFIG_FILE, required_argument, NULL, 'f'},
-                              {BOOT_QUERY_FILE, required_argument, NULL, 'b'},
+  struct option longopts[] = {{DAEMON_MODE, no_argument, nullptr, 'D'},
+                              {MAX_THREADS, required_argument, nullptr, 'm'},
+                              {MAX_PARA_SUBTARS, required_argument, nullptr, 'n'},
+                              {SHM_STORAGE_DIR, required_argument, nullptr, 's'},
+                              {SEC_STORAGE_DIR, required_argument, nullptr, 'd'},
+                              {CONFIG_FILE, required_argument, nullptr, 'f'},
+                              {BOOT_QUERY_FILE, required_argument, nullptr, 'b'},
                               {0, 0, 0, 0}};
 
-  while ((c = getopt_long(argc, args, "Dm:n:s:d:f:b:", longopts, NULL)) != -1) {
+  while ((c = (char)getopt_long(argc, args, "Dm:n:s:d:f:b:", longopts, nullptr)) != -1) {
     switch (c) {
     case 'D':_configurationManager->SetBooleanValue(DAEMON_MODE, true);
       break;
-    case 'm':threads = strtol(optarg, NULL, 10);
-      _configurationManager->SetIntValue(MAX_THREADS, threads);
+    case 'm':threads = strtol(optarg, nullptr, 10);
+      _configurationManager->SetIntValue(MAX_THREADS, static_cast<int32_t>(threads));
       break;
-    case 'n':subtars = strtol(optarg, NULL, 10);
-      _configurationManager->SetIntValue(MAX_PARA_SUBTARS, subtars);
+    case 'n':subtars = strtol(optarg, nullptr, 10);
+      _configurationManager->SetIntValue(MAX_PARA_SUBTARS, static_cast<int32_t>(subtars));
       break;
     case 's':
       _configurationManager->SetStringValue(SHM_STORAGE_DIR,
@@ -156,10 +160,24 @@ ModulesBuilder::ModulesBuilder(int argc, char **args) {
   string type = "BASIC";
 #endif
 
+#ifdef TBB_SUPPORT
+  string tbb_support = "yes";
+#else
+  string tbb_support = "no";
+#endif
+
+
+  string SAVIME_ASCII_LOGO = string("\n   _____             _              \n"
+                                    "  / ___/____ __   __(_)___ ___  ___ \n"
+                                    "  \\__ \\/ __ `/ | / / / __ `__ \\/ _ \\\n"
+                                    " ___/ / /_/ /| |/ / / / / / / /  __/\n"
+                                    "/____/\\__,_/ |___/_/_/ /_/ /_/\\___/  v" +
+                                    string(PACKAGE_VERSION) + "\n");
+  
   /*Log startup message*/
   string startupMsg =
       SAVIME_ASCII_LOGO + STARTUP_MSG(daemon, numThreads * numSubtars, port,
-          shmPath, secPath, catalyst, staging, type);
+          shmPath, secPath, catalyst, staging, type, tbb_support);
   _systemLogger->LogEvent("SAVIME", startupMsg);
 }
 
@@ -210,7 +228,7 @@ void ModulesBuilder::Daemonize() {
 }
 
 ConfigurationManagerPtr ModulesBuilder::BuildConfigurationManager() {
-  if (_configurationManager == NULL) {
+  if (_configurationManager == nullptr) {
     _configurationManager =
         ConfigurationManagerPtr(new DefaultConfigurationManager());
   }
@@ -219,7 +237,7 @@ ConfigurationManagerPtr ModulesBuilder::BuildConfigurationManager() {
 }
 
 SystemLoggerPtr ModulesBuilder::BuildSystemLogger() {
-  if (_systemLogger == NULL) {
+  if (_systemLogger == nullptr) {
     _systemLogger =
         SystemLoggerPtr(new DefaultSystemLogger(BuildConfigurationManager()));
   }
@@ -228,10 +246,10 @@ SystemLoggerPtr ModulesBuilder::BuildSystemLogger() {
 }
 
 EnginePtr ModulesBuilder::BuildEngine() {
-  if (_engine == NULL) {
+  if (_engine == nullptr) {
     _engine = EnginePtr(
         new DefaultEngine(BuildConfigurationManager(), BuildSystemLogger(),
-                          BuildMetadaManager(), BuildStorageManager()));
+                          BuildMetadataManager(), BuildStorageManager()));
 
     ((DefaultEngine *) _engine.get())->SetThisPtr(_engine);
   }
@@ -240,10 +258,10 @@ EnginePtr ModulesBuilder::BuildEngine() {
 }
 
 ParserPtr ModulesBuilder::BuildParser() {
-  if (_parser == NULL) {
+  if (_parser == nullptr) {
     _parser = ParserPtr(
         new DefaultParser(BuildConfigurationManager(), BuildSystemLogger()));
-    _parser->SetMetadaManager(BuildMetadaManager());
+    _parser->SetMetadataManager(BuildMetadataManager());
     _parser->SetStorageManager(BuildStorageManager());
   }
 
@@ -251,16 +269,18 @@ ParserPtr ModulesBuilder::BuildParser() {
 }
 
 OptimizerPtr ModulesBuilder::BuildOptimizer() {
-  if (_optmizier == NULL) {
-    _optmizier = OptimizerPtr(
-        new DefaultOptimizer(BuildConfigurationManager(), BuildSystemLogger()));
+  if (_optimizer == nullptr) {
+    _optimizer = OptimizerPtr(
+        new DefaultOptimizer(BuildConfigurationManager(), BuildSystemLogger(),
+          BuildMetadataManager()));
+    _optimizer->SetParser(BuildParser());
   }
 
-  return _optmizier;
+  return _optimizer;
 }
 
-MetadataManagerPtr ModulesBuilder::BuildMetadaManager() {
-  if (_metadataManager == NULL) {
+MetadataManagerPtr ModulesBuilder::BuildMetadataManager() {
+  if (_metadataManager == nullptr) {
     _metadataManager = MetadataManagerPtr(new DefaultMetadataManager(
         BuildConfigurationManager(), BuildSystemLogger()));
   }
@@ -269,7 +289,7 @@ MetadataManagerPtr ModulesBuilder::BuildMetadaManager() {
 }
 
 ConnectionManagerPtr ModulesBuilder::BuildConnectionManager() {
-  if (_connectionManager == NULL) {
+  if (_connectionManager == nullptr) {
     _connectionManager = ConnectionManagerPtr(new DefaultConnectionManager(
         BuildConfigurationManager(), BuildSystemLogger()));
   }
@@ -278,7 +298,7 @@ ConnectionManagerPtr ModulesBuilder::BuildConnectionManager() {
 }
 
 StorageManagerPtr ModulesBuilder::BuildStorageManager() {
-  if (_storageManager == NULL) {
+  if (_storageManager == nullptr) {
     _storageManager = StorageManagerPtr(new DefaultStorageManager(
         BuildConfigurationManager(), BuildSystemLogger()));
     ((DefaultStorageManager *) (_storageManager.get()))
@@ -290,7 +310,7 @@ StorageManagerPtr ModulesBuilder::BuildStorageManager() {
 }
 
 QueryDataManagerPtr ModulesBuilder::BuildQueryDataManager() {
-  if (_queryDataManager == NULL) {
+  if (_queryDataManager == nullptr) {
     _queryDataManager = QueryDataManagerPtr(new DefaultQueryDataManager(
         BuildConfigurationManager(), BuildSystemLogger()));
   }
@@ -299,11 +319,11 @@ QueryDataManagerPtr ModulesBuilder::BuildQueryDataManager() {
 }
 
 SessionManagerPtr ModulesBuilder::BuildSessionManager() {
-  if (_sessionManager == NULL) {
+  if (_sessionManager == nullptr) {
     _sessionManager = SessionManagerPtr(new DefaultSessionManager(
         BuildConfigurationManager(), BuildSystemLogger(),
         BuildConnectionManager(), BuildEngine(), BuildParser(),
-        BuildOptimizer(), BuildMetadaManager(), BuildQueryDataManager()));
+        BuildOptimizer(), BuildMetadataManager(), BuildQueryDataManager()));
   }
 
   return _sessionManager;
@@ -330,7 +350,7 @@ void ModulesBuilder::RunBootQueryFile(string queryFile) {
       continue;
     }
 
-    if (engine->run(queryDataManager, this) != SAVIME_SUCCESS) {
+    if (engine->Run(queryDataManager, this) != SAVIME_SUCCESS) {
       systemLogger->LogEvent("Builder",
                              "Error during boot query execution: " + query +
                                  " " + queryDataManager->GetErrorResponse());

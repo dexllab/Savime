@@ -1,3 +1,5 @@
+#include <memory>
+
 /*
 *    This program is free software: you can redistribute it and/or modify
 *    it under the terms of the GNU General Public License as published by
@@ -30,10 +32,10 @@ ConnectionListenerPtr DefaultSessionManager::NotifyNewConnection(
   QueryDataManagerPtr queryDataManager = _queryDataManager->GetInstance();
 
   // Creating new session
-  newSession = std::shared_ptr<DefaultSession>(new DefaultSession(
-      _sessionIdCounter++, connectionDetails, this, _connectionManager,
+  newSession = std::make_shared<DefaultSession>(
+    _sessionIdCounter++, connectionDetails, this, _connectionManager,
       _configurationManager, _systemLogger, _engine, _parser, _optimizer,
-      _metadaManager, queryDataManager));
+      _metadaManager, queryDataManager);
 
   newSession->SetThisPtr(newSession);
 
@@ -45,8 +47,8 @@ ConnectionListenerPtr DefaultSessionManager::NotifyNewConnection(
           " with socket " + std::to_string(connectionDetails->socket));
 
   // Starting thread for new session
-  _thread = std::shared_ptr<std::thread>(
-      new std::thread(&DefaultSession::Run, newSession));
+  _thread = std::make_shared<std::thread>(
+    &DefaultSession::Run, newSession);
 
   return newSession.get();
 }
@@ -67,14 +69,14 @@ void DefaultSessionManager::SetMetadaManager(MetadataManagerPtr metadaManager) {
 }
 
 SavimeResult DefaultSessionManager::Start() {
-  _thread = NULL;
+  _thread = nullptr;
   _connectionManager->AddConnectionListener(this);
   return SAVIME_SUCCESS;
 }
 
 SavimeResult DefaultSessionManager::EndSession(SessionPtr job) {
   _thread->detach();
-  _thread = NULL;
+  _thread = nullptr;
   _thread_mutex.unlock();
   _conditionVar.notify_all();
   return SAVIME_SUCCESS;

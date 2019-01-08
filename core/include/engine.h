@@ -1,3 +1,5 @@
+#include <utility>
+
 #ifndef ENGINE_H
 #define ENGINE_H
 /*! \file */
@@ -59,8 +61,8 @@ public:
   */
   Engine(ConfigurationManagerPtr configurationManager,
          SystemLoggerPtr systemLogger, MetadataManagerPtr metadataManager,
-         StorageManagerPtr storageManager)
-      : SavimeModule("Engine", configurationManager, systemLogger) {}
+         const StorageManagerPtr &storageManager)
+      : SavimeModule("Engine", std::move(configurationManager), systemLogger) {}
 
   /**
   * Executes the query in the QueryPlan of the QueryDataManager, and notifies
@@ -72,7 +74,7 @@ public:
   * execution becomes available.
   * @return SAVIME_SUCCESS on success or SAVIME_FAILURE on failure.
   */
-  virtual SavimeResult run(QueryDataManagerPtr queryDataManager,
+  virtual SavimeResult Run(QueryDataManagerPtr queryDataManager,
                            EngineListenerPtr caller) = 0;
 };
 typedef std::shared_ptr<Engine> EnginePtr; //!< Engine pointer.
@@ -86,6 +88,101 @@ typedef int (*OperatorFunction)(SubTARIndex subtarIndex, OperationPtr operation,
                                 MetadataManagerPtr metadataManager,
                                 StorageManagerPtr storageManager,
                                 EnginePtr engine);
+/**
+ * The EngineOperator is implemented by DDL and DML operators. The EngineOperators implement the logic for each
+ * operator supported.
+ */
+class EngineOperator {
+
+protected:
+
+  OperationPtr _operation;
+  ConfigurationManagerPtr _configurationManager;
+  QueryDataManagerPtr _queryDataManager;
+  MetadataManagerPtr _metadataManager;
+  StorageManagerPtr _storageManager;
+  EnginePtr _engine;
+
+public:
+
+  EngineOperator(const OperationPtr& operation,
+                 const ConfigurationManagerPtr& configurationManager,
+                 const QueryDataManagerPtr& queryDataManager,
+                 const MetadataManagerPtr& metadataManager,
+                 const StorageManagerPtr& storageManager,
+                 const EnginePtr& engine) {
+
+    _operation = operation;
+    _configurationManager = configurationManager;
+    _queryDataManager = queryDataManager;
+    _metadataManager = metadataManager;
+    _storageManager = storageManager;
+    _engine = engine;
+  }
+
+  /**
+   * Generate the desired subtar in the query plan pipeline.
+   * @param subtarIndex is the number of the subtar to be generated.
+   * @return SAVIME_SUCCESS on success or SAVIME_FAILURE on failure.
+   */
+  virtual SavimeResult GenerateSubtar(SubTARIndex subtarIndex) = 0;
+
+  /**
+  * Run the DDL operator.
+  * @return SAVIME_SUCCESS on success or SAVIME_FAILURE on failure.
+  */
+  virtual SavimeResult Run() = 0;
 
 
+  /**
+  * Returns the operation which defines the EngineOperator.
+  * @return the operation which defines the EngineOperator.
+  */
+  virtual OperationPtr GetOperation() {
+    return _operation;
+  }
+
+  /**
+  * Returns a string representation of the operator.
+  * @return a string representing the operator.
+  */
+  virtual string toString() { return "";}
+};
+typedef std::shared_ptr<EngineOperator> EngineOperatorPtr;
+
+
+/**
+ * EngineOperatorFactory creates instances of EngineOperators
+ */
+class EngineOperatorFactory {
+
+public:
+
+    ConfigurationManagerPtr _configurationManager;
+    QueryDataManagerPtr _queryDataManager;
+    MetadataManagerPtr _metadataManager;
+    StorageManagerPtr _storageManager;
+    EnginePtr _engine;
+
+    EngineOperatorFactory(ConfigurationManagerPtr configurationManager,
+                          QueryDataManagerPtr queryDataManager,
+                          MetadataManagerPtr metadataManager,
+                          StorageManagerPtr storageManager,
+                          EnginePtr engine){
+      _configurationManager = configurationManager;
+      _queryDataManager = queryDataManager;
+      _metadataManager = metadataManager;
+      _storageManager = storageManager;
+      _engine = engine;
+    }
+
+    /**
+     * Creates an instance of an EngineOperator.
+     * @param operation is the query plan operator for which the engine operator instance must be created.
+     * @return a instance of an operator as specified by the operation.
+     */
+    EngineOperatorPtr Make(OperationPtr operation);
+
+};
+typedef std::shared_ptr<EngineOperatorFactory> EngineOperatorFactoryPtr;
 #endif

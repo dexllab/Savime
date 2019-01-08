@@ -67,6 +67,8 @@ class DefaultParser : public Parser {
                                   QueryPlanPtr queryPlan, int &idCounter);
   OperationPtr ParseLoad(QueryExpressionPtr queryExpressionNode,
                          QueryPlanPtr queryPlan, int &idCounter);
+  OperationPtr ParseDelete(QueryExpressionPtr queryExpressionNode,
+                           QueryPlanPtr queryPlan, int &idCounter);
   OperationPtr ParseDropTARS(QueryExpressionPtr queryExpressionNode,
                              QueryPlanPtr queryPlan, int &idCounter);
   OperationPtr ParseDropTAR(QueryExpressionPtr queryExpressionNode,
@@ -102,12 +104,20 @@ class DefaultParser : public Parser {
                            QueryPlanPtr queryPlan, int &idCounter);
   OperationPtr ParseCross(QueryExpressionPtr queryExpressionNode,
                           QueryPlanPtr queryPlan, int &idCounter);
+  OperationPtr ParseSlice(QueryExpressionPtr queryExpressionNode,
+                            QueryPlanPtr queryPlan, int &idCounter);
   OperationPtr ParseDimJoin(QueryExpressionPtr queryExpressionNode,
+                            QueryPlanPtr queryPlan, int &idCounter);
+  OperationPtr ParseEquiJoin(QueryExpressionPtr queryExpressionNode,
+                               QueryPlanPtr queryPlan, int &idCounter);
+  OperationPtr ParseAtt2Dim(QueryExpressionPtr queryExpressionNode,
+                               QueryPlanPtr queryPlan, int &idCounter);
+  OperationPtr ParseUnion(QueryExpressionPtr queryExpressionNode,
+                          QueryPlanPtr queryPlan, int &idCounter);
+  OperationPtr ParseTranslate(QueryExpressionPtr queryExpressionNode,
                             QueryPlanPtr queryPlan, int &idCounter);
   OperationPtr ParseAggregate(QueryExpressionPtr queryExpressionNode,
                               QueryPlanPtr queryPlan, int &idCounter);
-  OperationPtr ParseSplit(QueryExpressionPtr queryExpressionNode,
-                          QueryPlanPtr queryPlan, int &idCounter);
   OperationPtr ParseUserDefined(QueryExpressionPtr queryExpressionNode,
                                 QueryPlanPtr queryPlan, int &idCounter);
 
@@ -118,8 +128,9 @@ public:
     _schemaBuilder == nullptr;
   }
 
-  void SetMetadaManager(MetadataManagerPtr metadaManager);
+  void SetMetadataManager(MetadataManagerPtr metadaManager);
   void SetStorageManager(StorageManagerPtr storageManager);
+  TARPtr InferOutputTARSchema(OperationPtr operation);
   SavimeResult Parse(QueryDataManagerPtr queryDataManager);
 };
 

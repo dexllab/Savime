@@ -1,6 +1,7 @@
 #ifndef STORAGE_MANAGER_H
 #define STORAGE_MANAGER_H
 /*! \file */
+#include <iostream>
 #include "metadata.h"
 #include "types.h"
 #include "query_data_manager.h"
@@ -10,7 +11,7 @@ using namespace std;
 typedef std::shared_ptr<std::vector<SubTARPosition>> Mapping;
 #define CREATE_MAPPING() std::make_shared<std::vector<SubTARPosition>>()
 
-/**A DatasetHandler encapsulates a Dataset reference and allows
+/**A DatasetHandler encapsulates a Dataset reference and allows the
  * iteration over dataset values, data appending, insertions and truncations.*/
 class DatasetHandler {
 
@@ -20,10 +21,10 @@ protected:
 public:
   /**
    * Constructor. It maps the Dataset file in memory
-   * and sets a inner entry cursor at position 0.
+   * and sets the  cursor at position 0.
    * @param ds is a Dataset reference to be handled.
    */
-  DatasetHandler(DatasetPtr ds) { _ds = ds; }
+  explicit DatasetHandler(DatasetPtr ds) { _ds = ds; }
 
   /**
    * Returns the size of a single Dataset entry/value.
@@ -205,7 +206,9 @@ public:
   virtual SavimeResult RegisterDatasetTruncation(savime_size_t size) = 0;
 
   /**
-   * Converts a Logical TAR index into a Real index.
+   * Converts a Logical TAR index into a Real index. Inexact, but close
+   * float point logical indexes are approximated to the nearerst valid real
+   * index.
    * @param dimension is the Dimension reference for which the indexes must be
    * converted.
    * @return A RealIndex reference containing the real index.
@@ -213,18 +216,22 @@ public:
   virtual RealIndex Logical2Real(DimensionPtr dimension, Literal logicalIndex) = 0;
 
   /**
-   * Gets the closest TAR real indexes for a logical index.
+   * Gets the closest TAR real indexes that bound a logical index. If the
+   * logical index is valid, then the pair returned by this function is composed
+   * by two equal real indexes equilavent to the logical indexes passed.
+   * If the logical index passed is invalid, then the returning pair is formed
+   * by the two closest real indexes that encompass it.
    * @param dimension is the Dimension reference for which the indexes must be
    * converted.
    * @return A IndexPair containing the the real indexes that are inferior and
-   * superior to logicalIndex.
+   * superior to the logicalIndex, or the exact real index duplicated.
    */
   virtual IndexPair Logical2ApproxReal(DimensionPtr dimension,
                                    Literal logicalIndex) = 0;
 
   /**
   * Converts a Dataset containing Logical TAR indexes into a Dataset containing
-  * Real indexes.
+  * Real indexes. If invalid logical indexes are passed, it fails.
   * @param dimension is the Dimension reference for which the indexes must be
   * converted.
   * @param dimSpecs is the DimensionSpecification of the subtar that contains
@@ -303,8 +310,9 @@ public:
   * @param destinyDataset.
   * @return SAVIME_SUCCESS on success or SAVIME_FAILURE otherwise.
   */
-  virtual SavimeResult Copy(DatasetPtr originDataset, RealIndex lowerBound,
-                            RealIndex upperBound, RealIndex offsetInDestiny,
+  virtual SavimeResult Copy(DatasetPtr originDataset, SubTARPosition lowerBound,
+                            SubTARPosition upperBound,
+                            SubTARPosition offsetInDestiny,
                             savime_size_t spacingInDestiny,
                             DatasetPtr destinyDataset) = 0;
 
@@ -629,58 +637,68 @@ typedef std::shared_ptr<StorageManager> StorageManagerPtr;
 /**
  * Function that prints a dataset for debugging purposes.
  */
-inline void dbg_print_dataset(DatasetHandler *handler) {
+inline void dbg_print_dataset(DatasetHandler *handler, bool closeHandler=true) {
+
   if (handler) {
     DatasetPtr ds = handler->GetDataSet();
     int64_t i = 0;
     handler->CursorAt(0);
 
-    printf("%s - %s\n", ds->GetName().c_str(), ds->GetLocation().c_str());
-    printf("-------------------------------------------\n");
+    std::cout << ds->GetName() << " " << ds->GetLocation() << _NEWLINE;
+    std::cout << "-------------------------------------------" << _NEWLINE;
 
     while (handler->HasNext()) {
       switch (handler->GetDataSet()->GetType().type()) {
 #ifdef FULL_TYPE_SUPPORT
       case INT8:
-        printf("%ld - %hhd\n", i++, *((int8_t *)handler->Next()));
+        std::cout << i++ << " - " << *((int8_t*)handler->Next()) << _NEWLINE;
         break;
       case INT16:
-        printf("%ld - %hi\n", i++, *((int16_t *)handler->Next()));
+        std::cout << i++ << " - " << *((int16_t*)handler->Next()) << _NEWLINE;
         break;
 #endif
       case INT32:
-        printf("%ld - %d\n", i++, *((int32_t *)handler->Next()));
+        std::cout << i++ << " - " << *((int32_t*)handler->Next()) << _NEWLINE;
         break;
+      case REAL_INDEX :
+      case SUBTAR_POSITION :
       case INT64:
-        printf("%ld - %li\n", i++, *((int64_t *)handler->Next()));
+        std::cout << i++ << " - " << *((int64_t*)handler->Next()) << _NEWLINE;
         break;
 #ifdef FULL_TYPE_SUPPORT
       case UINT8:
-        printf("%ld - %hhd\n", i++, *((int8_t *)handler->Next()));
+        std::cout << i++ << " - " << *((uint8_t*)handler->Next()) << _NEWLINE;
         break;
       case UINT16:
-        printf("%ld - %hd\n", i++, *((int16_t *)handler->Next()));
+        std::cout << i++ << " - " << *((uint16_t*)handler->Next()) << _NEWLINE;
         break;
       case UINT32:
-        printf("%ld - %d\n", i++, *((int32_t *)handler->Next()));
+        std::cout << i++ << " - " << *((uint32_t*)handler->Next()) << _NEWLINE;
         break;
       case UINT64:
-        printf("%ld - %ld\n", i++, *((int64_t *)handler->Next()));
+        std::cout << i++ << " - " << *((uint64_t*)handler->Next()) << _NEWLINE;
         break;
 #endif
       case FLOAT:
-        printf("%ld - %.2f\n", i++, *((float *)handler->Next()));
+        std::cout << i++ << " - " << *((float*)handler->Next()) << _NEWLINE;
         break;
       case DOUBLE:
-        printf("%ld - %.2lf\n", i++, *((double *)handler->Next()));
+        std::cout << i++ << " - " << *((double*)handler->Next()) << _NEWLINE;
         break;
+      case TAR_POSITION:
+        std::cout << i++ << " - " << *((uint64_t*)handler->Next()) << _NEWLINE;
+        break;
+      default:
+        std::cout << "Unsupported type for print dataset.";
       }
     }
-    printf("-------------------------------------------\n");
+    std::cout  <<  "-------------------------------------------" << _NEWLINE;
   } else {
-    printf("NULL HANDLER---------\n");
+    std::cout  <<  "NULL HANDLER---------\n";
   }
-  handler->Close();
+
+  if(closeHandler)
+    handler->Close();
 }
 
 #endif /* STORAGE_MANAGER_H */

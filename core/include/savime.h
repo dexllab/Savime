@@ -1,3 +1,5 @@
+#include <utility>
+
 #ifndef KERNEL_H
 #define KERNEL_H
 /*! \file */
@@ -37,9 +39,9 @@ public:
   */
   SavimeModule(string moduleName, ConfigurationManagerPtr configurationManager,
                SystemLoggerPtr systemLogger) {
-    _moduleName = moduleName;
-    _configurationManager = configurationManager;
-    _systemLogger = systemLogger;
+    _moduleName = std::move(moduleName);
+    _configurationManager = std::move(configurationManager);
+    _systemLogger = std::move(systemLogger);
   }
 
   /**
