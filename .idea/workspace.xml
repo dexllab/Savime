@@ -30,7 +30,7 @@
     <session id="1193775556">
       <usages-collector id="statistics.lifecycle.project">
         <counts>
-          <entry key="project.closed" value="91" />
+          <entry key="project.closed" value="92" />
           <entry key="project.open.time.10" value="1" />
           <entry key="project.open.time.11" value="3" />
           <entry key="project.open.time.13" value="1" />
@@ -510,12 +510,12 @@
       <workItem from="1546767143058" duration="26600000" />
       <workItem from="1546821708998" duration="8722000" />
       <workItem from="1546859096168" duration="12056000" />
-      <workItem from="1546914201987" duration="2615000" />
+      <workItem from="1546914201987" duration="3209000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="883093000" />
+    <option name="totallyTimeSpent" value="883687000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -534,7 +534,7 @@
       <window_info id="Favorites" order="2" sideWeight="0.50239235" side_tool="true" weight="0.15393196" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" weight="0.52756757" />
-      <window_info anchor="bottom" id="Run" order="2" visible="true" weight="0.31243244" />
+      <window_info anchor="bottom" id="Run" order="2" weight="0.31243244" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.3772973" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
