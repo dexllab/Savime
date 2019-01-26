@@ -16,9 +16,7 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="41de81ae-eae2-4b53-a251-54b4aa61cfc8" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/query/default_query_data_manager.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/query/default_query_data_manager.cpp" afterDir="false" />
-    </list>
+    <list default="true" id="41de81ae-eae2-4b53-a251-54b4aa61cfc8" name="Default Changelist" comment="" />
     <ignored path="$PROJECT_DIR$/cmake-build-debug/" />
     <ignored path="$PROJECT_DIR$/build/" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -125,7 +123,7 @@
         <entry file="file://$PROJECT_DIR$/query/default_query_data_manager.cpp">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="240">
-              <caret line="16" lean-forward="true" selection-start-line="16" selection-end-line="16" />
+              <caret line="16" selection-start-line="16" selection-end-line="16" />
             </state>
           </provider>
         </entry>
@@ -277,7 +275,7 @@
     <sorting>DEFINITION_ORDER</sorting>
   </component>
   <component name="OCFindUsagesOptions" text="true" ivars="false" properties="true" derivedClasses="false" />
-  <component name="ProjectFrameBounds" extendedState="6">
+  <component name="ProjectFrameBounds" extendedState="7">
     <option name="x" value="71" />
     <option name="y" value="-4" />
     <option name="width" value="1195" />
@@ -544,12 +542,12 @@
       <workItem from="1546914201987" duration="3209000" />
       <workItem from="1546990529317" duration="1048000" />
       <workItem from="1548208379396" duration="152000" />
-      <workItem from="1548510550650" duration="17000" />
+      <workItem from="1548510550650" duration="623000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="884904000" />
+    <option name="totallyTimeSpent" value="885510000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -561,8 +559,7 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="81" y="25" width="1839" height="1055" extended-state="6" />
-    <editor active="true" />
+    <frame x="81" y="25" width="1839" height="1055" extended-state="7" />
     <layout>
       <window_info active="true" content_ui="combo" id="Project" order="0" sideWeight="0.49760765" visible="true" weight="0.20245399" />
       <window_info id="Structure" order="1" sideWeight="0.50239235" side_tool="true" weight="0.15393196" />
@@ -1039,7 +1036,7 @@
     <entry file="file://$PROJECT_DIR$/query/default_query_data_manager.cpp">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="240">
-          <caret line="16" lean-forward="true" selection-start-line="16" selection-end-line="16" />
+          <caret line="16" selection-start-line="16" selection-end-line="16" />
         </state>
       </provider>
     </entry>
