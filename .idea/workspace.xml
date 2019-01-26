@@ -17,7 +17,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="41de81ae-eae2-4b53-a251-54b4aa61cfc8" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/query/default_query_data_manager.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/query/default_query_data_manager.cpp" afterDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/cmake-build-debug/" />
     <ignored path="$PROJECT_DIR$/build/" />
@@ -47,11 +47,11 @@
           <entry key="project.open.time.30" value="1" />
           <entry key="project.open.time.32" value="1" />
           <entry key="project.open.time.5" value="4" />
-          <entry key="project.open.time.6" value="26" />
+          <entry key="project.open.time.6" value="27" />
           <entry key="project.open.time.7" value="38" />
           <entry key="project.open.time.8" value="23" />
           <entry key="project.open.time.9" value="7" />
-          <entry key="project.opened" value="119" />
+          <entry key="project.opened" value="120" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.extensions.open">
@@ -115,23 +115,25 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/test/storage/mock_default_storage_manager.h">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="213">
+            <state relative-caret-position="615">
               <caret line="41" column="43" selection-start-line="41" selection-start-column="43" selection-end-line="41" selection-end-column="43" />
             </state>
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="false">
+      <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/query/default_query_data_manager.cpp">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-987" />
+            <state relative-caret-position="240">
+              <caret line="16" lean-forward="true" selection-start-line="16" selection-end-line="16" />
+            </state>
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="true">
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/core/system_logger.cpp">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="303">
+            <state relative-caret-position="305">
               <caret line="118" selection-start-line="118" selection-end-line="118" />
             </state>
           </provider>
@@ -140,7 +142,7 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/test/mock_builder.cpp">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="450">
+            <state relative-caret-position="600">
               <caret line="40" column="6" selection-start-line="40" selection-start-column="6" selection-end-line="40" selection-end-column="6" />
             </state>
           </provider>
@@ -214,7 +216,6 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/engine/filter.cpp" />
         <option value="$PROJECT_DIR$/engine/load_subtar.cpp" />
         <option value="$PROJECT_DIR$/engine/save.cpp" />
         <option value="$PROJECT_DIR$/engine/select.cpp" />
@@ -265,6 +266,7 @@
         <option value="$PROJECT_DIR$/test/engine/engine_test.cpp" />
         <option value="$PROJECT_DIR$/test/storage/mock_default_storage_manager.cpp" />
         <option value="$PROJECT_DIR$/test/mock_builder.cpp" />
+        <option value="$PROJECT_DIR$/query/default_query_data_manager.cpp" />
       </list>
     </option>
   </component>
@@ -289,7 +291,6 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -346,6 +347,7 @@
           <select />
         </subPane>
       </pane>
+      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -542,11 +544,12 @@
       <workItem from="1546914201987" duration="3209000" />
       <workItem from="1546990529317" duration="1048000" />
       <workItem from="1548208379396" duration="152000" />
+      <workItem from="1548510550650" duration="17000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="884887000" />
+    <option name="totallyTimeSpent" value="884904000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -559,8 +562,9 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="81" y="25" width="1839" height="1055" extended-state="6" />
+    <editor active="true" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" sideWeight="0.49760765" visible="true" weight="0.20022309" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" sideWeight="0.49760765" visible="true" weight="0.20245399" />
       <window_info id="Structure" order="1" sideWeight="0.50239235" side_tool="true" weight="0.15393196" />
       <window_info id="Favorites" order="2" sideWeight="0.50239235" side_tool="true" weight="0.15393196" />
       <window_info anchor="bottom" id="Message" order="0" />
@@ -980,9 +984,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="75">
           <caret line="155" column="25" selection-start-line="155" selection-start-column="25" selection-end-line="155" selection-end-column="25" />
-          <folding>
-            <element signature="e#716#734#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -1000,6 +1001,20 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/test/storage/mock_default_storage_manager.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="615">
+          <caret line="41" column="43" selection-start-line="41" selection-start-column="43" selection-end-line="41" selection-end-column="43" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/test/mock_builder.cpp">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="600">
+          <caret line="40" column="6" selection-start-line="40" selection-start-column="6" selection-end-line="40" selection-end-column="6" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/storage/default_storage_manager.h">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1125">
@@ -1014,29 +1029,17 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/test/mock_builder.cpp">
+    <entry file="file://$PROJECT_DIR$/core/system_logger.cpp">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="450">
-          <caret line="40" column="6" selection-start-line="40" selection-start-column="6" selection-end-line="40" selection-end-column="6" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/test/storage/mock_default_storage_manager.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="213">
-          <caret line="41" column="43" selection-start-line="41" selection-start-column="43" selection-end-line="41" selection-end-column="43" />
+        <state relative-caret-position="305">
+          <caret line="118" selection-start-line="118" selection-end-line="118" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/query/default_query_data_manager.cpp">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-987" />
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/core/system_logger.cpp">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="303">
-          <caret line="118" selection-start-line="118" selection-end-line="118" />
+        <state relative-caret-position="240">
+          <caret line="16" lean-forward="true" selection-start-line="16" selection-end-line="16" />
         </state>
       </provider>
     </entry>
