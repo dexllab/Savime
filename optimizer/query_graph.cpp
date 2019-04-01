@@ -1,5 +1,3 @@
-#include <utility>
-
 /*
 *    This program is free software: you can redistribute it and/or modify
 *    it under the terms of the GNU General Public License as published by
@@ -16,7 +14,7 @@
 *
 *    HERMANO L. S. LUSTOSA				JANUARY 2018
 */
-
+#include <utility>
 #include "default_optimizer.h"
 
 //Quey Graph definitions
@@ -733,15 +731,18 @@ QueryPlanPtr QueryGraph::ToQueryPlan(ParserPtr parser) {
     auto op = GetOperator(node);
     if(op == nullptr) continue;
 
-    auto tar = parser->InferOutputTARSchema(op);
+    if(op->GetOperation() != TAL_USER_DEFINED) {
+      auto tar = parser->InferOutputTARSchema(op);
 
-    for(auto& edge : _edges){
-      if(edge.origin == node){
-        edge.tar = tar;
+      for (auto &edge : _edges) {
+        if (edge.origin == node) {
+          edge.tar = tar;
+        }
       }
+
+      op->SetResultingTAR(tar);
     }
 
-    op->SetResultingTAR(tar);
     queryPlan->AddOperation(op, idCounter);
   }
 

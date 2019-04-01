@@ -1587,9 +1587,9 @@ public:
     int workPerThread = _configurationManager->GetIntValue(WORK_PER_THREAD);
     bool hasRestrictions = ds1->BitMask() != nullptr;
 
-    int64_t matchesPerThread[numCores] = {0};
-    int64_t matchesStartPos[numCores] = {0};
-    int64_t matchesFinalPos[numCores] = {0};
+    int64_t matchesPerThread[numCores];
+    int64_t matchesStartPos[numCores];
+    int64_t matchesFinalPos[numCores];
 
     ParallelSavimeHashMap<T2, SubTARPosition> parallelHash;
     DatasetHandlerPtr ds1Handler, ds2Handler;

@@ -498,7 +498,7 @@ SavimeResult DefaultEngine::Run(QueryDataManagerPtr queryDataManager,
         auto resultingTAR = operation->GetResultingTAR();
 
         /*
-         * For every operation that returns a TAR, creates a generators
+         * For every operation that returns a TAR, creates a generator
          * that creates the TAR on demand as Subtars are required by
          * subsequent operations.
          */
