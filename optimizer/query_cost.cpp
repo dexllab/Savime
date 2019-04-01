@@ -73,7 +73,7 @@ double SelectivityEstimator::Estimate(QueryGraphPtr graph, int64_t node) {
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-unordered_map<OperationCode, vector<double>> COEFICIENTS = { {TAL_SCAN, {1.0, 1.0, 1.0, 1.0}},
+/*unordered_map<OperationCode, vector<double>> COEFICIENTS = { {TAL_SCAN, {1.0, 1.0, 1.0, 1.0}},
                                                               {TAL_SELECT, {1.0, 1.0, 1.0, 1.0}},
                                                               {TAL_FILTER, {1.0, 1.0, 1.0, 1.0}},
                                                               {TAL_SUBSET, {1.0, 1.0, 1.0, 1.0}},
@@ -89,7 +89,7 @@ unordered_map<OperationCode, vector<double>> COEFICIENTS = { {TAL_SCAN, {1.0, 1.
                                                               {TAL_UNION, {1.0, 1.0, 1.0, 1.0}},
                                                               {TAL_TRANSLATE, {1.0, 1.0, 1.0, 1.0}},
                                                               {TAL_USER_DEFINED, {1.0, 1.0, 1.0, 1.0}}};
-
+*/
 void QueryCostCalculator::DefaultEstimation(int64_t node, string inputTarName, double factor) {
   auto op = _graph->GetOperator(node);
 
@@ -308,10 +308,15 @@ double QueryCostCalculator::CalculateCost(QueryGraphPtr graph, MetadataManagerPt
     auto features = _features[entry.first];
     auto op = entry.second->GetOperation();
 
-    cost += COEFICIENTS[op][0]*features.avgSubtarsLen
+    /*
+     * cost += COEFICIENTS[op][0]*features.avgSubtarsLen
             + COEFICIENTS[op][1]*features.subtars
             + COEFICIENTS[op][2]*features.dimensions
             + COEFICIENTS[op][3]*features.attributes;
+    */
+    cost += features.avgSubtarsLen + features.subtars
+            + features.dimensions + features.attributes;
+
   }
 
   return cost;

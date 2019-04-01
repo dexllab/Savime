@@ -716,6 +716,7 @@ public:
     DatasetHandlerPtr destinyHandler =
       _storageManager->GetHandler(destinyDataset);
     copied = 0;
+    int64_t totalCopied = 0;
 
     auto originBuffer =
       BUILD_VECTOR<T1>(originHandler->GetBuffer(), originDataset->GetType());
@@ -724,24 +725,26 @@ public:
       BUILD_VECTOR<T2>(destinyHandler->GetBuffer(), originDataset->GetType());
 
     if (!originDataset->GetType().isVector()) {
-#pragma omp parallel for reduction(+ : copied)
+#pragma omp parallel for reduction(+ : totalCopied)
       for (SubTARPosition i = 0; i < originDataset->GetEntryCount(); i++) {
         SubTARPosition pos = (*mapping)[i];
         if (pos != INVALID_SUBTAR_POSITION) {
           (*destinyBuffer)[pos] = (T2)(*originBuffer)[i];
-          copied++;
+          totalCopied++;
         }
       }
     } else {
-#pragma omp parallel for reduction(+ : copied)
+#pragma omp parallel for reduction(+ : totalCopied)
       for (SubTARPosition i = 0; i < originDataset->GetEntryCount(); i++) {
         SubTARPosition pos = (*mapping)[i];
         if (pos != INVALID_SUBTAR_POSITION) {
           destinyBuffer->copyTuple(pos, &(*originBuffer)[i]);
-          copied++;
+          totalCopied++;
         }
       }
     }
+    copied = totalCopied;
+
 
     originHandler->Close();
     destinyHandler->Close();
@@ -765,6 +768,7 @@ public:
       _storageManager->GetHandler(destinyDataset);
     DatasetHandlerPtr mappingHandler = _storageManager->GetHandler(mapping);
     copied = 0;
+    int64_t totalCopied = 0;
 
     auto originBuffer =
       BUILD_VECTOR<T1>(originHandler->GetBuffer(), originDataset->GetType());
@@ -776,24 +780,26 @@ public:
       (SubTARPosition *)mappingHandler->GetBuffer();
 
     if (!originDataset->GetType().isVector()) {
-#pragma omp parallel for reduction(+ : copied)
+#pragma omp parallel for reduction(+ : totalCopied)
       for (SubTARPosition i = 0; i < originDataset->GetEntryCount(); i++) {
         SubTARPosition pos = mappingBuffer[i];
         if (pos != INVALID_SUBTAR_POSITION) {
           (*destinyBuffer)[pos] = (T2)(*originBuffer)[i];
-          copied++;
+          totalCopied++;
         }
       }
     } else {
-#pragma omp parallel for reduction(+ : copied)
+#pragma omp parallel for reduction(+ : totalCopied)
       for (SubTARPosition i = 0; i < originDataset->GetEntryCount(); i++) {
         SubTARPosition pos = mappingBuffer[i];
         if (pos != INVALID_SUBTAR_POSITION) {
           destinyBuffer->copyTuple(pos, &(*originBuffer)[i]);
-          copied++;
+          totalCopied++;
         }
       }
     }
+
+    copied = totalCopied;
 
     originHandler->Close();
     destinyHandler->Close();
