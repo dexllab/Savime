@@ -22,7 +22,7 @@ CreateDataset::CreateDataset(OperationPtr operation, ConfigurationManagerPtr con
   EngineOperator(operation, configurationManager, queryDataManager, metadataManager, storageManager, engine){}
 
 SavimeResult CreateDataset::Run() {
-  regex range("[0-9]+:[0-9]+:[0-9]+:[0-9]+");
+    regex range("[0-9]+:[0-9]+:[0-9]+:[0-9]+");
 
   try {
     ParameterPtr parameter = _operation->GetParametersByName(COMMAND);

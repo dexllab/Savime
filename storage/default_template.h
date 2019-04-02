@@ -327,6 +327,7 @@ public:
       }
 #endif
 
+
 #pragma omp parallel
       for (SubTARPosition i = THREAD_FIRST(); i < THREAD_LAST(); ++i) {
         if (indexMap.find(logicalBuffer[i]) != indexMap.end()) {
@@ -1594,8 +1595,11 @@ public:
     bool hasRestrictions = ds1->BitMask() != nullptr;
 
     int64_t matchesPerThread[numCores];
+    memset(matchesPerThread, 0, numCores*sizeof(int64_t));
     int64_t matchesStartPos[numCores];
+    memset(matchesStartPos, 0, numCores*sizeof(int64_t));
     int64_t matchesFinalPos[numCores];
+    memset(matchesFinalPos, 0, numCores*sizeof(int64_t));
 
     ParallelSavimeHashMap<T2, SubTARPosition> parallelHash;
     DatasetHandlerPtr ds1Handler, ds2Handler;
