@@ -48,7 +48,7 @@ public:
     }
   }
 
-  virtual inline uint64_t GetHash(vector<int64_t> indexes) {
+  virtual inline uint64_t GetHash(vector<int64_t>& indexes) {
     uint64_t r = 0;
     for (int32_t i = 0; i < indexes.size(); i++)
       r += multipliers[i] * indexes[i];
@@ -67,7 +67,7 @@ public:
     calculateMultipliers(dimensions);
   }
   
-  inline uint64_t GetHash(vector<int64_t> indexes) {
+  inline uint64_t GetHash(vector<int64_t>& indexes) {
     uint64_t r = BaseSavimeHash::GetHash(indexes);
     (*indexesMap)[r] = indexes;
     return r;

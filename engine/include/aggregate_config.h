@@ -112,6 +112,8 @@ public:
         adj[name2index[dimName]] *= dimensions[j]->GetCurrentLength();
       }
     }
+
+    //vector<SubTARPosition> indexes(positionHandlersBuffers.size());
   }
 
   inline uint64_t GetTotalLength() {
@@ -131,7 +133,7 @@ public:
     return totalLen;
   }
 
-  inline SubTARPosition GetLinearPosition(AggregateBufferPtr buffer,
+  inline SubTARPosition GetLinearPosition(const AggregateBufferPtr& buffer,
                                           int64_t pos) {
 
     if (positionHandlersBuffers.size() == 0 && mode == BUFFERED)
@@ -315,12 +317,16 @@ inline void setLocalAggregatorBuffers(AggregateConfigurationPtr aggConfig,
                                       AggregateBufferPtr &localAggBuffer,
                                       AggregateBufferPtr &localAuxBuffer,
                                       int64_t outputLen) {
+
   if (aggConfig->mode == BUFFERED) {
+
     localAggBuffer = AggregateBufferPtr(new VectorAggregateBuffer(
         aggConfig->dimensions, outputLen, func->GetStartValue()));
+
     if (func->RequiresAuxDataset())
       localAuxBuffer = AggregateBufferPtr(
           new VectorAggregateBuffer(aggConfig->dimensions, outputLen, 0));
+
   } else {
     localAggBuffer = AggregateBufferPtr(
         new MapAggregateBuffer(aggConfig->dimensions, func->GetStartValue()));
@@ -351,6 +357,11 @@ inline void createLogicalIndexesBuffer(AggregateConfigurationPtr aggConfig,
       throw std::runtime_error(ERROR_MSG("Logical2Real", "AGGREGATE"));
 
     auto indexHandler = storageManager->GetHandler(indexes);
+
+    if(aggConfig->positionHandlers[aggConfig->name2index[dim->GetName()]] != nullptr){
+      aggConfig->positionHandlers[aggConfig->name2index[dim->GetName()]]->Close();
+    }
+
     aggConfig->positionHandlers[aggConfig->name2index[dim->GetName()]] = indexHandler;
     aggConfig->handlersToClose.push_back(indexHandler);
     aggConfig->positionHandlersBuffers[aggConfig->name2index[dim->GetName()]] =
@@ -362,9 +373,9 @@ inline void createLogicalIndexesBuffer(AggregateConfigurationPtr aggConfig,
 inline void setInputBuffers(AggregateConfigurationPtr aggConfig,
                             StorageManagerPtr storageManager,
                             SubtarPtr subtar) {
+
   auto subtarLen = subtar->GetFilledLength();
 
-  aggConfig->inputHandlers.clear();
   for (auto func : aggConfig->functions) {
     DatasetPtr dataset = subtar->GetDataSetFor(func->paramName);
 
@@ -374,6 +385,11 @@ inline void setInputBuffers(AggregateConfigurationPtr aggConfig,
           dataset);
 
     auto dsHandler = storageManager->GetHandler(dataset);
+
+    if(aggConfig->inputHandlers.find(func->paramName) != aggConfig->inputHandlers.end() ){
+      aggConfig->inputHandlers[func->paramName]->Close();
+    }
+
     aggConfig->inputHandlers[func->paramName] = dsHandler;
     aggConfig->handlersToClose.push_back(dsHandler);
   }

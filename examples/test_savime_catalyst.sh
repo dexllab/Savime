@@ -13,7 +13,8 @@ savimec 'create_dataset("coordinates:double:3", "@'$(pwd)'/coords.data");'
 
 savimec 'load_subtar("top", "ordered, incidentee, 0, 460198", "incident, top_data | type, type_data");'
 savimec 'load_subtar("geo", "ordered, index, 0, 92539", "coords, coordinates");'
-savimec 'load_subtar("data",  "ordered, time, 0, 239| ordered, index, 0, 92539", "pressure, hemo");'
+savimec 'load_subtar("data",  "ordered, time, 0, 239 | ordered, index, 0, 92539", "pressure, hemo");'
+#savimec 'load_subtar("data",  "ordered, index, 0, 92539 | ordered, time, 0, 239 ", "pressure, hemo");'
 
 #Creating vizualizations
 #mkdir $(pwd)/viz

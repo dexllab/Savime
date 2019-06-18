@@ -386,13 +386,17 @@ TARPtr SchemaBuilder::InferSchemaForDimJoinOp(OperationPtr operation) {
       auto leftDim = leftTARParam->GetDataElement(leftDimName)->GetDimension();
       auto rightDim =
           rightTARParam->GetDataElement(rightDimName)->GetDimension();
+
+
+      SET_SINGLE_THREAD_MULTIPLE_SUBTARS(_configurationManager);
       _storageManager->IntersectDimensions(leftDim, rightDim, newDim);
+      UNSET_SINGLE_THREAD_MULTIPLE_SUBTARS(_configurationManager);
 
       newDim->AlterName(prefix[0] + leftDimName);
       resultingTAR->AddDimension(newDim);
 
       /*Intersection is empty if returned dataset is null.*/
-      if (newDim->GetDataset() == nullptr)
+      if (newDim->GetId() == -2)
         operation->AddParam(PARAM(TAL_DIMJOIN, _NO_INTERSECTION_JOIN), true);
     }
   }
@@ -488,7 +492,9 @@ TARPtr SchemaBuilder::InferSchemaForUserDefined(OperationPtr operation) {
 
 TARPtr SchemaBuilder::InferSchema(OperationPtr operation) {
 
-  if (operation->GetOperation() == TAL_SCAN) {
+  if (operation->GetOperation() == TAL_SCAN
+      || operation->GetOperation() == TAL_SPLIT
+      || operation->GetOperation() == TAL_REORIENT) {
     return InferSchemaForScanOp(operation);
   } else if (operation->GetOperation() == TAL_SELECT) {
     return InferSchemaForSelectOp(operation);

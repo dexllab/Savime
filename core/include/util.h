@@ -23,6 +23,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 #include <execinfo.h>
 #include <cxxabi.h>
 #include "symbols.h"
@@ -37,6 +38,20 @@ using namespace chrono;
 #define GET_T1_LOCAL() t1 = high_resolution_clock::now()
 #define GET_T2_LOCAL() t2 = high_resolution_clock::now()
 #define GET_DURATION() duration_cast<microseconds>(t2 - t1).count() / 1000
+
+#define PRINT_TIME_INFO(FUNCTION)                                              \
+  GET_T2();                                                                    \
+  _systemLogger->LogEvent(_moduleName, string(FUNCTION) + " took " +           \
+                                           to_string(GET_DURATION()) +         \
+                                           " ms.");
+
+#define PRINT_TIME_INFO_FROM_OP(OPERATOR, FUNCTION)                              \
+  GET_T2();                                                                      \
+  _engine->GetSystemLogger()->LogEvent(OPERATOR, string(FUNCTION) + " took " +\
+                                           to_string(GET_DURATION()) +           \
+                                           " ms.");
+
+
 typedef std::chrono::time_point<std::chrono::high_resolution_clock> SavimeTime;
 
 //------------------------------------------------------------------------------
@@ -235,6 +250,42 @@ inline std::string replaceAll(std::string const &original,
 
 
 ////MISC FUNCTIONS
+inline vector<int64_t> find_divisors(int64_t n)
+{
+  vector<int64_t> divisors;
+  for (int64_t i = 1; i <= sqrt(n); i++) {
+    if (n % i == 0) {
+      divisors.push_back(i);
+    }
+  }
+  return divisors;
+}
+
+inline  int64_t find_closest_divisor(int64_t n, int64_t close)
+{
+  auto divisors = find_divisors(n);
+  int64_t closestTo = 1;
+
+  for(const auto& divisor : divisors){
+    if(divisor <= close)
+      closestTo = divisor;
+    else
+      break;
+  }
+
+  return closestTo;
+}
+
+inline int64_t find_closest_multiple(int64_t n, int64_t close){
+
+ int64_t multiple = 1;
+ while((multiple+1)*n <= close){
+    multiple++;
+ }
+
+  return multiple;
+}
+
 //------------------------------------------------------------------------------
 // Function original source:
 // https://www.codeproject.com/Articles/17480/Optimizing-integer-divisions-with-Multiply-Shift-i
@@ -329,6 +380,22 @@ inline void fast_division(int64_t max, int64_t div, int64_t &mul,
 
 #define THREAD_FIRST() startPositionPerCore[omp_get_thread_num()]
 #define THREAD_LAST() finalPositionPerCore[omp_get_thread_num()]
+
+
+#define SET_SINGLE_THREAD_MULTIPLE_SUBTARS(C)                                  \
+  bool ___sstms_set = false;                                                   \
+  auto ___M = C->GetIntValue(MAX_THREADS);                                     \
+  auto ___N = C->GetIntValue(MAX_PARA_SUBTARS);                                \
+  if((___N > 1) && (___M == 1)){                                               \
+    C->SetIntValue(MAX_THREADS, ___N);                                         \
+    ___sstms_set = true;                                                       \
+  }
+
+
+#define UNSET_SINGLE_THREAD_MULTIPLE_SUBTARS(C)                                \
+  if(___sstms_set){                                                            \
+    C->SetIntValue(MAX_THREADS, 1);                                            \
+  }
 
 
 inline int SetWorkloadPerThread(int64_t workloadSize, int64_t minWorkPerThread,

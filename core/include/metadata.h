@@ -119,6 +119,9 @@ protected:
   std::recursive_mutex _mutex; /*!<Mutex for controlling access to the object.*/
 
 public:
+
+  int64_t token = 0; /*!<Token used to identify the object.*/
+
   /**
   * Adds a new MetadaObjectListener to the list.
   * @param listener is a MetadaObjectListener to be notified for events related
@@ -574,7 +577,7 @@ bool compareAdj(DimSpecPtr a, DimSpecPtr b);
 /**
  * Adjusts the stride and the adjacency of all dimension specifications
  * according to their order in the list\vector.
- * @param dimensionsSpecs is a list of dimension specifications to be adjusted.
+ * @param dimensionsSpecs is a collection of dimension specifications to be adjusted.
  */
 #define ADJUST_SPECS(SPECS)                                                    \
   for (auto spec : (SPECS)) {                                                  \

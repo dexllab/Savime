@@ -1,5 +1,8 @@
 Stack trace:
          savime : DefaultSystemLogger::SystemLoggerHandler(int)+0x42
          /lib/x86_64-linux-gnu/libc.so.6 : +0x3ef20
-         /lib/x86_64-linux-gnu/libc.so.6 : __cxa_finalize+0x80
-         /usr/local/lib/libvtkCommonExecutionModel-pv5.6.so.1 : +0x82633
+         /lib/x86_64-linux-gnu/libpthread.so.0 : pthread_cond_wait+0x241
+         /usr/lib/x86_64-linux-gnu/libstdc++.so.6 : std::condition_variable::wait(std::unique_lock<std::mutex>&)+0xc
+         savime : main+0xeb
+         /lib/x86_64-linux-gnu/libc.so.6 : __libc_start_main+0xe7
+         savime : _start+0x2a

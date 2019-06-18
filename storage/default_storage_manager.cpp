@@ -35,11 +35,6 @@
 using namespace std;
 using namespace std::chrono;
 
-#define PRINT_TIME_INFO(FUNCTION)                                              \
-  GET_T2();                                                                    \
-  _systemLogger->LogEvent(_moduleName, string(FUNCTION) + " took " +           \
-                                           to_string(GET_DURATION()) +         \
-                                           " ms.");
 
 #define BUF2STR(OUT, BUFFER, IDX, SIZE)                                        \
    {                                                                           \
@@ -1712,6 +1707,35 @@ SavimeResult DefaultStorageManager::Split(DatasetPtr origin,
     return SAVIME_FAILURE;
   }
 }
+
+
+SavimeResult DefaultStorageManager::Reorient(DatasetPtr originDataset, vector<DimSpecPtr> dimSpecs,
+                                             savime_size_t totalLength, int32_t newMajor, int64_t partitionSize,
+                                             DatasetPtr& destinyDataset) {
+  SavimeResult result;
+  try {
+#ifdef TIME
+    GET_T1();
+#endif
+
+    DataType type1 = originDataset->GetType();
+    AbstractStorageManagerPtr st = TemplateBuilder::Build(
+      _this, _configurationManager, _systemLogger, type1, type1, type1);
+
+    result = st->Reorient(originDataset, dimSpecs, totalLength,
+                          newMajor, partitionSize, destinyDataset);
+
+#ifdef TIME
+    PRINT_TIME_INFO("Reorient")
+#endif
+
+    return result;
+  } catch (std::exception &e) {
+    _systemLogger->LogEvent(this->_moduleName, e.what());
+    return SAVIME_FAILURE;
+  }
+}
+
 
 void DefaultStorageManager::FromBitMaskToPosition(DatasetPtr &dataset,
                                                   bool keepBitmask) {

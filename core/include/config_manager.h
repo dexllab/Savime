@@ -29,6 +29,7 @@
 #define MAX_THREADS "max_num_threads"
 #define MAX_PARA_SUBTARS "max_subtars_processed_in_parallel"
 #define MAX_THREADS_ENGINE "max_num_threads_engine"
+#define REORIENT_PARTITION_SIZE "reorient_partition_size"
 
 #define DEFAULT_TARS "default_tars"
 #define WORK_PER_THREAD "work_per_thread"

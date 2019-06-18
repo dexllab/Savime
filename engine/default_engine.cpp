@@ -1,5 +1,3 @@
-#include <memory>
-
 /*
 *    This program is free software: you can redistribute it and/or modify
 *    it under the terms of the GNU General Public License as published by
@@ -27,6 +25,7 @@
 #include <string.h>
 #include <errno.h>
 #include <chrono>
+#include <memory>
 #include <condition_variable>
 #include "include/default_engine.h"
 #include "../core/include/savime.h"
@@ -274,6 +273,14 @@ EngineOperatorPtr EngineOperatorFactory::Make(OperationPtr operation) {
                                     _queryDataManager, _metadataManager,
                                     _storageManager, _engine);
 
+    case TAL_SPLIT:
+      return make_shared<Split>(operation, _configurationManager,
+                                _queryDataManager, _metadataManager,
+                                _storageManager, _engine);
+    case TAL_REORIENT:
+      return make_shared<Reorient>(operation, _configurationManager,
+                                _queryDataManager, _metadataManager,
+                                _storageManager, _engine);
     case  TAL_TRANSLATE : throw  runtime_error("Unsupported Operation.");
 
     case TAL_USER_DEFINED:
@@ -555,9 +562,11 @@ SavimeResult DefaultEngine::Run(QueryDataManagerPtr queryDataManager,
     }
 
     if (lastOp->GetResultingTAR() != nullptr) {
+
       lastOp->GetResultingTAR()->RemoveTempDataElements();
       caller->NotifyTextResponse(lastOp->GetResultingTAR()->toSmallString());
       SendResultingTAR(caller, lastOp->GetResultingTAR());
+
     } else if (queryDataManager->GetQueryPlan()->GetType() == DML) {
 
       auto operation = queryDataManager->GetQueryPlan()->GetOperations().back();
@@ -573,10 +582,13 @@ SavimeResult DefaultEngine::Run(QueryDataManagerPtr queryDataManager,
 
       caller->NotifyTextResponse("Query executed successfully");
     } else {
+
+      SET_SINGLE_THREAD_MULTIPLE_SUBTARS(_configurationManager);
       if (queryDataManager->GetQueryResponseText().empty())
         caller->NotifyTextResponse("Query executed successfully");
       else
         caller->NotifyTextResponse(queryDataManager->GetQueryResponseText());
+      UNSET_SINGLE_THREAD_MULTIPLE_SUBTARS(_configurationManager);
     }
 
     CleanTempTARs();

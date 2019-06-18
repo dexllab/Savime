@@ -55,6 +55,8 @@
 #define _DIMJOIN "dimjoin"
 #define _SLICE "slice"
 #define _UNION "union"
+#define _SPLIT "split"
+#define _REORIENT "reorient"
 #define _ATT2DIM "att2dim"
 #define _TRANSLATE "translate"
 #define _AGGREGATE "aggregate"
@@ -99,7 +101,11 @@ enum OperationCode {
                    and them filters the result.*/
   TAL_DIMJOIN,  /*!<DDL operation that creates a TAR intersecting cells with_NEW_MEMBER
                    matching indexes for a set of paierd dimensions. */
-  TAL_SLICE,    /*!<DDL operation that removes creates a TAR by slicing. */
+  TAL_SLICE,
+
+  TAL_SPLIT, /*!<DDL operation that divides each subTAR in a TAR in smaller subTARS. */
+
+  TAL_REORIENT, /*!<DDL operation that resorts sorted subTARs. */
 
   TAL_ATT2DIM ,  /*!DDL that transform an attribute into a dimension.*/
 

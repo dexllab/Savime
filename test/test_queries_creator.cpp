@@ -825,7 +825,7 @@ std::vector<std::string> TEST_QUERY_PLANS =
      "TAR_1[footype]<y:imp:int32(0,10/10/5,1), x:imp:int32(2,4/2/2,1)>[a:double] = SUBSET (io, x, 2.000000, 4.000000)"
      "TAR_2[footype]<left_y:imp:int32(0,10/10/5,1), left_x:exp:int32(0,1/1/1,1), right_y:imp:int32(0,10/5/5,2)>[right_a:double, left_a:double] = DIMJOIN (TAR_1, it, x, x)",
      "TAR_1[footype]<y:imp:int32(0,10/10/5,1), x:imp:int32(2,4/2/2,1)>[a:double] = SUBSET (io, x, 2.000000, 4.000000)"
-     "TAR_2[footype]<left_y:imp:int32(0,10/10/5,1), left_x:exp:int32(0,2/2/2,1), right_x:imp:int32(0,10/10/5,1)>[right_a:double, left_a:double] = DIMJOIN (TAR_1, io, x, y)",
+     "TAR_2[footype]<left_y:imp:int32(0,10/10/5,1), left_x:imp:int32(2,4/2/4,1), right_x:imp:int32(0,10/10/5,1)>[right_a:double, left_a:double] = DIMJOIN (TAR_1, io, x, y)",
      "TAR_1[*]<x:imp:int32(0,10/10/5,1), y:imp:int32(0,10/10/5,1)>[mask:subtar_position, offset:real_index] = COMPARISON (>=, io, a, 2.000000)"
      "TAR_2[*]<x:imp:int32(0,10/10/5,1), y:imp:int32(0,10/10/5,1)>[mask:subtar_position, offset:real_index] = COMPARISON (<=, io, a, 8.000000)"
      "TAR_3[*]<x:imp:int32(0,10/10/5,1), y:imp:int32(0,10/10/5,1)>[mask:subtar_position, offset:real_index] = LOGICAL (io, and, TAR_1, TAR_2)"
@@ -835,12 +835,12 @@ std::vector<std::string> TEST_QUERY_PLANS =
      "TAR_2[*]<x:imp:int32(0,10/10/5,1), y:imp:int32(0,10/10/5,1)>[mask:subtar_position, offset:real_index] = COMPARISON (<=, io, a, 8.000000)"
      "TAR_3[*]<x:imp:int32(0,10/10/5,1), y:imp:int32(0,10/10/5,1)>[mask:subtar_position, offset:real_index] = LOGICAL (io, and, TAR_1, TAR_2)"
      "TAR_4[footype]<x:imp:int32(0,10/10/5,1), y:imp:int32(0,10/10/5,1)>[a:double] = FILTER (io, TAR_3)"
-     "TAR_5[footype]<left_x:exp:int32(0,2/2/2,1), left_y:exp:int32(0,2/2/2,1)>[right_a:double, left_a:double] = DIMJOIN (TAR_4, it, x, x, y, y)",
+     "TAR_5[footype]<left_x:imp:int32(0,4/2/4,2), left_y:imp:int32(0,4/2/4,2)>[right_a:double, left_a:double] = DIMJOIN (TAR_4, it, x, x, y, y)",
      "TAR_1[*]<x:imp:int32(0,10/10/5,1), y:imp:int32(0,10/10/5,1)>[mask:subtar_position, offset:real_index] = COMPARISON (>=, io, a, 2.000000)"
      "TAR_2[*]<x:imp:int32(0,10/10/5,1), y:imp:int32(0,10/10/5,1)>[mask:subtar_position, offset:real_index] = COMPARISON (<=, io, a, 8.000000)"
      "TAR_3[*]<x:imp:int32(0,10/10/5,1), y:imp:int32(0,10/10/5,1)>[mask:subtar_position, offset:real_index] = LOGICAL (io, and, TAR_1, TAR_2)"
      "TAR_4[footype]<x:imp:int32(0,10/10/5,1), y:imp:int32(0,10/10/5,1)>[a:double] = FILTER (io, TAR_3)"
-     "TAR_5[footype]<left_x:exp:int32(0,5/5/5,1), left_y:imp:int32(0,10/10/5,1), right_y:imp:int32(0,10/10/5,1)>[right_a:double, left_a:double] = DIMJOIN (TAR_4, io, x, x)",
+     "TAR_5[footype]<left_x:imp:int32(0,5/5/5,1), left_y:imp:int32(0,10/10/5,1), right_y:imp:int32(0,10/10/5,1)>[right_a:double, left_a:double] = DIMJOIN (TAR_4, io, x, x)",
      "TAR_1[*]<x:imp:int32(0,10/10/5,1), y:imp:int32(0,10/10/5,1)>[mask:subtar_position, offset:real_index] = COMPARISON (>=, io, a, 2.000000)"
      "TAR_2[*]<x:imp:int32(0,10/10/5,1), y:imp:int32(0,10/10/5,1)>[mask:subtar_position, offset:real_index] = COMPARISON (<=, io, a, 8.000000)"
      "TAR_3[*]<x:imp:int32(0,10/10/5,1), y:imp:int32(0,10/10/5,1)>[mask:subtar_position, offset:real_index] = LOGICAL (io, and, TAR_1, TAR_2)"
@@ -849,11 +849,11 @@ std::vector<std::string> TEST_QUERY_PLANS =
      "TAR_1[footype]<x:imp:int32(0,10/10/5,1), y:imp:int32(0,10/10/5,1)>[a:double, derived_outer:int32] = DERIVE (+, x, 1.000000, io, derived_outer)"
      "TAR_2[footype]<right_x:imp:int32(0,10/5/5,2), right_y:imp:int32(0,10/5/5,2), left_x:imp:int32(0,10/10/5,1), left_y:imp:int32(0,10/10/5,1)>[right_a:double, left_a:double, left_derived_outer:int32] = CROSS (TAR_1, it)",
      "TAR_1[footype]<x:imp:int32(0,10/10/5,1), y:imp:int32(0,10/10/5,1)>[a:double, derived_outer:int32] = DERIVE (+, x, 1.000000, io, derived_outer)"
-     "TAR_2[footype]<left_x:exp:int32(0,5/5/5,1), left_y:exp:int32(0,5/5/5,1)>[right_a:double, left_a:double, left_derived_outer:int32] = DIMJOIN (TAR_1, io, x, x, y, y)",
+     "TAR_2[footype]<left_x:imp:int32(0,5/5/5,1), left_y:imp:int32(0,5/5/5,1)>[right_a:double, left_a:double, left_derived_outer:int32] = DIMJOIN (TAR_1, io, x, x, y, y)",
      "TAR_1[footype]<x:imp:int32(0,10/10/5,1), y:imp:int32(0,10/10/5,1)>[a:double, derived_outer:int32] = DERIVE (+, x, 1.000000, io, derived_outer)"
      "TAR_2[footype]<left_x:imp:int32(0,0/0/0,1), left_y:imp:int32(0,10/10/5,1), right_y:exp:float(0,4/4/4,1)>[right_a:double, left_a:double, left_derived_outer:int32] = DIMJOIN (TAR_1, ep, x, x, 1)",
      "TAR_1[footype]<x:imp:int32(0,10/10/5,1), y:imp:int32(0,10/10/5,1)>[a:double, derived_outer:int32] = DERIVE (+, x, 1.000000, io, derived_outer)"
-     "TAR_2[footype]<left_x:exp:int32(0,2/2/2,1), left_y:imp:int32(0,10/10/5,1), right_x:imp:int32(0,10/5/5,2)>[right_a:double, left_a:double, left_derived_outer:int32] = DIMJOIN (TAR_1, it, x, y)",
+     "TAR_2[footype]<left_x:imp:int32(0,4/2/4,2), left_y:imp:int32(0,10/10/5,1), right_x:imp:int32(0,10/5/5,2)>[right_a:double, left_a:double, left_derived_outer:int32] = DIMJOIN (TAR_1, it, x, y)",
      "TAR_1[*]<ID:imp:int32(0,0/0/0,1)>[avg_a:double] = AGGREGATE (io, avg, a, avg_a)"
      "TAR_2[*]<right_x:imp:int32(0,10/10/5,1), right_y:imp:int32(0,10/10/5,1), left_ID:imp:int32(0,0/0/0,1)>[right_a:double, left_avg_a:double] = CROSS (TAR_1, io)",
      "",
@@ -868,48 +868,42 @@ std::vector<std::string> TEST_QUERY_PLANS =
      "TAR_2[footype]<right_x:exp:float(0,4/4/4,1), right_y:exp:float(0,4/4/4,1), left_x:imp:int32(0,10/10/5,1), left_y:imp:int32(0,10/10/5,1)>[right_a:double, left_a:double, derived_inner:int32] = DERIVE (+, left_x, 1.000000, TAR_1, derived_inner)",
      "TAR_1[footype]<right_x:imp:int32(0,10/5/5,2), right_y:imp:int32(0,10/5/5,2), left_x:imp:int32(0,10/10/5,1), left_y:imp:int32(0,10/10/5,1)>[right_a:double, left_a:double] = CROSS (io, it)"
      "TAR_2[*]<ID:imp:int32(0,0/0/0,1)>[avg_a:double] = AGGREGATE (TAR_1, avg, left_a, avg_a)",
-     "TAR_1[footype]<left_x:exp:int32(0,5/5/5,1), left_y:exp:int32(0,5/5/5,1)>[right_a:double, left_a:double] = DIMJOIN (io, io, x, x, y, y)"
+     "TAR_1[footype]<left_x:imp:int32(0,5/5/5,1), left_y:imp:int32(0,5/5/5,1)>[right_a:double, left_a:double] = DIMJOIN (io, io, x, x, y, y)"
      "TAR_2[*]<ID:imp:int64(1,36/35/35,1)>[left_x:int32, left_a:double] = SELECT (TAR_1, left_x, left_a)",
      "TAR_1[footype]<left_x:imp:int32(0,0/0/0,1), left_y:imp:int32(0,10/10/5,1), right_y:exp:float(0,4/4/4,1)>[right_a:double, left_a:double] = DIMJOIN (io, ep, x, x, 1)"
      "TAR_2[*]<ID:imp:int64(1,30/29/29,1)>[left_x:int32, left_a:double] = SELECT (TAR_1, left_x, left_a)",
-     "TAR_1[footype]<left_x:exp:int32(0,2/2/2,1), left_y:imp:int32(0,10/10/5,1), right_x:imp:int32(0,10/5/5,2)>[right_a:double, left_a:double] = DIMJOIN (io, it, x, y)"
-     "TAR_2[*]<ID:imp:int64(1,108/107/107,1)>[left_x:int32, left_a:double] = SELECT (TAR_1, left_x, left_a)",
-     "TAR_1[footype]<left_x:exp:int32(0,5/5/5,1), left_y:exp:int32(0,5/5/5,1)>[right_a:double, left_a:double] = DIMJOIN (io, io, x, x, y, y)"
-     "TAR_2[*]<left_x:exp:int32(0,5/5/5,1), left_y:exp:int32(0,5/5/5,1)>[mask:subtar_position, offset:real_index] = COMPARISON (>=, TAR_1, left_x, 2.000000)"
-     "TAR_3[*]<left_x:exp:int32(0,5/5/5,1), left_y:exp:int32(0,5/5/5,1)>[mask:subtar_position, offset:real_index] = COMPARISON (<=, TAR_1, left_x, 4.000000)"
-     "TAR_4[*]<left_x:exp:int32(0,5/5/5,1), left_y:exp:int32(0,5/5/5,1)>[mask:subtar_position, offset:real_index] = LOGICAL (and, TAR_1, TAR_2, TAR_3)"
-     "TAR_5[footype]<left_x:exp:int32(0,5/5/5,1), left_y:exp:int32(0,5/5/5,1)>[right_a:double, left_a:double] = FILTER (TAR_1, TAR_4)",
+     "TAR_1[footype]<left_x:imp:int32(0,4/2/4,2), left_y:imp:int32(0,10/10/5,1), right_x:imp:int32(0,10/5/5,2)>[right_a:double, left_a:double] = DIMJOIN (io, it, x, y)"
+     "TAR_2[*]<ID:imp:int64(1,180/179/179,1)>[left_x:int32, left_a:double] = SELECT (TAR_1, left_x, left_a)",
+     "TAR_1[footype]<left_x:imp:int32(0,5/5/5,1), left_y:imp:int32(0,5/5/5,1)>[right_a:double, left_a:double] = DIMJOIN (io, io, x, x, y, y)"
+     "TAR_2[footype]<left_y:imp:int32(0,5/5/5,1), left_x:imp:int32(2,4/2/2,1)>[right_a:double, left_a:double] = SUBSET (TAR_1, left_x, 2.000000, 4.000000)",
      "TAR_1[footype]<left_x:imp:int32(0,0/0/0,1), left_y:imp:int32(0,10/10/5,1), right_y:exp:float(0,4/4/4,1)>[right_a:double, left_a:double] = DIMJOIN (io, ep, x, x, 1)"
      "TAR_2[*]<left_x:imp:int32(0,0/0/0,1), left_y:imp:int32(0,10/10/5,1), right_y:exp:float(0,4/4/4,1)>[mask:subtar_position, offset:real_index] = COMPARISON (>=, TAR_1, left_x, 2.000000)"
      "TAR_3[*]<left_x:imp:int32(0,0/0/0,1), left_y:imp:int32(0,10/10/5,1), right_y:exp:float(0,4/4/4,1)>[mask:subtar_position, offset:real_index] = COMPARISON (<=, TAR_1, left_x, 4.000000)"
      "TAR_4[*]<left_x:imp:int32(0,0/0/0,1), left_y:imp:int32(0,10/10/5,1), right_y:exp:float(0,4/4/4,1)>[mask:subtar_position, offset:real_index] = LOGICAL (and, TAR_1, TAR_2, TAR_3)"
      "TAR_5[footype]<left_x:imp:int32(0,0/0/0,1), left_y:imp:int32(0,10/10/5,1), right_y:exp:float(0,4/4/4,1)>[right_a:double, left_a:double] = FILTER (TAR_1, TAR_4)",
-     "TAR_1[footype]<left_x:exp:int32(0,2/2/2,1), left_y:imp:int32(0,10/10/5,1), right_x:imp:int32(0,10/5/5,2)>[right_a:double, left_a:double] = DIMJOIN (io, it, x, y)"
-     "TAR_2[*]<left_x:exp:int32(0,2/2/2,1), left_y:imp:int32(0,10/10/5,1), right_x:imp:int32(0,10/5/5,2)>[mask:subtar_position, offset:real_index] = COMPARISON (>=, TAR_1, left_x, 2.000000)"
-     "TAR_3[*]<left_x:exp:int32(0,2/2/2,1), left_y:imp:int32(0,10/10/5,1), right_x:imp:int32(0,10/5/5,2)>[mask:subtar_position, offset:real_index] = COMPARISON (<=, TAR_1, left_x, 4.000000)"
-     "TAR_4[*]<left_x:exp:int32(0,2/2/2,1), left_y:imp:int32(0,10/10/5,1), right_x:imp:int32(0,10/5/5,2)>[mask:subtar_position, offset:real_index] = LOGICAL (and, TAR_1, TAR_2, TAR_3)"
-     "TAR_5[footype]<left_x:exp:int32(0,2/2/2,1), left_y:imp:int32(0,10/10/5,1), right_x:imp:int32(0,10/5/5,2)>[right_a:double, left_a:double] = FILTER (TAR_1, TAR_4)",
+     "TAR_1[footype]<left_x:imp:int32(0,4/2/4,2), left_y:imp:int32(0,10/10/5,1), right_x:imp:int32(0,10/5/5,2)>[right_a:double, left_a:double] = DIMJOIN (io, it, x, y)"
+     "TAR_2[footype]<left_y:imp:int32(0,10/10/5,1), right_x:imp:int32(0,10/5/5,2), left_x:imp:int32(2,4/1/1,2)>[right_a:double, left_a:double] = SUBSET (TAR_1, left_x, 2.000000, 4.000000)",
      "",
      "",
      "",
-     "TAR_1[footype]<left_x:exp:int32(0,5/5/5,1), left_y:exp:int32(0,5/5/5,1)>[right_a:double, left_a:double] = DIMJOIN (io, io, x, x, y, y)"
-     "TAR_2[footype]<left_x:exp:int32(0,5/5/5,1), left_y:exp:int32(0,5/5/5,1)>[right_a:double, left_a:double, derived_inner:int32] = DERIVE (+, left_x, 1.000000, TAR_1, derived_inner)",
+     "TAR_1[footype]<left_x:imp:int32(0,5/5/5,1), left_y:imp:int32(0,5/5/5,1)>[right_a:double, left_a:double] = DIMJOIN (io, io, x, x, y, y)"
+     "TAR_2[footype]<left_x:imp:int32(0,5/5/5,1), left_y:imp:int32(0,5/5/5,1)>[right_a:double, left_a:double, derived_inner:int32] = DERIVE (+, left_x, 1.000000, TAR_1, derived_inner)",
      "TAR_1[footype]<left_x:imp:int32(0,0/0/0,1), left_y:imp:int32(0,10/10/5,1), right_y:exp:float(0,4/4/4,1)>[right_a:double, left_a:double] = DIMJOIN (io, ep, x, x, 1)"
      "TAR_2[footype]<left_x:imp:int32(0,0/0/0,1), left_y:imp:int32(0,10/10/5,1), right_y:exp:float(0,4/4/4,1)>[right_a:double, left_a:double, derived_inner:int32] = DERIVE (+, left_x, 1.000000, TAR_1, derived_inner)",
-     "TAR_1[footype]<left_x:exp:int32(0,2/2/2,1), left_y:imp:int32(0,10/10/5,1), right_x:imp:int32(0,10/5/5,2)>[right_a:double, left_a:double] = DIMJOIN (io, it, x, y)"
-     "TAR_2[footype]<left_x:exp:int32(0,2/2/2,1), left_y:imp:int32(0,10/10/5,1), right_x:imp:int32(0,10/5/5,2)>[right_a:double, left_a:double, derived_inner:int32] = DERIVE (+, left_x, 1.000000, TAR_1, derived_inner)",
-     "TAR_1[footype]<left_x:exp:int32(0,5/5/5,1), left_y:exp:int32(0,5/5/5,1)>[right_a:double, left_a:double] = DIMJOIN (io, io, x, x, y, y)"
+     "TAR_1[footype]<left_x:imp:int32(0,4/2/4,2), left_y:imp:int32(0,10/10/5,1), right_x:imp:int32(0,10/5/5,2)>[right_a:double, left_a:double] = DIMJOIN (io, it, x, y)"
+     "TAR_2[footype]<left_x:imp:int32(0,4/2/4,2), left_y:imp:int32(0,10/10/5,1), right_x:imp:int32(0,10/5/5,2)>[right_a:double, left_a:double, derived_inner:int32] = DERIVE (+, left_x, 1.000000, TAR_1, derived_inner)",
+     "TAR_1[footype]<left_x:imp:int32(0,5/5/5,1), left_y:imp:int32(0,5/5/5,1)>[right_a:double, left_a:double] = DIMJOIN (io, io, x, x, y, y)"
      "TAR_2[*]<ID:imp:int32(0,0/0/0,1)>[avg_a:double] = AGGREGATE (TAR_1, avg, left_a, avg_a)",
      "TAR_1[footype]<left_x:imp:int32(0,0/0/0,1), left_y:imp:int32(0,10/10/5,1), right_y:exp:float(0,4/4/4,1)>[right_a:double, left_a:double] = DIMJOIN (io, ep, x, x, 1)"
      "TAR_2[*]<ID:imp:int32(0,0/0/0,1)>[avg_a:double] = AGGREGATE (TAR_1, avg, left_a, avg_a)",
-     "TAR_1[footype]<left_x:exp:int32(0,2/2/2,1), left_y:imp:int32(0,10/10/5,1), right_x:imp:int32(0,10/5/5,2)>[right_a:double, left_a:double] = DIMJOIN (io, it, x, y)"
+     "TAR_1[footype]<left_x:imp:int32(0,4/2/4,2), left_y:imp:int32(0,10/10/5,1), right_x:imp:int32(0,10/5/5,2)>[right_a:double, left_a:double] = DIMJOIN (io, it, x, y)"
      "TAR_2[*]<ID:imp:int32(0,0/0/0,1)>[avg_a:double] = AGGREGATE (TAR_1, avg, left_a, avg_a)",
      "TAR_1[footype]<right_x:exp:float(0,4/4/4,1), right_y:exp:float(0,4/4/4,1), left_x:imp:int32(0,10/10/5,1), left_y:imp:int32(0,10/10/5,1)>[right_a:double, left_a:double] = CROSS (io, ep)"
      "TAR_2[footype]<right_x:exp:float(0,4/4/4,1), right_y:exp:float(0,4/4/4,1), left_right_x:exp:float(0,4/4/4,1), left_right_y:exp:float(0,4/4/4,1), left_left_x:imp:int32(0,10/10/5,1), left_left_y:imp:int32(0,10/10/5,1)>[right_a:double, left_right_a:double, left_left_a:double] = CROSS (TAR_1, et)",
      "TAR_1[footype]<right_x:exp:float(0,4/4/4,1), right_y:exp:float(0,4/4/4,1), left_x:imp:int32(0,10/10/5,1), left_y:imp:int32(0,10/10/5,1)>[right_a:double, left_a:double] = CROSS (io, ep)"
-     "TAR_2[footype]<left_right_x:exp:float(0,4/4/4,1), left_right_y:exp:float(0,4/4/4,1), left_left_x:exp:int32(0,5/5/5,1), left_left_y:exp:int32(0,5/5/5,1)>[right_a:double, left_right_a:double, left_left_a:double] = DIMJOIN (TAR_1, io, left_x, x, left_y, y)",
-     "TAR_1[footype]<left_x:exp:int32(0,5/5/5,1), left_y:exp:int32(0,5/5/5,1)>[right_a:double, left_a:double] = DIMJOIN (io, io, x, x, y, y)"
-     "TAR_2[footype]<left_left_x:exp:int32(0,5/5/5,1), left_left_y:exp:int32(0,5/5/5,1)>[right_a:double, left_right_a:double, left_left_a:double] = DIMJOIN (TAR_1, io, left_x, x, left_y, y)",
+     "TAR_2[footype]<left_right_x:exp:float(0,4/4/4,1), left_right_y:exp:float(0,4/4/4,1), left_left_x:imp:int32(0,5/5/5,1), left_left_y:imp:int32(0,5/5/5,1)>[right_a:double, left_right_a:double, left_left_a:double] = DIMJOIN (TAR_1, io, left_x, x, left_y, y)",
+     "TAR_1[footype]<left_x:imp:int32(0,5/5/5,1), left_y:imp:int32(0,5/5/5,1)>[right_a:double, left_a:double] = DIMJOIN (io, io, x, x, y, y)"
+     "TAR_2[footype]<left_left_x:imp:int32(0,5/5/5,1), left_left_y:imp:int32(0,5/5/5,1)>[right_a:double, left_right_a:double, left_left_a:double] = DIMJOIN (TAR_1, io, left_x, x, left_y, y)",
     };
 
 std::vector<std::string> TEST_ERROR_RESPONSES = {"",

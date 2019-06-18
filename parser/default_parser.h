@@ -106,6 +106,10 @@ class DefaultParser : public Parser {
                           QueryPlanPtr queryPlan, int &idCounter);
   OperationPtr ParseSlice(QueryExpressionPtr queryExpressionNode,
                             QueryPlanPtr queryPlan, int &idCounter);
+  OperationPtr ParseSplit(QueryExpressionPtr queryExpressionNode,
+                            QueryPlanPtr queryPlan, int &idCounter);
+  OperationPtr ParseReorient(QueryExpressionPtr queryExpressionNode,
+                            QueryPlanPtr queryPlan, int &idCounter);
   OperationPtr ParseDimJoin(QueryExpressionPtr queryExpressionNode,
                             QueryPlanPtr queryPlan, int &idCounter);
   OperationPtr ParseEquiJoin(QueryExpressionPtr queryExpressionNode,

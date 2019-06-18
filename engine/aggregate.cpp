@@ -41,11 +41,14 @@ SavimeResult Aggregate::GenerateSubtar(SubTARIndex subtarIndex) {
   unordered_map<string, AggregateBufferPtr> globalAggBuffer, globalAuxBuffer;
   vector<AggregateConfigurationPtr> aggConfigs(static_cast<unsigned long>(_numSubtars));
 
-  AggregateConfigurationPtr aggConfig =
-    createConfiguration(_inputTAR, _operation);
-  setAggregateMode(aggConfig, _configurationManager);
-  setSavimeDatasets(aggConfig, _storageManager, _numThreads, _workPerThread);
-  setGlobalAggregatorBuffers(aggConfig, globalAggBuffer, globalAuxBuffer);
+  AggregateConfigurationPtr aggConfig = createConfiguration(_inputTAR, _operation);
+  {
+    SET_SINGLE_THREAD_MULTIPLE_SUBTARS(_configurationManager);
+    setAggregateMode(aggConfig, _configurationManager);
+    setSavimeDatasets(aggConfig, _storageManager, _numThreads, _workPerThread);
+    setGlobalAggregatorBuffers(aggConfig, globalAggBuffer, globalAuxBuffer);
+    UNSET_SINGLE_THREAD_MULTIPLE_SUBTARS(_configurationManager);
+  }
 
   for (int32_t i = 0; i < _numSubtars; i++) {
     aggConfigs[i] = aggConfig->Clone();
@@ -67,6 +70,17 @@ SavimeResult Aggregate::GenerateSubtar(SubTARIndex subtarIndex) {
     return SAVIME_SUCCESS;
   }
 
+
+  for(int32_t i = 0; i < _numSubtars; i++) {
+    AggregateBufferPtr localAggBuffer, localAuxBuffer;
+    for (const auto &func : aggConfigs[i]->functions) {
+      setLocalAggregatorBuffers(aggConfigs[i], func, localAggBuffer,
+                                localAuxBuffer, outputLen);
+      aggregateBuffers[func->attribName][i] = localAggBuffer;
+      auxAggregateBuffers[func->attribName][i] = localAuxBuffer;
+    }
+  }
+
   SubTARIndex currentSubtar = subtarIndex;
   bool hasSubtars = true;
 
@@ -84,6 +98,10 @@ SavimeResult Aggregate::GenerateSubtar(SubTARIndex subtarIndex) {
       currentSubtar++;
     }
 
+#ifdef TIME
+    GET_T1();
+#endif
+
     SET_SUBTARS_THREADS(_numSubtars);
 #pragma omp parallel
     for (int32_t i = SUB_THREADS_FIRST(); i <= SUB_THREADS_LAST(); i++) {
@@ -91,19 +109,7 @@ SavimeResult Aggregate::GenerateSubtar(SubTARIndex subtarIndex) {
       TRY()
         if (subtar[i] == nullptr) {
           hasSubtars = false;
-          for (const auto &func : aggConfigs[i]->functions) {
-            aggregateBuffers[func->attribName][i] = nullptr;
-            auxAggregateBuffers[func->attribName][i] = nullptr;
-          }
           break;
-        }
-
-        AggregateBufferPtr localAggBuffer, localAuxBuffer;
-        for (const auto &func : aggConfigs[i]->functions) {
-          setLocalAggregatorBuffers(aggConfigs[i], func, localAggBuffer,
-                                    localAuxBuffer, outputLen);
-          aggregateBuffers[func->attribName][i] = localAggBuffer;
-          auxAggregateBuffers[func->attribName][i] = localAuxBuffer;
         }
 
         int64_t subtarLen = subtar[i]->GetFilledLength();
@@ -111,11 +117,13 @@ SavimeResult Aggregate::GenerateSubtar(SubTARIndex subtarIndex) {
         setInputBuffers(aggConfigs[i], _storageManager, subtar[i]);
 
         for (const auto &func : aggConfigs[i]->functions) {
+
           auto type = _inputTAR->GetDataElement(func->paramName)->GetDataType();
           AbstractAggregateEnginePtr engine = buildAggregateEngine(
             aggConfigs[i], func, type, subtarLen, _numThreads, _workPerThread);
 
-          engine->Run(localAggBuffer, localAuxBuffer, outputLen);
+          engine->Run(aggregateBuffers[func->attribName][i],
+            auxAggregateBuffers[func->attribName][i] , outputLen);
         }
 
         _generator->TestAndDisposeSubtar(currentSubtars[i]);
@@ -123,28 +131,37 @@ SavimeResult Aggregate::GenerateSubtar(SubTARIndex subtarIndex) {
     }
     RETHROW()
 
-    /*Reducing aggregations. */
-    for (const auto &func : aggConfigs[0]->functions) {
 
-      auto type = _inputTAR->GetDataElement(func->paramName)->GetDataType();
-      AbstractAggregateEnginePtr engine = buildAggregateEngine(
-        aggConfigs[0], func, type, 0, _numThreads, _workPerThread);
-
-      engine->Reduce(globalAggBuffer[func->attribName],
-                     globalAuxBuffer[func->attribName],
-                     aggregateBuffers[func->attribName],
-                     auxAggregateBuffers[func->attribName], outputLen);
-    }
+#ifdef TIME
+  PRINT_TIME_INFO_FROM_OP("Aggregate Operator", "AggregateEngine");
+#endif
 
     if (!hasSubtars)
       break;
+
+
   }
+
+  SET_SINGLE_THREAD_MULTIPLE_SUBTARS(_configurationManager);
+  /*Reducing aggregations. */
+  for (const auto &func : aggConfigs[0]->functions) {
+
+    auto type = _inputTAR->GetDataElement(func->paramName)->GetDataType();
+    AbstractAggregateEnginePtr engine = buildAggregateEngine(
+      aggConfigs[0], func, type, 0, _numSubtars, _workPerThread);
+
+    engine->Reduce(globalAggBuffer[func->attribName],
+                   globalAuxBuffer[func->attribName],
+                   aggregateBuffers[func->attribName],
+                   auxAggregateBuffers[func->attribName], outputLen);
+  }
+
 
   for (const auto &func : aggConfig->functions) {
 
     auto type = _inputTAR->GetDataElement(func->paramName)->GetDataType();
     AbstractAggregateEnginePtr engine = buildAggregateEngine(
-      aggConfigs[0], func, type, 0, _numThreads, _workPerThread);
+      aggConfigs[0], func, type, 0, _numSubtars, _workPerThread);
 
     engine->Finalize(globalAggBuffer[func->attribName],
                      globalAuxBuffer[func->attribName], outputLen);
@@ -187,6 +204,7 @@ SavimeResult Aggregate::GenerateSubtar(SubTARIndex subtarIndex) {
       dimensionHandlers[aggConfig->name2index[dim->GetName()]] = handler;
       auto *buffer = (RealIndex *)handler->GetBuffer();
       dimensionBuffers[aggConfig->name2index[dim->GetName()]] = buffer;
+      aggConfig->handlersToClose.push_back(handler);
     }
 
     /*Copying data from hashmap to datasets*/
@@ -244,7 +262,11 @@ SavimeResult Aggregate::GenerateSubtar(SubTARIndex subtarIndex) {
                             attributeDatasets[func->attribName]);
       attributeHandlers[func->attribName]->Close();
     }
+
+
   }
+
+  UNSET_SINGLE_THREAD_MULTIPLE_SUBTARS(_configurationManager);
 
   _outputGenerator->AddSubtar(0, newSubtar);
 

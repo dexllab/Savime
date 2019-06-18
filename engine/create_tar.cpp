@@ -25,6 +25,8 @@ CreateTAR::CreateTAR(OperationPtr operation, ConfigurationManagerPtr configurati
 
 SavimeResult CreateTAR::Run() {
   try {
+
+
     std::map<std::string, RolePtr> roles;
     std::list<AttributePtr> atts;
     std::list<DimensionPtr> dims;

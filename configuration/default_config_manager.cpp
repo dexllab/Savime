@@ -43,8 +43,8 @@ DefaultConfigurationManager::DefaultConfigurationManager() {
   SetLongValue(MAX_TFX_BUFFER_SIZE, 512l * 1024l * 1024l * 1024l);
   SetLongValue(MAX_STORAGE_SIZE, 600l * 1024l * 1024l * 1024l);
 
-  SetIntValue(MAX_THREADS, 2);
-  SetIntValue(MAX_PARA_SUBTARS, 2);
+  SetIntValue(MAX_THREADS, 1);
+  SetIntValue(MAX_PARA_SUBTARS, 1);
   SetIntValue(MAX_THREADS_ENGINE, 1);
   SetIntValue(WORK_PER_THREAD, 10);
   SetIntValue(DEFAULT_TARS, 1);
@@ -53,6 +53,7 @@ DefaultConfigurationManager::DefaultConfigurationManager() {
   SetLongValue(MAX_SPLIT_LEN, 100000);
   SetLongValue(MAX_AGGREGATE_BUFFER, 10*1024l * 1024l * 1024l);
   SetStringValue(CATALYST_EXECUTABLE, "savime-catalyst");
+  SetLongValue(REORIENT_PARTITION_SIZE, 6l*1024l*1024l*1024l);
 
   SetBooleanValue(OPERATOR("catalyze"), true);
   SetBooleanValue(OPERATOR("store"), true);

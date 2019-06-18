@@ -631,6 +631,20 @@ public:
   virtual SavimeResult Split(DatasetPtr origin, savime_size_t totalLength,
                              savime_size_t parts,
                              vector<DatasetPtr> &brokenDatasets) = 0;
+
+
+    /**
+    * Resorts data in dataset according to a new major dimension.
+    * @param origin is a Dataset reference containing the dataset to be resorted.
+    * @param dimSpecs is set of dimensions specifications of the subtar;
+    * @param totalLength is the size of the origin dataset.
+    * @param newMajor is the position of the dimension to be new major in the dataset.
+    * @param destinyDataset is a Dataset reference where the result is to be
+    * saved.
+    * @return SAVIME_SUCCESS on success or SAVIME_FAILURE otherwise.
+    */
+    virtual SavimeResult Reorient(DatasetPtr originDataset, vector<DimSpecPtr> dimSpecs, savime_size_t totalLength,
+                          int32_t newMajor, int64_t partitionSize, DatasetPtr& destinyDataset) = 0;
 };
 typedef std::shared_ptr<StorageManager> StorageManagerPtr;
 

@@ -35,6 +35,8 @@ TEST_CASE("Parser", "[Parser]") {
   for(int64_t i = 0; i <  TEST_QUERIES.size(); i++) {
     queryDataManager->AddQueryTextPart(TEST_QUERIES[i]);
 
+
+
     parser->Parse(queryDataManager);
     string queryPlanStr;
     if(queryDataManager->GetQueryPlan() != nullptr){
@@ -43,6 +45,7 @@ TEST_CASE("Parser", "[Parser]") {
 
     queryPlanStr.erase(std::remove(queryPlanStr.begin(),
                        queryPlanStr.end(), '\n'), queryPlanStr.end());
+
 
     REQUIRE(queryPlanStr == TEST_QUERY_PLANS[i]);
     REQUIRE(queryDataManager->GetErrorResponse() == TEST_ERROR_RESPONSES[i]);

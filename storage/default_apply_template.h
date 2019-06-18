@@ -364,6 +364,11 @@ public:
                      vector<DatasetPtr> &brokenDatasets) {
     return SAVIME_FAILURE;
   }
+
+  SavimeResult Reorient(DatasetPtr originDataset, vector<DimSpecPtr> dimSpecs, savime_size_t totalLength,
+    int32_t newMajor, int64_t partitionSize, DatasetPtr& destinyDataset){
+    return SAVIME_FAILURE;
+  }
 };
 
 #endif /* DEFAULT_TEMPLATE_H */

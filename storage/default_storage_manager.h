@@ -194,7 +194,10 @@ public:
   SavimeResult Split(DatasetPtr origin, savime_size_t totalLength,
                      savime_size_t parts, vector<DatasetPtr> &brokenDatasets) override;
 
-  /*FromBitMaskToIndex*/
+  SavimeResult Reorient(DatasetPtr originDataset, vector<DimSpecPtr> dimSpecs, savime_size_t totalLength,
+                        int32_t newMajor, int64_t partitionSize, DatasetPtr& destinyDataset) override;
+
+    /*FromBitMaskToIndex*/
   void FromBitMaskToPosition(DatasetPtr &dataset, bool keepBitmask) override;
 
   /*Utilities*/

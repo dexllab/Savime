@@ -1,5 +1,3 @@
-#include <memory>
-
 /*
 *    This program is free software: you can redistribute it and/or modify
 *    it under the terms of the GNU General Public License as published by
@@ -24,6 +22,7 @@
 #include "../../core/include/parser.h"
 #include "dml_operators.h"
 #include <unordered_map>
+#include <memory>
 
 using namespace std;
 
@@ -192,10 +191,9 @@ inline DatasetPtr calculateSingleDim(vector<DatasetPtr> matDims,
   if (singleDs == nullptr)
     throw std::runtime_error(ERROR_MSG("MatchDim", "DIMJOIN"));
 
-  singleDs->InflateBitMask();
-
   DatasetHandlerPtr singleHandler = storageManager->GetHandler(singleDs);
   TARPosition *singleBuffer = (TARPosition *) singleHandler->GetBuffer();
+  bool isSorted = true;
 
   SET_THREADS_ALIGNED(size, minWork, numCores, singleDs->GetBitsPerBlock());
 #pragma omp parallel
@@ -203,11 +201,22 @@ inline DatasetPtr calculateSingleDim(vector<DatasetPtr> matDims,
     singleBuffer[i] = 0;
     for (int32_t d = 0; d < numDims; d++) {
       if (buffers[d][i] == INVALID_EXACT_REAL_INDEX) {
+
+        if(singleDs->BitMask() == nullptr){
+          singleDs->InflateBitMask();
+        }
+
         singleBuffer[i] = static_cast<TARPosition>(invalidFlag);
         (*singleDs->BitMask())[i] = true;
+        //isSorted = false;
         break;
       }
       singleBuffer[i] += multipliers[d] * buffers[d][i];
+    }
+
+    if(i > 0 && isSorted){
+      if(singleBuffer[i] < singleBuffer[i-1])
+        isSorted = false;
     }
   }
 
@@ -215,6 +224,7 @@ inline DatasetPtr calculateSingleDim(vector<DatasetPtr> matDims,
     handler->Close();
   }
   singleHandler->Close();
+  singleDs->Sorted() = isSorted;
 
   return singleDs;
 }

@@ -47,7 +47,10 @@ SavimeResult DimJoin::GenerateSubtar(SubTARIndex subtarIndex) {
   auto nextUntested =
     static_cast<int32_t>(_outputGenerator->GetSubtarsIndexMap(2, subtarIndex - 1) + 1);
   map<string, string> leftDims, rightDims;
+
+  SET_SINGLE_THREAD_MULTIPLE_SUBTARS(_configurationManager);
   createDimensionMappings(_operation, leftDims, rightDims);
+  UNSET_SINGLE_THREAD_MULTIPLE_SUBTARS(_configurationManager);
 
   OMP_EXCEPTION_ENV()
   SET_SUBTARS_THREADS(_numSubtars);

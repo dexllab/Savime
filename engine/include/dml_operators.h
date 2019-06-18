@@ -45,6 +45,9 @@
 #define SET_INT_CONFIG_VAL(VAR, KEY)\
    VAR = configurationManager->GetIntValue(KEY)
 
+#define SET_LONG_CONFIG_VAL(VAR, KEY)\
+   VAR = configurationManager->GetLongValue(KEY)
+
 #define SET_BOOL_CONFIG_VAL(VAR, KEY)\
    VAR = configurationManager->GetBooleanValue(KEY)
 
@@ -271,6 +274,50 @@ public :
 
 };
 
+class Split : public EngineOperator{
+
+    int32_t _numThreads;
+    int32_t _workPerThread;
+    int32_t _numSubtars;
+    TARPtr _inputTAR;
+    TARPtr _outputTAR;
+    TARGeneratorPtr _generator;
+    TARGeneratorPtr _outputGenerator;
+    int64_t _idealSize;
+
+public:
+
+    Split(OperationPtr operation, ConfigurationManagerPtr configurationManager,
+      QueryDataManagerPtr queryDataManager, MetadataManagerPtr metadataManager, StorageManagerPtr storageManager,
+    EnginePtr engine);
+
+    SavimeResult GenerateSubtar(SubTARIndex subtarIndex) override;
+    SavimeResult Run() override { return SAVIME_FAILURE; }
+
+};
+
+class Reorient : public EngineOperator{
+
+    int32_t _numThreads;
+    int32_t _workPerThread;
+    int32_t _numSubtars;
+    int32_t _maxPartitionSize;
+    TARPtr _inputTAR;
+    TARPtr _outputTAR;
+    TARGeneratorPtr _generator;
+    TARGeneratorPtr _outputGenerator;
+    DimensionPtr _newMajorDimension;
+
+public:
+
+    Reorient(OperationPtr operation, ConfigurationManagerPtr configurationManager,
+          QueryDataManagerPtr queryDataManager, MetadataManagerPtr metadataManager, StorageManagerPtr storageManager,
+          EnginePtr engine);
+
+    SavimeResult GenerateSubtar(SubTARIndex subtarIndex) override;
+    SavimeResult Run() override { return SAVIME_FAILURE; }
+
+};
 
 
 class UserDefined : public EngineOperator {

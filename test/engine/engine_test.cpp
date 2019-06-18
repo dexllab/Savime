@@ -21,8 +21,8 @@
 #include "mock_engine.h"
 #include "test/test_queries_creator.h"
 
-
-/*TEST_CASE("EngineResultGeneration", "[Engine]") {
+/*
+TEST_CASE("EngineResultGeneration", "[Engine]") {
   auto builder = new MockModulesBuilder();
   auto parser = builder->BuildParser();
   auto storageManager = builder->BuildStorageManager();
@@ -35,7 +35,7 @@
   string literalResultsStr = _LEFT_CURLY_BRACKETS;
   for (int64_t i = 0; i < TEST_QUERIES.size(); i++) {
 
-    std::cout << TEST_QUERIES[i] << _NEWLINE;
+    std::cout << "Query " << i << " - " << TEST_QUERIES[i] << _NEWLINE;
     queryDataManager->AddQueryTextPart(TEST_QUERIES[i]);
     engineListerner->StartNewQuery();
     parser->Parse(queryDataManager);
@@ -50,7 +50,7 @@
     ((DefaultEngine *) engine.get())->SetThisPtr(engine);
 
     if (queryDataManager->GetQueryPlan() != nullptr) {
- //     optimizer->Optimize(queryDataManager);
+      optimizer->Optimize(queryDataManager);
       engine->Run(queryDataManager, engineListerner);
       auto binaryString = engineListerner->GetBinaryString();
       //std::cout << binaryString << _NEWLINE;
@@ -151,6 +151,7 @@ void printCase(std::map<std::string, std::vector<std::vector<uint8_t>>> binData1
 }
 
 
+
 TEST_CASE("Engine", "[Engine]") {
 
   bool stressMode = false;
@@ -158,7 +159,7 @@ TEST_CASE("Engine", "[Engine]") {
   int32_t num_subtars = 2;
   int64_t runsCount = 0;
 
-  bool optimized = true;
+  bool optimized = false;
   auto builder = new MockModulesBuilder();
   auto config = builder->BuildConfigurationManager();
   auto parser = builder->BuildParser();
@@ -183,6 +184,7 @@ TEST_CASE("Engine", "[Engine]") {
   while(true){
     for (int64_t i = 0; i < TEST_QUERIES.size(); i++) {
 
+      printf("Testing query: %s\n", TEST_QUERIES[i].c_str());
       queryDataManager->AddQueryTextPart(TEST_QUERIES[i]);
       engineListener->StartNewQuery();
       parser->Parse(queryDataManager);
@@ -213,8 +215,11 @@ TEST_CASE("Engine", "[Engine]") {
           if (!dataElement.empty()) {
             auto lastOp = queryDataManager->GetQueryPlan()->GetOperations().back();
             auto tar = lastOp->GetResultingTAR();
-            auto type = tar->GetDataElement(dataElement)->GetDataType();
-            printCase(resultBinaryData, QUERY_RESULTS_WITH_OPTIMIZER[i], type, dataElement, error_i, error_j);
+
+            if(tar->GetDataElement(dataElement) != nullptr) {
+              auto type = tar->GetDataElement(dataElement)->GetDataType();
+              printCase(resultBinaryData, QUERY_RESULTS_WITH_OPTIMIZER[i], type, dataElement, error_i, error_j);
+            }
           }
           WARN("Wrong query result for: " << TEST_QUERIES[i]);
         }
@@ -229,3 +234,4 @@ TEST_CASE("Engine", "[Engine]") {
     WARN("Run " << ++runsCount << " finished.");
   }
 }
+

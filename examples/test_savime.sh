@@ -70,6 +70,8 @@ savimec 'load_subtar("et", "total, x, #1.5, #13.1, dstotalexplicitx | total, y, 
 savimec 'load_subtar("vi", "ordered, i, 0, 4", "a,vec");'
 savimec 'load_subtar("vs", "ordered, i, 0, 5", "s,vecstr");'
 
+exit 0
+
 #Queries
 echo "Select Queries"
 savimec 'select(io, x, y, a);'

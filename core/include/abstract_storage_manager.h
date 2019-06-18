@@ -125,6 +125,11 @@ public:
   virtual SavimeResult Split(DatasetPtr origin, int64_t totalLength,
                              int64_t parts,
                              vector<DatasetPtr> &brokenDatasets) = 0;
+
+  virtual SavimeResult Reorient(DatasetPtr originDataset, vector<DimSpecPtr>
+                                dimSpecs, savime_size_t totalLength,
+                                int32_t newMajor, int64_t partitionSize,
+                                DatasetPtr& destinyDataset) = 0;
 };
 typedef std::shared_ptr<AbstractStorageManager>
   AbstractStorageManagerPtr;

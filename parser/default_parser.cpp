@@ -57,7 +57,10 @@ const char *aggregation_error = "Invalid parameter for operator AGGREGATE. "
                                 "aggregation_function_param, new_attrib_name, "
                                 "[aggr_dim1, aggr_dim2, ..., aggr_dimN])";
 const char *split_error =
-    "Invalid parameter for operator SPLIT. Expected SPLIT(tar)";
+    "Invalid parameter for operator SPLIT. Expected SPLIT(tar, ideal_size)";
+
+const char *reorient_error =
+  "Invalid parameter for operator REORIENT. Expected REORIENT(tar, major_dim)";
 
 using namespace std;
 
@@ -1292,6 +1295,87 @@ OperationPtr DefaultParser::ParseDimJoin(QueryExpressionPtr queryExpressionNode,
   return operation;
 }
 
+OperationPtr DefaultParser::ParseSplit(QueryExpressionPtr queryExpressionNode,
+                        QueryPlanPtr queryPlan, int &idCounter){
+
+#define EXPECTED_SPLIT_PARAMS 2
+
+  OperationPtr operation = std::make_shared<Operation>(TAL_SPLIT);
+  UnsignedNumericLiteralPtr literal;
+  auto params = queryExpressionNode->_value_expression_list->ParamsToList();
+
+  if (params.size() == EXPECTED_SPLIT_PARAMS) {
+
+    TARPtr inputTAR =
+      ParseTAR(params.front(), split_error, queryPlan, idCounter);
+    operation->AddParam(PARAM(TAL_SPLIT, _INPUT_TAR), inputTAR);
+    params.pop_front();
+
+
+    if(literal = PARSE(params.front(), UnsignedNumericLiteral)){
+      int64_t idealSize = (int64_t) literal->_doubleValue;
+      operation->AddParam(PARAM(TAL_SPLIT, _OPERAND), idealSize);
+    } else {
+      throw std::runtime_error(split_error);
+    }
+
+  } else {
+    throw std::runtime_error(split_error);
+  }
+
+
+  operation->SetResultingTAR(_schemaBuilder->InferSchema(operation));
+  return operation;
+}
+
+OperationPtr DefaultParser::ParseReorient(QueryExpressionPtr queryExpressionNode,
+                                       QueryPlanPtr queryPlan, int &idCounter){
+
+#define EXPECTED_REORIENT_PARAMS 2
+
+  OperationPtr operation = std::make_shared<Operation>(TAL_REORIENT);
+  IdentifierChainPtr identifier;
+  auto params = queryExpressionNode->_value_expression_list->ParamsToList();
+
+  if (params.size() == EXPECTED_REORIENT_PARAMS) {
+
+    TARPtr inputTAR =
+      ParseTAR(params.front(), split_error, queryPlan, idCounter);
+    operation->AddParam(PARAM(TAL_REORIENT, _INPUT_TAR), inputTAR);
+    params.pop_front();
+
+
+    if(identifier = PARSE(params.front(), IdentifierChain)){
+      string strIdentifier = GET_IDENTIFER_BODY(identifier);
+
+      if(!inputTAR->HasDataElement(strIdentifier)){
+        throw std::runtime_error("Schema element " +
+                                   strIdentifier +
+                                 " is not a valid member.");
+      }
+
+      if(inputTAR->GetDataElement(strIdentifier)->GetDimension() == nullptr){
+        throw std::runtime_error("Schema element " +
+                                 strIdentifier +
+                                 " is not a dimension.");
+      }
+
+      operation->AddIdentifierParam(PARAM(TAL_REORIENT, _OPERAND), strIdentifier);
+
+    } else {
+      throw std::runtime_error(reorient_error);
+    }
+
+
+  } else {
+    throw std::runtime_error(reorient_error);
+  }
+
+
+  operation->SetResultingTAR(_schemaBuilder->InferSchema(operation));
+  return operation;
+}
+
 OperationPtr DefaultParser::ParseEquiJoin(QueryExpressionPtr queryExpressionNode,
                                           QueryPlanPtr queryPlan, int &idCounter) {
 
@@ -1555,6 +1639,10 @@ TARPtr DefaultParser::ParseOperation(QueryExpressionPtr queryExpressionNode,
     operation = ParseUnion(queryExpressionNode, queryPlan, idCounter);
   } else if (functionName == (_TRANSLATE)) {
     operation = ParseTranslate(queryExpressionNode, queryPlan, idCounter);
+  } else if (functionName == (_SPLIT)) {
+    operation = ParseSplit(queryExpressionNode, queryPlan, idCounter);
+  } else if (functionName == (_REORIENT)) {
+    operation = ParseReorient(queryExpressionNode, queryPlan, idCounter);
   } else if (_configurationManager->GetBooleanValue(
       OPERATOR(functionName))) {
     operation = ParseUserDefined(queryExpressionNode, queryPlan, idCounter);

@@ -604,8 +604,9 @@ TEST_CASE("IntersectDimensions", "[StorageManager]") {
     DimensionPtr destiny;
     vector<string> vec2 = {"0", "2", "4", "6", "8", "10"};
     auto intersectedDimDs = storage->Create(DOUBLE, vec2);
-    DimensionPtr expected =
-        make_shared<Dimension>(UNSAVED_ID, "", intersectedDimDs);
+    //DimensionPtr expected =
+    //    make_shared<Dimension>(UNSAVED_ID, "", intersectedDimDs);
+    DimensionPtr expected = make_shared<Dimension>(UNSAVED_ID, "", DOUBLE, 0, 10, 2);
     storage->IntersectDimensions(implicitDim1, implicitDim3, destiny);
     REQUIRE(metadataComparator.Compare(destiny, expected, B(5)));
   }
@@ -627,13 +628,14 @@ TEST_CASE("IntersectDimensions", "[StorageManager]") {
     DimensionPtr expected =
         make_shared<Dimension>(UNSAVED_ID, "", intersectedDimDs);
     storage->IntersectDimensions(explicitDim1, explicitDim2, destiny);
+
     REQUIRE(metadataComparator.Compare(destiny, expected, B(5)));
   }
 
   SECTION("Testing empty intersection") {
     DimensionPtr destiny;
     DimensionPtr expected = make_shared<Dimension>(
-        UNSAVED_ID, "", implicitDim1->GetType(), 0, 0, 1);
+        UNSAVED_ID, "", DOUBLE, 0, 0, 1);
     storage->IntersectDimensions(implicitDim1, explicitDim2, destiny);
     REQUIRE(metadataComparator.Compare(destiny, expected, B(5)));
   }
@@ -2390,6 +2392,31 @@ TEST_CASE("Match", "[StorageManager]") {
   storage->Match(ds1, ds4, destiny1a, destiny2a);
   REQUIRE(destiny1a == nullptr);
   REQUIRE(destiny2a == nullptr);
+
+  delete builder;
+}
+
+TEST_CASE("Reorient", "[StorageManager]") {
+  auto builder = new MockModulesBuilder();
+  auto storage = builder->BuildStorageManager();
+  DatasetComparator comparator(storage);
+  DatasetPtr destiny1, destiny2;
+
+
+  auto ds1 = storage->Create(DOUBLE, 0, 1, 99, 1);
+
+  auto implicitDim1 = make_shared<Dimension>(0, "noname", INT32, 0, 9, 1);
+  auto implicitDim1Specs = make_shared<DimensionSpecification>(
+    UNSAVED_ID, implicitDim1, 0, implicitDim1->GetLength() - 1, implicitDim1->GetLength() - 1, 10);
+
+  auto implicitDim2 = make_shared<Dimension>(0, "noname", INT32, 0, 9, 1);
+  auto implicitDim2Specs = make_shared<DimensionSpecification>(
+    UNSAVED_ID, implicitDim2, 0, implicitDim2->GetLength() - 1, 10, 1);
+
+  vector<DimSpecPtr> dimSpecs = {implicitDim1Specs, implicitDim2Specs};
+  storage->Reorient(ds1, dimSpecs, ds1->GetEntryCount(), 1, 10, destiny1);
+
+  //TO-DO[HERMANO]: Implement remaining test.
 
   delete builder;
 }

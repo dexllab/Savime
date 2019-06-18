@@ -14,7 +14,10 @@
 *
 *    HERMANO L. S. LUSTOSA				JANUARY 2019
 */
+#include <boost/regex.hpp>
 #include "include/ddl_operators.h"
+
+//using namespace boost;
 
 CreateDataset::CreateDataset(OperationPtr operation, ConfigurationManagerPtr configurationManager,
                        QueryDataManagerPtr queryDataManager, MetadataManagerPtr metadataManager,
@@ -22,7 +25,7 @@ CreateDataset::CreateDataset(OperationPtr operation, ConfigurationManagerPtr con
   EngineOperator(operation, configurationManager, queryDataManager, metadataManager, storageManager, engine){}
 
 SavimeResult CreateDataset::Run() {
-    regex range("[0-9]+:[0-9]+:[0-9]+:[0-9]+");
+  regex range("[0-9]+:[0-9]+:[0-9]+:[0-9]+");
 
   try {
     ParameterPtr parameter = _operation->GetParametersByName(COMMAND);
@@ -110,10 +113,13 @@ SavimeResult CreateDataset::Run() {
             throw std::runtime_error("Number of repetitions must be greater or "
                                      "equal to 1.");
 
+
+          SET_SINGLE_THREAD_MULTIPLE_SUBTARS(_configurationManager);
           _storageManager->SetUseSecStorage(true);
           ds = _storageManager->Create(dsType, dRanges[0], dRanges[1],
                                       dRanges[2], dRanges[3]);
           _storageManager->SetUseSecStorage(false);
+          UNSET_SINGLE_THREAD_MULTIPLE_SUBTARS(_configurationManager);
 
           if (ds == nullptr)
             throw std::runtime_error("Invalid range specification");

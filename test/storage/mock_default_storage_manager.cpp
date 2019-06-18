@@ -30,37 +30,38 @@
 
 std::unordered_map<string, void *> MockDefaultDatasetHandler::_buffers;
 std::mutex _buffers_lock;
+int64_t nameCounter = 0;
 
 MockDefaultDatasetHandler::MockDefaultDatasetHandler(
     DatasetPtr ds, StorageManagerPtr storageManager, int64_t hugeTblThreshold,
     int64_t hugeTblSize)
     : DatasetHandler(ds) {
 
-
+  _buffers_lock.lock();
   _storageManager = storageManager;
   _huge_pages_size = hugeTblSize;
   _buffer_offset = 0;
   _buffer = nullptr;
 
   if (ds == nullptr) {
+    _buffers_lock.unlock();
     throw std::runtime_error("Invalid dataset for handler creation.");
   }
 
-  _buffers_lock.lock();
   _entry_length = TYPE_SIZE(ds->GetType());
   _buffer = _buffers[ds->GetLocation()];
-  _buffers_lock.unlock();
 
   if (_buffer == nullptr) {
     _mapping_length = ds->GetLength();
     _buffer = malloc(_mapping_length+100);
-    _buffers_lock.lock();
     _buffers[ds->GetLocation()] = _buffer;
-    _buffers_lock.unlock();
-    if (_buffer == nullptr)
+    if (_buffer == nullptr) {
+      _buffers_lock.unlock();
       throw std::runtime_error("Could not malloc buffer for dataset");
+    }
   }
 
+  _buffers_lock.unlock();
   _open = true;
 }
 
@@ -134,7 +135,12 @@ DatasetPtr MockDefaultStorageManager::Create(DataType type,
 
     int error, typeSize;
     typeSize = TYPE_SIZE(type);
-    auto name = generateUniqueFileName(MOCK_FILE_PREFIX, 1);
+    _buffers_lock.lock();
+    //auto name = generateUniqueFileName(MOCK_FILE_PREFIX, 1);
+    //auto name = generateUniqueFileName(MOCK_FILE_PREFIX, 1);
+    auto name = "ds1"+std::to_string(nameCounter++);
+    _buffers_lock.unlock();
+
     auto size = entries * typeSize;
 
     // Checking size
