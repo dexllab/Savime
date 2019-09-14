@@ -1558,6 +1558,7 @@ DefaultParser::ParseUserDefined(QueryExpressionPtr queryExpressionNode,
     }
   }
 
+  operation->SetResultingTAR(_schemaBuilder->InferSchema(operation));
   return operation;
 }
 

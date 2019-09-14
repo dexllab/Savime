@@ -40,6 +40,7 @@
 #define CATALYST_EXECUTABLE "catalyst_exe"
 
 #define OPERATOR(x) "op_exists_" + std::string(x)
+#define OPERATOR_TAR(x) "op_exists_tar_" + std::string(x)
 #define OPERATOR_PARSE_STRING(x) "op_parse_string_" + std::string(x)
 #define OPERATOR_SCHEMA_INFER_STRING(x) "op_infer_string_" + std::string(x)
 #define OPERATOR_ADDRESS(x) "op_address_" + std::string(x)

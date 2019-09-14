@@ -16,6 +16,7 @@
 */
 #include "include/dml_operators.h"
 #include "include/viz.h"
+#include "include/predict.h"
 
 
 int store(SubTARIndex subtarIndex, OperationPtr operation,
@@ -91,6 +92,7 @@ UserDefined::UserDefined(OperationPtr operation, ConfigurationManagerPtr configu
 SavimeResult UserDefined::GenerateSubtar(SubTARIndex subtarIndex) {
 
 #define _CATALYZE "catalyze"
+#define _PREDICT "predict"
 #define _STORE "store"
 
   if (_operation->GetParametersByName(OPERATOR_NAME)->literal_str == _CATALYZE) {
@@ -103,7 +105,10 @@ SavimeResult UserDefined::GenerateSubtar(SubTARIndex subtarIndex) {
   } else if (_operation->GetParametersByName(OPERATOR_NAME)->literal_str ==
              _STORE) {
     return (SavimeResult) store(subtarIndex, _operation, _configurationManager, _queryDataManager,
-                 _metadataManager, _storageManager, _engine);
+                                _metadataManager, _storageManager, _engine);
+  } else if (_operation->GetParametersByName(OPERATOR_NAME)->literal_str == _PREDICT) {
+    return (SavimeResult) predict(subtarIndex, _operation, _configurationManager, _queryDataManager,
+                                _metadataManager, _storageManager, _engine);
     ;
   }
 }

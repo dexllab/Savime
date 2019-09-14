@@ -57,6 +57,8 @@ DefaultConfigurationManager::DefaultConfigurationManager() {
 
   SetBooleanValue(OPERATOR("catalyze"), true);
   SetBooleanValue(OPERATOR("store"), true);
+  SetBooleanValue(OPERATOR("predict"), true);
+  SetBooleanValue(OPERATOR_TAR("predic"), true);
 
   SetBooleanValue(NUMERICAL_FUNCTION("cos"), true);
   SetIntValue(NUMERICAL_FUNCTION_PARAMS("cos"), 1);

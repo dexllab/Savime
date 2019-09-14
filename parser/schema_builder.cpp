@@ -478,14 +478,14 @@ TARPtr SchemaBuilder::InferSchemaForSplitOp(OperationPtr operation) {
 }
 
 TARPtr SchemaBuilder::InferSchemaForUserDefined(OperationPtr operation) {
-  // Get operator name
-  std::string operatorName = operation->GetName();
 
-  // Get schema infer string
-  std::string inferSchemaString = _configurationManager->GetStringValue(
-      OPERATOR_SCHEMA_INFER_STRING(operatorName));
-  throw std::runtime_error(
-      "Infer schema for user defined functions not implemented yet.");
+  std::string operatorName = operation->GetParametersByName(OPERATOR_NAME)->literal_str;
+
+  if(_configurationManager->GetBooleanValue(OPERATOR_TAR(operatorName))){
+    ParameterPtr inputTARParam = operation->GetParameters().front();
+    TARPtr resultingTAR = inputTARParam->tar->Clone(false, false, false);
+    return resultingTAR;
+  }
 
   return nullptr;
 }
