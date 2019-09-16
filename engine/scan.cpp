@@ -32,6 +32,7 @@ SavimeResult Scan::GenerateSubtar(SubTARIndex subtarIndex) {
       break;
     _generator->TestAndDisposeSubtar(subtarIndex);
     subtarIndex++;
+
   }
 
   return SAVIME_SUCCESS;

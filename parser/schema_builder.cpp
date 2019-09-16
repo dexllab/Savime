@@ -482,8 +482,15 @@ TARPtr SchemaBuilder::InferSchemaForUserDefined(OperationPtr operation) {
   std::string operatorName = operation->GetParametersByName(OPERATOR_NAME)->literal_str;
 
   if(_configurationManager->GetBooleanValue(OPERATOR_TAR(operatorName))){
-    ParameterPtr inputTARParam = operation->GetParameters().front();
-    TARPtr resultingTAR = inputTARParam->tar->Clone(false, false, false);
+
+    TARPtr resultingTAR = nullptr;
+    for(ParameterPtr inputTARParam : operation->GetParameters()){
+      if(inputTARParam->tar != nullptr){
+        resultingTAR = inputTARParam->tar->Clone(false, false, false);
+        break;
+      }
+    }
+
     return resultingTAR;
   }
 
