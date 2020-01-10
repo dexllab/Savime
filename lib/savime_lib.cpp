@@ -737,7 +737,7 @@ void dipose_query_handle(QueryResultHandle &queryHandle) {
 }
 
 void close_connection(SavimeConn &connection) {
-  if(connection.opened)
+  if(!connection.opened)
     return;
   
   MessageHeader header;
