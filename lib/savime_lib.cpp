@@ -728,7 +728,7 @@ QueryResultHandle execute(SavimeConn &connection, const char *query) {
   return result_handle;
 }
 
-void dipose_query_handle(QueryResultHandle &queryHandle) {
+void dispose_query_handle(QueryResultHandle &queryHandle) {
   for (auto entry : queryHandle.descriptors)
     close(entry.second);
 

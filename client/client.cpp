@@ -343,7 +343,7 @@ int main(int argc, char *argv[]) {
       }
 
       process_query_response(con, handle, true);
-      dipose_query_handle(handle);
+        dispose_query_handle(handle);
     }
     infile.close();
     
@@ -356,7 +356,7 @@ int main(int argc, char *argv[]) {
     }
 
     process_query_response(con, handle, !print_flag);
-    dipose_query_handle(handle);
+      dispose_query_handle(handle);
   } else {
      while (true) {
       memset(query, '\0', sizeof(char));
@@ -370,7 +370,7 @@ int main(int argc, char *argv[]) {
       }
 
       process_query_response(con, handle, true);
-      dipose_query_handle(handle);
+         dispose_query_handle(handle);
     }
   }
 
