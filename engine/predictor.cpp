@@ -25,8 +25,9 @@
 #include <json_parser.h>
 #include <engine/misc/include/curl.h>
 
-vector<string> Predictor::getPredictions(SubtarPtr subtar, StorageManagerPtr storageManager, string modelName){
-    Json::Value JSonQuery = createJsonQuery(subtar, storageManager);
+vector<string> Predictor::getPredictions(SubtarPtr subtar, StorageManagerPtr storageManager,
+                                         string modelName, string predictedAttribute){
+    Json::Value JSonQuery = createJsonQuery(subtar, storageManager, predictedAttribute);
     string url_address = "http://localhost:8501/v1/models/" + modelName + ":predict";
     Json::Value JSonPrediction = sendJsonToUrl(JSonQuery, url_address);
 
@@ -63,12 +64,12 @@ Json::Value Predictor::fillDimensionArray(map<string, DimSpecPtr> *dimSpecs, std
     }
 }
 
-Json::Value Predictor::createJsonQuery(SubtarPtr subtar, StorageManagerPtr storageManager) {
+Json::Value Predictor::createJsonQuery(SubtarPtr subtar, StorageManagerPtr storageManager, string predictedAttribute) {
     auto dimSpecs = subtar->GetDimSpecs();
     auto datasetList = subtar->GetDataSets();
     DatasetHandlerPtr datasetHandler;
     for (auto ds : datasetList) {
-      if(ds.first == "temperature"){
+      if(ds.first == predictedAttribute){
           datasetHandler = storageManager->GetHandler(ds.second);
       }
     }

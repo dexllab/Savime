@@ -42,6 +42,7 @@ int predict(SubTARIndex subtarIndex, OperationPtr operation,
     //input TAR is a parameter in the operation
     TARPtr inputTAR = operation->GetParametersByName("operand0")->tar;
     string modelName = operation->GetParametersByName("operand1")->literal_str;
+    string predictedAttribute = operation->GetParametersByName("operand2")->literal_str;
     auto list = operation->GetParameters();
 
 
@@ -73,7 +74,7 @@ int predict(SubTARIndex subtarIndex, OperationPtr operation,
 
     //Obtaining Predictions
     auto *p = new Predictor();
-    vector<string> predictedValues = p->getPredictions(subtar, storageManager, modelName);
+    vector<string> predictedValues = p->getPredictions(subtar, storageManager, modelName, predictedAttribute);
     delete(p);
 
     newSubtar->AddDataSet("op_result", storageManager->Create(DOUBLE, predictedValues));

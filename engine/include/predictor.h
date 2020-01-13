@@ -10,9 +10,9 @@
 
 class Predictor {
  public:
-   vector<string> getPredictions(SubtarPtr subtar, StorageManagerPtr storageManager, string modelName);
+   vector<string> getPredictions(SubtarPtr subtar, StorageManagerPtr storageManager, string modelName, string predictedAttribute);
  private:
-   Json::Value createJsonQuery(SubtarPtr subtar, StorageManagerPtr storageManager);
+   Json::Value createJsonQuery(SubtarPtr subtar, StorageManagerPtr storageManager, string predictedAttribute);
    Json::Value fillDimensionArray(map<string, DimSpecPtr> *dimSpecs, std::map<string, DimSpecPtr>::iterator *it,
                                     int *bufferIndex, double* buffer, SubtarPtr subtar);
 };
