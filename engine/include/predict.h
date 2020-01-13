@@ -5,6 +5,9 @@
 #include "../core/include/query_data_manager.h"
 #include "../core/../core/include/storage_manager.h"
 #include "default_engine.h"
+#include <bits/stdc++.h>
+#include <string>
+#include <iostream>
 
 int predict(SubTARIndex subtarIndex, OperationPtr operation,
           ConfigurationManagerPtr configurationManager,
@@ -12,3 +15,4 @@ int predict(SubTARIndex subtarIndex, OperationPtr operation,
           MetadataManagerPtr metadataManager, StorageManagerPtr storageManager,
           EnginePtr engine);
 #endif //SAVIME_PREDICT_H
+

@@ -85,7 +85,7 @@ public:
   SavimeResult Drop(DatasetPtr dataset) override;
   void SetUseSecStorage(bool use) override;
 
-  /*Misc*/
+  /*misc*/
   bool CheckSorted(DatasetPtr dataset) override;
 
   RealIndex Logical2Real(DimensionPtr dimension, Literal logicalIndex) override;

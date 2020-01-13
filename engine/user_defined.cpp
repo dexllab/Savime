@@ -16,7 +16,7 @@
 */
 #include "include/dml_operators.h"
 #include "include/viz.h"
-#include "include/predict.h"
+#include "engine/include/predict.h"
 
 
 int store(SubTARIndex subtarIndex, OperationPtr operation,

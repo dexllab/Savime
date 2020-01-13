@@ -61,6 +61,7 @@
 #define _TRANSLATE "translate"
 #define _AGGREGATE "aggregate"
 #define _SPLIT "split"
+#define _PREDICT "predict"
 
 using namespace std;
 
@@ -83,6 +84,7 @@ enum OperationCode {
   TAL_DELETE,      /*!<DML operation that removes all Subtars intersecting a n-dimensional slice.*/
   TAL_SAVE,        /*!<DML operation saves a logical backup. */
   TAL_SHOW,        /*!<DML operation that lists TARs and Subtars. */
+  TAL_PREDICT,     /*!<DML operation that invokes machine learning models. */
   TAL_SCAN,        /*!<DDL operation to allow fully TAR retrieval as is. */
   TAL_SELECT, /*!<DDL operation that projects dimensions and attributes from the
                  TAR. */

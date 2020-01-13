@@ -1047,6 +1047,9 @@ public:
 
       DatasetHandlerPtr op1Handler = _storageManager->GetHandler(operand1);
 
+
+
+
       auto op1Buffer =
         BUILD_VECTOR<T1>(op1Handler->GetBuffer(), operand1->GetType());
       T2 operand2;

@@ -317,7 +317,7 @@ inline EnumDataType SelectType(DataType t1, DataType t2, string op) {
   }
 }
 
-// Misc functions
+// misc functions
 inline int32_t TYPE_SIZE(DataType type) { return type.getSize(); }
 
 inline EnumDataType STR2TYPE(const char *type) {
