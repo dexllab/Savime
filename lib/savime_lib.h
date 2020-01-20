@@ -183,7 +183,7 @@ int read_query_block(SavimeConn &connection, QueryResultHandle &result_handle);
 * Free all memory used by the QueryResultHandle.
 * @param queryHandle is the QueryResultHandle to be disposed.
 */
-void dipose_query_handle(QueryResultHandle &queryHandle);
+void dispose_query_handle(QueryResultHandle &queryHandle);
 
 /**
 * Closes a connection with the savime server.

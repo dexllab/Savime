@@ -172,7 +172,7 @@ std::string staging::communicator::run_savime_sync(const std::string &query) {
       return ret;
   QueryResultHandle handle = execute(conn, query.c_str());
   ret = handle.response_text;
-  dipose_query_handle(handle);
+    dispose_query_handle(handle);
   close_connection(conn);
   return ret;
 }
@@ -236,7 +236,7 @@ void staging::communicator::worker() {
       continue;
       
     QueryResultHandle handle = execute(conn, batch_query.str().c_str());
-    dipose_query_handle(handle);
+      dispose_query_handle(handle);
     close_connection(conn);
 
     for (int32_t i = 0; i < queries.size(); i++) {

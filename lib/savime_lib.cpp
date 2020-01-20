@@ -110,7 +110,7 @@ int savime_connect(int portno, const char *address) {
 
   if (sockfd < 0) {
     perror("Error opening socket");
-    return SAV_FAILURE;
+    return __INVALID_SOCKET;
   }
 
   bzero((char *)&serv_addr, sizeof(serv_addr));
@@ -121,7 +121,7 @@ int savime_connect(int portno, const char *address) {
 
   if (connect(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) {
     perror("Error connecting");
-    return SAV_FAILURE;
+    return __INVALID_SOCKET;
   }
 
   return sockfd;
@@ -728,7 +728,7 @@ QueryResultHandle execute(SavimeConn &connection, const char *query) {
   return result_handle;
 }
 
-void dipose_query_handle(QueryResultHandle &queryHandle) {
+void dispose_query_handle(QueryResultHandle &queryHandle) {
   for (auto entry : queryHandle.descriptors)
     close(entry.second);
 
@@ -737,7 +737,7 @@ void dipose_query_handle(QueryResultHandle &queryHandle) {
 }
 
 void close_connection(SavimeConn &connection) {
-  if(connection.opened)
+  if(!connection.opened)
     return;
   
   MessageHeader header;
