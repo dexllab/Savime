@@ -25,8 +25,71 @@
 #include <json_parser.h>
 #include <engine/misc/include/curl.h>
 
+void Predictor::checkModelDimensions(string modelName, SubtarPtr subtar)
+{
+    //Check Model Dimensions
+    if (modelName == "arima")
+    {
+        for(auto entry : subtar->GetDimSpecs())
+        {
+            auto dimensionString = entry.first;
+            if(dimensionString == "lat")
+            {
+                long int dimLength = subtar->GetDimensionSpecificationFor(dimensionString)->GetUpperBound() -
+                    subtar->GetDimensionSpecificationFor(dimensionString)->GetLowerBound()+1;
+                if(dimLength != 1)
+                {
+                    string errorMsg = "Unexpected dimension length for " + dimensionString + "." +
+                        "Expected: " + std::to_string(1) + " Found: " + std::to_string(dimLength);
+                    //throw std::runtime_error(ERROR_MSG(errorMsg , "PREDICT"));
+                    throw std::runtime_error(ERROR_MSG("operation", "PREDICT") + "\n" + errorMsg );
+                }
+            } else if(dimensionString == "long")
+            {
+                long int dimLength = subtar->GetDimensionSpecificationFor(dimensionString)->GetUpperBound() -
+                    subtar->GetDimensionSpecificationFor(dimensionString)->GetLowerBound()+1;
+                if(dimLength != 9)
+                {
+                    string errorMsg = "Unexpected dimension length for " + dimensionString + "." +
+                        "Expected: " + std::to_string(9) + " Found: " + std::to_string(dimLength);
+                    //throw std::runtime_error(ERROR_MSG(errorMsg , "PREDICT"));
+                    throw std::runtime_error(ERROR_MSG("operation", "PREDICT") + "\n" + errorMsg );
+                }
+            } else if(dimensionString == "tile")
+            {
+                long int dimLength = subtar->GetDimensionSpecificationFor(dimensionString)->GetUpperBound() -
+                    subtar->GetDimensionSpecificationFor(dimensionString)->GetLowerBound()+1;
+                if(dimLength != 1)
+                {
+                    string errorMsg = "Unexpected dimension length for " + dimensionString + "." +
+                        "Expected: " + std::to_string(1) + " Found: " + std::to_string(dimLength);
+                    //throw std::runtime_error(ERROR_MSG(errorMsg , "PREDICT"));
+                    throw std::runtime_error(ERROR_MSG("operation", "PREDICT") + "\n" + errorMsg );
+                }
+            } else if(dimensionString == "time")
+            {
+                long int dimLength = subtar->GetDimensionSpecificationFor(dimensionString)->GetUpperBound() -
+                    subtar->GetDimensionSpecificationFor(dimensionString)->GetLowerBound()+1;
+                if(dimLength != 1)
+                {
+                    string errorMsg = "Unexpected dimension length for " + dimensionString + "." +
+                                         "Expected: " + std::to_string(1) + " Found: " + std::to_string(dimLength);
+                    //throw std::runtime_error(ERROR_MSG(errorMsg , "PREDICT"));
+                    throw std::runtime_error(ERROR_MSG("operation", "PREDICT") + "\n" + errorMsg );
+                }
+            } else {
+                throw std::runtime_error(ERROR_MSG("Unexpected dimension " + dimensionString, "PREDICT"));
+            }
+        }
+        auto it = subtar->GetDimSpecs().begin();
+    }
+}
+
 vector<string> Predictor::getPredictions(SubtarPtr subtar, StorageManagerPtr storageManager,
                                          string modelName, string predictedAttribute){
+    modelName.erase(std::remove(modelName.begin(),modelName.end(),'\"'),modelName.end());
+    checkModelDimensions(modelName, subtar);
+
     Json::Value JSonQuery = createJsonQuery(subtar, storageManager, predictedAttribute);
     string url_address = "http://localhost:8501/v1/models/" + modelName + ":predict";
     Json::Value JSonPrediction = sendJsonToUrl(JSonQuery, url_address);
@@ -69,24 +132,29 @@ Json::Value Predictor::createJsonQuery(SubtarPtr subtar, StorageManagerPtr stora
     auto datasetList = subtar->GetDataSets();
     DatasetHandlerPtr datasetHandler;
     for (auto ds : datasetList) {
-      if(ds.first == predictedAttribute){
-          datasetHandler = storageManager->GetHandler(ds.second);
+        if(ds.first == predictedAttribute){
+            datasetHandler = storageManager->GetHandler(ds.second);
       }
     }
-    double* buffer = (double*) datasetHandler->GetBuffer();
 
-    Json::Value JSonQuery;
+    if(datasetHandler != nullptr) {
+        double *buffer = (double *) datasetHandler->GetBuffer();
 
-    int ct = 0;
-    auto it = dimSpecs.begin();
-    Json::Value dimensionalArray = fillDimensionArray(&dimSpecs, &it, &ct, buffer, subtar);
+        Json::Value JSonQuery;
 
-    JSonQuery["signature_name"] = "serving_default";
-    JSonQuery["instances"] = dimensionalArray ;
+        int ct = 0;
+        auto it = dimSpecs.begin();
+        Json::Value dimensionalArray = fillDimensionArray(&dimSpecs, &it, &ct, buffer, subtar);
 
-    /********Only for debug purposes*********/
-    writeJsonFile("/home/anderson/Programacao/Savime/TinyModelServer/example/savime_json_test.json", JSonQuery);
+        JSonQuery["signature_name"] = "serving_default";
+        JSonQuery["instances"] = dimensionalArray;
 
-    return JSonQuery;
+        /********Only for debug purposes*********/
+        writeJsonFile("/home/anderson/Programacao/Savime/TinyModelServer/example/savime_json_test.json", JSonQuery);
+
+        return JSonQuery;
+    }else{
+        throw std::runtime_error(ERROR_MSG("Could not get handler for dataset", "PREDICT"));
+    }
 }
 

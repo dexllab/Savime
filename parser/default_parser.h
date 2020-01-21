@@ -122,6 +122,8 @@ class DefaultParser : public Parser {
                             QueryPlanPtr queryPlan, int &idCounter);
   OperationPtr ParseAggregate(QueryExpressionPtr queryExpressionNode,
                               QueryPlanPtr queryPlan, int &idCounter);
+  OperationPtr ParsePredict(QueryExpressionPtr queryExpressionNode,
+                              QueryPlanPtr queryPlan, int &idCounter);
   OperationPtr ParseUserDefined(QueryExpressionPtr queryExpressionNode,
                                 QueryPlanPtr queryPlan, int &idCounter);
 

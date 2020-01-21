@@ -62,6 +62,10 @@ const char *split_error =
 const char *reorient_error =
   "Invalid parameter for operator REORIENT. Expected REORIENT(tar, major_dim)";
 
+const char *predict_error = "Invalid parameter for operator PREDICT. Expected "
+                             "PREDICT(tar, \"model\", attribute)";
+
+
 using namespace std;
 
 // UTIL FUNCTIONS
@@ -1562,6 +1566,61 @@ DefaultParser::ParseUserDefined(QueryExpressionPtr queryExpressionNode,
   return operation;
 }
 
+//Predict Operator
+OperationPtr
+DefaultParser::ParsePredict(QueryExpressionPtr queryExpressionNode,
+                                QueryPlanPtr queryPlan, int &idCounter) {
+#define EXPECTED_PREDICT_PARAMS_NUM 3
+  CharacterStringLiteralPtr stringLiteral;
+  OperationPtr operation = std::make_shared<Operation>(TAL_PREDICT);
+  IdentifierChainPtr identifier; int32_t identifierCount = 0;
+  auto params = queryExpressionNode->_value_expression_list->ParamsToList();
+  int32_t op_count = 1;
+
+  if (params.size() == EXPECTED_PREDICT_PARAMS_NUM) {
+    TARPtr inputTAR =
+        ParseTAR(params.front(), predict_error, queryPlan, idCounter);
+    operation->AddParam(PARAM(TAL_PREDICT, _INPUT_TAR), inputTAR);
+    params.pop_front();
+
+    auto param = params.begin();
+
+    //First Parameter
+    if (stringLiteral = PARSE(*param, CharacterStringLiteral)) {
+        if (stringLiteral->_literalString.compare("\"arima\"") and stringLiteral->_literalString.compare("\"convLSTM\"")) {
+            throw std::runtime_error("Element " +
+                stringLiteral->_literalString +
+                " is not a registered model name.");
+        }
+        else {
+            operation->AddParam("model_name", stringLiteral->_literalString);
+        }
+    } else {
+        throw std::runtime_error(predict_error);
+    }
+    param++;
+    //Second Parameter
+    if (identifier = PARSE(*param, IdentifierChain)) {
+        if (!inputTAR->HasDataElement(GET_IDENTIFER_BODY(identifier))) {
+            throw std::runtime_error("Schema element " +
+                GET_IDENTIFER_BODY(identifier) +
+                " is not a valid attribute in TAR " + inputTAR->GetName() + ".");
+        }
+    } else {
+        throw std::runtime_error(predict_error);
+    }
+    operation->AddParam("attribute", GET_IDENTIFER_BODY(identifier));
+
+  }
+  else {
+    throw std::runtime_error(predict_error);
+  }
+
+  operation->SetResultingTAR(_schemaBuilder->InferSchema(operation));
+  return operation;
+
+}
+
 // MAIN FUNCTIONS
 OperationPtr
 DefaultParser::ParseDMLOperation(QueryExpressionPtr queryExpressionNode,
@@ -1644,6 +1703,8 @@ TARPtr DefaultParser::ParseOperation(QueryExpressionPtr queryExpressionNode,
     operation = ParseSplit(queryExpressionNode, queryPlan, idCounter);
   } else if (functionName == (_REORIENT)) {
     operation = ParseReorient(queryExpressionNode, queryPlan, idCounter);
+  } else if (functionName == (_PREDICT)) {
+      operation = ParsePredict(queryExpressionNode, queryPlan, idCounter);
   } else if (_configurationManager->GetBooleanValue(
       OPERATOR(functionName))) {
     operation = ParseUserDefined(queryExpressionNode, queryPlan, idCounter);

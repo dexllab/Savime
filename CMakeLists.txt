@@ -149,7 +149,7 @@ if(BUILD_SAVIME_TESTS)
     engine/load_subtar.cpp engine/drop_tars.cpp engine/drop_type.cpp engine/drop_dataset.cpp engine/save.cpp engine/show.cpp
     engine/store.cpp engine/drop_tar.cpp test/optimizer/mock_optimizer.h test/optimizer/test_optimizer.cpp optimizer/query_cost.cpp
     optimizer/dependency_checker.cpp optimizer/query_graph.cpp optimizer/operation_splitter.cpp engine/split.cpp engine/reorient.cpp
-    engine/predict.cpp engine/include/predict.h engine/predictor.cpp engine/include/predictor.h)
+    engine/predict.cpp engine/predictor.cpp engine/include/predictor.h)
 
     target_compile_options(savime-test PRIVATE ${OpenMP_CXX_FLAGS})
     target_link_libraries(savime-test ${OpenMP_CXX_FLAGS})
@@ -269,7 +269,7 @@ if(BUILD_WITH_CATALYST)
         engine/create_tar.cpp engine/create_type.cpp engine/create_dataset.cpp engine/load_subtar.cpp engine/drop_tars.cpp
         engine/drop_type.cpp engine/drop_dataset.cpp engine/save.cpp engine/show.cpp engine/store.cpp engine/drop_tar.cpp
         optimizer/query_cost.cpp optimizer/dependency_checker.cpp optimizer/query_graph.cpp optimizer/operation_splitter.cpp
-        engine/split.cpp engine/reorient.cpp engine/predict.cpp engine/include/predict.h engine/predictor.cpp engine/include/predictor.h)
+        engine/split.cpp engine/reorient.cpp engine/predict.cpp engine/predictor.cpp engine/include/predictor.h)
 
     target_compile_definitions(savime-bin PUBLIC -DCATALYST)
 
@@ -383,7 +383,7 @@ else(BUILD_WITH_CATALYST)
             engine/drop_type.cpp engine/drop_dataset.cpp engine/save.cpp engine/show.cpp
             engine/store.cpp engine/drop_tar.cpp optimizer/query_cost.cpp optimizer/dependency_checker.cpp
             optimizer/query_graph.cpp optimizer/operation_splitter.cpp engine/split.cpp
-            engine/reorient.cpp engine/predict.cpp engine/include/predict.h
+            engine/reorient.cpp engine/predict.cpp
             engine/misc/curl.cpp engine/misc/include/curl.h
             engine/predictor.cpp engine/include/predictor.h)
 

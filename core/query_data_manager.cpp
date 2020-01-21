@@ -204,7 +204,9 @@ std::string Operation::OpToString(OperationCode op) {
   case TAL_UNION:
     return std::string("SPLIT");
   case TAL_USER_DEFINED:
-    return std::string("USER");   
+    return std::string("USER");
+  case TAL_PREDICT:
+    return std::string("PREDICT");
   default:
     return std::string("HAL");
   }

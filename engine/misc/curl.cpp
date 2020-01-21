@@ -22,6 +22,10 @@
 #include <fstream>
 #include "engine/misc/include/curl.h"
 
+#define ERROR_MSG(F, O)                                                        \
+  "Error during " + std::string(F) + " execution in " + std::string(O) +       \
+      " operator. Check the log file for more info."
+
 // This struct will store the server results
 struct MemoryStruct {
   char *memory;
@@ -78,8 +82,12 @@ Json::Value sendJsonToUrl(Json::Value JSonQuery, string url) {
         Json::Value root;
         if(!reader.parse(chunk.memory, root)){
             std::cout << "Could not parse JSon data" << std::endl;
+            throw std::runtime_error("Could not parse JSon data");
         }
 
         return root;
+    } else {
+        std::cout << "Could not initialize curl." << std::endl;
+        throw std::runtime_error("Could not initialize curl.");
     }
 }

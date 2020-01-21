@@ -283,6 +283,11 @@ EngineOperatorPtr EngineOperatorFactory::Make(OperationPtr operation) {
                                 _storageManager, _engine);
     case  TAL_TRANSLATE : throw  runtime_error("Unsupported Operation.");
 
+    case  TAL_PREDICT :
+      return make_shared<Predict>(operation, _configurationManager,
+                                      _queryDataManager, _metadataManager,
+                                      _storageManager, _engine);
+
     case TAL_USER_DEFINED:
       return make_shared<UserDefined>(operation, _configurationManager,
                                       _queryDataManager, _metadataManager,
@@ -392,7 +397,7 @@ void DefaultEngine::DispatchBlocks() {
 }
 
 void DefaultEngine::SendResultingTAR(EngineListener *caller, TARPtr tar) {
-  DatasetPtr dataset;
+      DatasetPtr dataset;
   int32_t subtarCounter = 0;
   bool isFirst = true, isLast = false;
 
@@ -566,7 +571,6 @@ SavimeResult DefaultEngine::Run(QueryDataManagerPtr queryDataManager,
       lastOp->GetResultingTAR()->RemoveTempDataElements();
       caller->NotifyTextResponse(lastOp->GetResultingTAR()->toSmallString());
       SendResultingTAR(caller, lastOp->GetResultingTAR());
-
     } else if (queryDataManager->GetQueryPlan()->GetType() == DML) {
 
       auto operation = queryDataManager->GetQueryPlan()->GetOperations().back();
@@ -614,7 +618,7 @@ SavimeResult DefaultEngine::Run(QueryDataManagerPtr queryDataManager,
     _generators.clear();
     _systemLogger->LogEvent(this->_moduleName, e.what());
     if (queryDataManager->GetErrorResponse().empty())
-      queryDataManager->SetErrorResponseText(_DEFAULT_ENGINE_ERROR_MSG);
+      queryDataManager->SetErrorResponseText(_DEFAULT_ENGINE_ERROR_MSG + "\n" + e.what());
     return SAVIME_FAILURE;
   }
 }

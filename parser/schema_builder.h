@@ -46,6 +46,7 @@ class SchemaBuilder
   TARPtr InferSchemaForDimJoinOp(OperationPtr operation);
   TARPtr InferSchemaForAggregationOp(OperationPtr  operation);
   TARPtr InferSchemaForSplitOp(OperationPtr operation);
+  TARPtr InferSchemaForPredict(OperationPtr operation);
   TARPtr InferSchemaForUserDefined(OperationPtr operation);
 
   public :

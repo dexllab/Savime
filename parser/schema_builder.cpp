@@ -477,6 +477,23 @@ TARPtr SchemaBuilder::InferSchemaForSplitOp(OperationPtr operation) {
   return resultingTAR;
 }
 
+TARPtr SchemaBuilder::InferSchemaForPredict(OperationPtr operation) {
+
+    //Creates the output tar structure for predict operator
+    TARPtr resultingTAR = nullptr;
+
+    for(ParameterPtr inputTARParam : operation->GetParameters()){
+        if(inputTARParam->tar != nullptr){
+            resultingTAR = inputTARParam->tar->Clone(false, false, false);
+            resultingTAR->AddAttribute("op_result", DataType(DOUBLE, 1));
+            SetResultingType(inputTARParam->tar, resultingTAR);
+            break;
+        }
+
+    }
+    return resultingTAR;
+}
+
 TARPtr SchemaBuilder::InferSchemaForUserDefined(OperationPtr operation) {
 
   std::string operatorName = operation->GetParametersByName(OPERATOR_NAME)->literal_str;
@@ -538,6 +555,8 @@ TARPtr SchemaBuilder::InferSchema(OperationPtr operation) {
     return InferSchemaForAggregationOp(operation);
   } else if (operation->GetOperation() == TAL_UNION) {
     return InferSchemaForSplitOp(operation);
+  } else if (operation->GetOperation() == TAL_PREDICT) {
+    return InferSchemaForPredict(operation);
   } else if (operation->GetOperation() == TAL_USER_DEFINED) {
     return InferSchemaForUserDefined(operation);
   }
