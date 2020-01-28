@@ -149,7 +149,8 @@ if(BUILD_SAVIME_TESTS)
     engine/load_subtar.cpp engine/drop_tars.cpp engine/drop_type.cpp engine/drop_dataset.cpp engine/save.cpp engine/show.cpp
     engine/store.cpp engine/drop_tar.cpp test/optimizer/mock_optimizer.h test/optimizer/test_optimizer.cpp optimizer/query_cost.cpp
     optimizer/dependency_checker.cpp optimizer/query_graph.cpp optimizer/operation_splitter.cpp engine/split.cpp engine/reorient.cpp
-    engine/predict.cpp engine/predictor.cpp engine/include/predictor.h engine/register_model.cpp engine/misc/prediction_model.cpp engine/misc/include/prediction_model.h parser/register_model_parser.cpp parser/register_model_parser.h configuration/model_configuration_manager.cpp configuration/model_configuration_manager.h)
+    engine/misc/curl.cpp engine/misc/include/curl.h engine/predict.cpp engine/predictor.cpp engine/include/predictor.h
+    engine/register_model.cpp engine/misc/prediction_model.cpp engine/misc/include/prediction_model.h parser/register_model_parser.cpp parser/register_model_parser.h configuration/model_configuration_manager.cpp configuration/model_configuration_manager.h)
 
     target_compile_options(savime-test PRIVATE ${OpenMP_CXX_FLAGS})
     target_link_libraries(savime-test ${OpenMP_CXX_FLAGS})
@@ -269,7 +270,10 @@ if(BUILD_WITH_CATALYST)
         engine/create_tar.cpp engine/create_type.cpp engine/create_dataset.cpp engine/load_subtar.cpp engine/drop_tars.cpp
         engine/drop_type.cpp engine/drop_dataset.cpp engine/save.cpp engine/show.cpp engine/store.cpp engine/drop_tar.cpp
         optimizer/query_cost.cpp optimizer/dependency_checker.cpp optimizer/query_graph.cpp optimizer/operation_splitter.cpp
-        engine/split.cpp engine/reorient.cpp engine/predict.cpp engine/predictor.cpp engine/include/predictor.h engine/register_model.cpp engine/misc/prediction_model.cpp engine/misc/include/prediction_model.h parser/register_model_parser.cpp parser/register_model_parser.h configuration/model_configuration_manager.cpp configuration/model_configuration_manager.h)
+        engine/split.cpp engine/reorient.cpp engine/predict.cpp engine/misc/curl.cpp engine/misc/include/curl.h
+        engine/predictor.cpp engine/include/predictor.h engine/register_model.cpp engine/misc/prediction_model.cpp
+        engine/misc/include/prediction_model.h parser/register_model_parser.cpp parser/register_model_parser.h
+        configuration/model_configuration_manager.cpp configuration/model_configuration_manager.h)
 
     target_compile_definitions(savime-bin PUBLIC -DCATALYST)
 
