@@ -287,8 +287,11 @@ EngineOperatorPtr EngineOperatorFactory::Make(OperationPtr operation) {
       return make_shared<Predict>(operation, _configurationManager,
                                       _queryDataManager, _metadataManager,
                                       _storageManager, _engine);
-
-    case TAL_USER_DEFINED:
+    case TAL_REGISTER_MODEL:
+        return make_shared<RegisterModel>(operation, _configurationManager,
+                                          _queryDataManager, _metadataManager,
+                                          _storageManager, _engine);
+      case TAL_USER_DEFINED:
       return make_shared<UserDefined>(operation, _configurationManager,
                                       _queryDataManager, _metadataManager,
                                       _storageManager, _engine);

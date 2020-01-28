@@ -60,8 +60,8 @@
 #define _ATT2DIM "att2dim"
 #define _TRANSLATE "translate"
 #define _AGGREGATE "aggregate"
-#define _SPLIT "split"
 #define _PREDICT "predict"
+#define _REGISTER_MODEL "register_model"
 
 using namespace std;
 
@@ -117,7 +117,9 @@ enum OperationCode {
 
   TAL_TRANSLATE, /*!<DDL operation that shifts dimension indexes according to an offset. */
 
-  TAL_USER_DEFINED /*!<DDL operation code for UDFs. */
+  TAL_USER_DEFINED, /*!<DDL operation code for UDFs. */
+
+  TAL_REGISTER_MODEL /*!<DDL operation that register machine learning models into Savime. */
 };
 
 enum TALParameter {

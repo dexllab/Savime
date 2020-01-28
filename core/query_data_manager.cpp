@@ -207,6 +207,8 @@ std::string Operation::OpToString(OperationCode op) {
     return std::string("USER");
   case TAL_PREDICT:
     return std::string("PREDICT");
+  case TAL_REGISTER_MODEL:
+    return std::string("REGISTER_MODEL");
   default:
     return std::string("HAL");
   }

@@ -169,11 +169,11 @@ public:
 
 class QueryExpression : public ValueExpression {
   IdentifierPtr _identifier;
-  std::shared_ptr<ValueExpressionList> _value_expression_list;
+
 
 public:
   friend DefaultParser;
-
+  std::shared_ptr<ValueExpressionList> _value_expression_list;
   QueryExpression(IdentifierPtr identifier,
                   std::shared_ptr<ValueExpressionList> value_expression_list) {
     _identifier = identifier;
@@ -190,11 +190,9 @@ public:
 };
 
 class Identifier : public ParseTreeNode {
-  std::string _identifierBody;
-
 public:
   friend DefaultParser;
-
+  std::string _identifierBody;
   Identifier(std::string identifierBody) { _identifierBody = identifierBody; }
 
   virtual void printType() {
@@ -235,6 +233,8 @@ public:
     ParseTreeNode::_children.push_back(PARSE(identifier, ParseTreeNode));
     ParseTreeNode::_children.push_back(PARSE(identifierChain, ParseTreeNode));
   }
+  IdentifierPtr getIdentifier(){ return _identifier;  }
+  IdentifierChainPtr getIdentifierChain(){ return _identifierChain;  }
 };
 
 class SetFunctionSpecification : public ValueExpression {
@@ -504,9 +504,8 @@ class GeneralLiteral : public ValueExpression {
 
 public:
   friend DefaultParser;
-
   GeneralLiteral(std::string literalString) { _literalString = literalString; }
-
+  std::string getLiteralString(){ return _literalString; }
   virtual void printType() {
     printf("%s %s\n", typeid(*this).name(), _literalString.c_str());
   }

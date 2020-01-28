@@ -24,64 +24,16 @@
 #include <jsoncpp/json/reader.h>
 #include <json_parser.h>
 #include <engine/misc/include/curl.h>
+#include <engine/misc/include/prediction_model.h>
 
 void Predictor::checkModelDimensions(string modelName, SubtarPtr subtar)
 {
     //Check Model Dimensions
-    if (modelName == "arima")
-    {
-        for(auto entry : subtar->GetDimSpecs())
-        {
-            auto dimensionString = entry.first;
-            if(dimensionString == "lat")
-            {
-                long int dimLength = subtar->GetDimensionSpecificationFor(dimensionString)->GetUpperBound() -
-                    subtar->GetDimensionSpecificationFor(dimensionString)->GetLowerBound()+1;
-                if(dimLength != 1)
-                {
-                    string errorMsg = "Unexpected dimension length for " + dimensionString + "." +
-                        "Expected: " + std::to_string(1) + " Found: " + std::to_string(dimLength);
-                    //throw std::runtime_error(ERROR_MSG(errorMsg , "PREDICT"));
-                    throw std::runtime_error(ERROR_MSG("operation", "PREDICT") + "\n" + errorMsg );
-                }
-            } else if(dimensionString == "long")
-            {
-                long int dimLength = subtar->GetDimensionSpecificationFor(dimensionString)->GetUpperBound() -
-                    subtar->GetDimensionSpecificationFor(dimensionString)->GetLowerBound()+1;
-                if(dimLength != 9)
-                {
-                    string errorMsg = "Unexpected dimension length for " + dimensionString + "." +
-                        "Expected: " + std::to_string(9) + " Found: " + std::to_string(dimLength);
-                    //throw std::runtime_error(ERROR_MSG(errorMsg , "PREDICT"));
-                    throw std::runtime_error(ERROR_MSG("operation", "PREDICT") + "\n" + errorMsg );
-                }
-            } else if(dimensionString == "tile")
-            {
-                long int dimLength = subtar->GetDimensionSpecificationFor(dimensionString)->GetUpperBound() -
-                    subtar->GetDimensionSpecificationFor(dimensionString)->GetLowerBound()+1;
-                if(dimLength != 1)
-                {
-                    string errorMsg = "Unexpected dimension length for " + dimensionString + "." +
-                        "Expected: " + std::to_string(1) + " Found: " + std::to_string(dimLength);
-                    //throw std::runtime_error(ERROR_MSG(errorMsg , "PREDICT"));
-                    throw std::runtime_error(ERROR_MSG("operation", "PREDICT") + "\n" + errorMsg );
-                }
-            } else if(dimensionString == "time")
-            {
-                long int dimLength = subtar->GetDimensionSpecificationFor(dimensionString)->GetUpperBound() -
-                    subtar->GetDimensionSpecificationFor(dimensionString)->GetLowerBound()+1;
-                if(dimLength != 1)
-                {
-                    string errorMsg = "Unexpected dimension length for " + dimensionString + "." +
-                                         "Expected: " + std::to_string(1) + " Found: " + std::to_string(dimLength);
-                    //throw std::runtime_error(ERROR_MSG(errorMsg , "PREDICT"));
-                    throw std::runtime_error(ERROR_MSG("operation", "PREDICT") + "\n" + errorMsg );
-                }
-            } else {
-                throw std::runtime_error(ERROR_MSG("Unexpected dimension " + dimensionString, "PREDICT"));
-            }
-        }
-        auto it = subtar->GetDimSpecs().begin();
+    PredictionModel predictionModel = PredictionModel(modelName);
+    try{
+        predictionModel.checkInputDimensions(subtar);
+    }catch(std::exception &e){
+        throw std::runtime_error(ERROR_MSG("operation", "PREDICT") + "\n" + e.what());
     }
 }
 

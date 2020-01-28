@@ -27,6 +27,7 @@
 #include "tree.h"
 #include "bison.h"
 #include "../core/include/metadata.h"
+#include "register_model_parser.h"
 
 enum OperandsType {
   __IDENTIFIER,
@@ -64,7 +65,6 @@ const char *reorient_error =
 
 const char *predict_error = "Invalid parameter for operator PREDICT. Expected "
                              "PREDICT(tar, \"model\", attribute)";
-
 
 using namespace std;
 
@@ -1586,14 +1586,16 @@ DefaultParser::ParsePredict(QueryExpressionPtr queryExpressionNode,
     auto param = params.begin();
 
     //First Parameter
-    if (stringLiteral = PARSE(*param, CharacterStringLiteral)) {
-        if (stringLiteral->_literalString.compare("\"arima\"") and stringLiteral->_literalString.compare("\"convLSTM\"")) {
-            throw std::runtime_error("Element " +
-                stringLiteral->_literalString +
-                " is not a registered model name.");
+    if(identifier = PARSE(*param, IdentifierChain)) {
+        string modelName = identifier->getIdentifier()->_identifierBody;
+        ifstream f("/home/anderson/Programacao/Savime/Savime/etc/modelscfg/" + modelName);
+        if(f.good()){
+            operation->AddParam("model_name", modelName);
+            f.close();
         }
         else {
-            operation->AddParam("model_name", stringLiteral->_literalString);
+            throw std::runtime_error("Element " +
+                modelName + " is not a registered model name.");
         }
     } else {
         throw std::runtime_error(predict_error);
@@ -1606,6 +1608,7 @@ DefaultParser::ParsePredict(QueryExpressionPtr queryExpressionNode,
                 GET_IDENTIFER_BODY(identifier) +
                 " is not a valid attribute in TAR " + inputTAR->GetName() + ".");
         }
+
     } else {
         throw std::runtime_error(predict_error);
     }
@@ -1619,6 +1622,15 @@ DefaultParser::ParsePredict(QueryExpressionPtr queryExpressionNode,
   operation->SetResultingTAR(_schemaBuilder->InferSchema(operation));
   return operation;
 
+}
+
+OperationPtr
+DefaultParser::ParseRegisterModel(QueryExpressionPtr queryExpressionNode,
+                                  QueryPlanPtr queryPlan, int &idCounter) {
+  RegisterModelParser *registerModelParser = new RegisterModelParser(this);
+  OperationPtr operation = registerModelParser->parse(queryExpressionNode, queryPlan, idCounter);
+  delete(registerModelParser);
+  return operation;
 }
 
 // MAIN FUNCTIONS
@@ -1657,6 +1669,8 @@ DefaultParser::ParseDMLOperation(QueryExpressionPtr queryExpressionNode,
     operation = ParseShow(queryExpressionNode, queryPlan, idCounter);
   } else if (functionName == _BATCH) {
     operation = ParseBatch(queryExpressionNode, queryPlan, idCounter);
+  } else if (functionName == _REGISTER_MODEL) {
+    operation = ParseRegisterModel(queryExpressionNode, queryPlan, idCounter);
   } else {
     throw std::runtime_error("Unknown or invalid operator: " + functionName + ".");
   }
@@ -1705,6 +1719,8 @@ TARPtr DefaultParser::ParseOperation(QueryExpressionPtr queryExpressionNode,
     operation = ParseReorient(queryExpressionNode, queryPlan, idCounter);
   } else if (functionName == (_PREDICT)) {
       operation = ParsePredict(queryExpressionNode, queryPlan, idCounter);
+  } else if (functionName == (_REGISTER_MODEL)) {
+    operation = ParseRegisterModel(queryExpressionNode, queryPlan, idCounter);
   } else if (_configurationManager->GetBooleanValue(
       OPERATOR(functionName))) {
     operation = ParseUserDefined(queryExpressionNode, queryPlan, idCounter);
@@ -1736,7 +1752,8 @@ int DefaultParser::CreateQueryPlan(ParseTreeNodePtr root,
           !functionName.compare(0, 4, "save") ||
           !functionName.compare(0, 6, "delete") ||
           !functionName.compare(0, 7, "restore") ||
-          !functionName.compare(0, 5, "batch")) {
+          !functionName.compare(0, 5, "batch") ||
+          !functionName.compare(0, 8, "register")) {
         ParseDMLOperation(queryExpression, queryPlan, idCounter);
         queryPlan->SetType(DDL);
       } else {

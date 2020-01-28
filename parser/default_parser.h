@@ -39,105 +39,109 @@ extern int yylex \
 
 
 class DefaultParser : public Parser {
-  MetadataManagerPtr _metadaManager;
-  StorageManagerPtr _storageManager;
-  std::shared_ptr<SchemaBuilder> _schemaBuilder;
-  TARSPtr _currentTARS;
+  public:
+    MetadataManagerPtr _metadaManager;
+    StorageManagerPtr _storageManager;
+    std::shared_ptr<SchemaBuilder> _schemaBuilder;
+    TARSPtr _currentTARS;
 
-  // UTIL
-  TARPtr ParseTAR(ValueExpressionPtr param, string errorMsg,
-                  QueryPlanPtr queryPlan, int &idCounter);
-  int CreateQueryPlan(ParseTreeNodePtr root,
-                      QueryDataManagerPtr queryDataManager);
-  TARPtr ParseOperation(QueryExpressionPtr queryExpressionNode,
-                        QueryPlanPtr queryPlan, int &idCounter);
-  bool ValidateNumericalFunction(QueryExpressionPtr expression,
-                                 TARPtr inputTAR);
-  bool ValidateBoolFunction(QueryExpressionPtr expression, TARPtr inputTAR);
-  OperationPtr ParseDMLOperation(QueryExpressionPtr queryExpressionNode,
+    // UTIL
+    TARPtr ParseTAR(ValueExpressionPtr param, string errorMsg,
+                    QueryPlanPtr queryPlan, int &idCounter);
+    int CreateQueryPlan(ParseTreeNodePtr root,
+                        QueryDataManagerPtr queryDataManager);
+    TARPtr ParseOperation(QueryExpressionPtr queryExpressionNode,
+                          QueryPlanPtr queryPlan, int &idCounter);
+    bool ValidateNumericalFunction(QueryExpressionPtr expression,
+                                   TARPtr inputTAR);
+    bool ValidateBoolFunction(QueryExpressionPtr expression, TARPtr inputTAR);
+    OperationPtr ParseDMLOperation(QueryExpressionPtr queryExpressionNode,
+                                   QueryPlanPtr queryPlan, int &idCounter);
+  private:
+    // DDL
+    OperationPtr ParseCreateTARS(QueryExpressionPtr queryExpressionNode,
                                  QueryPlanPtr queryPlan, int &idCounter);
-  // DDL
-  OperationPtr ParseCreateTARS(QueryExpressionPtr queryExpressionNode,
+    OperationPtr ParseCreateTAR(QueryExpressionPtr queryExpressionNode,
+                                QueryPlanPtr queryPlan, int &idCounter);
+    OperationPtr ParseCreateType(QueryExpressionPtr queryExpressionNode,
+                                 QueryPlanPtr queryPlan, int &idCounter);
+    OperationPtr ParseCreateDataset(QueryExpressionPtr queryExpressionNode,
+                                    QueryPlanPtr queryPlan, int &idCounter);
+    OperationPtr ParseLoad(QueryExpressionPtr queryExpressionNode,
+                           QueryPlanPtr queryPlan, int &idCounter);
+    OperationPtr ParseDelete(QueryExpressionPtr queryExpressionNode,
+                             QueryPlanPtr queryPlan, int &idCounter);
+    OperationPtr ParseDropTARS(QueryExpressionPtr queryExpressionNode,
                                QueryPlanPtr queryPlan, int &idCounter);
-  OperationPtr ParseCreateTAR(QueryExpressionPtr queryExpressionNode,
+    OperationPtr ParseDropTAR(QueryExpressionPtr queryExpressionNode,
                               QueryPlanPtr queryPlan, int &idCounter);
-  OperationPtr ParseCreateType(QueryExpressionPtr queryExpressionNode,
+    OperationPtr ParseDropType(QueryExpressionPtr queryExpressionNode,
                                QueryPlanPtr queryPlan, int &idCounter);
-  OperationPtr ParseCreateDataset(QueryExpressionPtr queryExpressionNode,
+    OperationPtr ParseDropDataset(QueryExpressionPtr queryExpressionNode,
                                   QueryPlanPtr queryPlan, int &idCounter);
-  OperationPtr ParseLoad(QueryExpressionPtr queryExpressionNode,
-                         QueryPlanPtr queryPlan, int &idCounter);
-  OperationPtr ParseDelete(QueryExpressionPtr queryExpressionNode,
+    OperationPtr ParseSave(QueryExpressionPtr queryExpressionNode,
+                                  QueryPlanPtr queryPlan, int &idCounter);
+    OperationPtr ParseShow(QueryExpressionPtr queryExpressionNode,
                            QueryPlanPtr queryPlan, int &idCounter);
-  OperationPtr ParseDropTARS(QueryExpressionPtr queryExpressionNode,
-                             QueryPlanPtr queryPlan, int &idCounter);
-  OperationPtr ParseDropTAR(QueryExpressionPtr queryExpressionNode,
+    OperationPtr ParseBatch(QueryExpressionPtr queryExpressionNode,
                             QueryPlanPtr queryPlan, int &idCounter);
-  OperationPtr ParseDropType(QueryExpressionPtr queryExpressionNode,
-                             QueryPlanPtr queryPlan, int &idCounter);
-  OperationPtr ParseDropDataset(QueryExpressionPtr queryExpressionNode,
-                                QueryPlanPtr queryPlan, int &idCounter);
-  OperationPtr ParseSave(QueryExpressionPtr queryExpressionNode,
-                                QueryPlanPtr queryPlan, int &idCounter);
-  OperationPtr ParseShow(QueryExpressionPtr queryExpressionNode,
-                         QueryPlanPtr queryPlan, int &idCounter);
-  OperationPtr ParseBatch(QueryExpressionPtr queryExpressionNode,
-                          QueryPlanPtr queryPlan, int &idCounter);
-  // DML
-  OperationPtr ParseLogical(ValueExpressionPtr valueExpression, TARPtr inputTAR,
-                            QueryPlanPtr queryPlan, int &idCounter);
-  OperationPtr ParseComparison(ValueExpressionPtr valueExpression,
-                               TARPtr inputTAR, QueryPlanPtr queryPlan,
-                               int &idCounter);
-  OperationPtr ParseArithmetic(ValueExpressionPtr valueExpression,
-                               TARPtr inputTAR, std::string newMember,
-                               QueryPlanPtr queryPlan, int &idCounter);
-  OperationPtr ParseScan(QueryExpressionPtr queryExpressionNode,
-                         QueryPlanPtr queryPlan, int &idCounter);
-  OperationPtr ParseSelect(QueryExpressionPtr queryExpressionNode,
-                           QueryPlanPtr queryPlan, int &idCounter);
-  OperationPtr ParseFilter(QueryExpressionPtr queryExpressionNode,
-                           QueryPlanPtr queryPlan, int &idCounter);
-  OperationPtr ParseSubset(QueryExpressionPtr queryExpressionNode,
-                           QueryPlanPtr queryPlan, int &idCounter);
-  OperationPtr ParseDerive(QueryExpressionPtr queryExpressionNode,
-                           QueryPlanPtr queryPlan, int &idCounter);
-  OperationPtr ParseCross(QueryExpressionPtr queryExpressionNode,
-                          QueryPlanPtr queryPlan, int &idCounter);
-  OperationPtr ParseSlice(QueryExpressionPtr queryExpressionNode,
-                            QueryPlanPtr queryPlan, int &idCounter);
-  OperationPtr ParseSplit(QueryExpressionPtr queryExpressionNode,
-                            QueryPlanPtr queryPlan, int &idCounter);
-  OperationPtr ParseReorient(QueryExpressionPtr queryExpressionNode,
-                            QueryPlanPtr queryPlan, int &idCounter);
-  OperationPtr ParseDimJoin(QueryExpressionPtr queryExpressionNode,
-                            QueryPlanPtr queryPlan, int &idCounter);
-  OperationPtr ParseEquiJoin(QueryExpressionPtr queryExpressionNode,
-                               QueryPlanPtr queryPlan, int &idCounter);
-  OperationPtr ParseAtt2Dim(QueryExpressionPtr queryExpressionNode,
-                               QueryPlanPtr queryPlan, int &idCounter);
-  OperationPtr ParseUnion(QueryExpressionPtr queryExpressionNode,
-                          QueryPlanPtr queryPlan, int &idCounter);
-  OperationPtr ParseTranslate(QueryExpressionPtr queryExpressionNode,
-                            QueryPlanPtr queryPlan, int &idCounter);
-  OperationPtr ParseAggregate(QueryExpressionPtr queryExpressionNode,
+    // DML
+    OperationPtr ParseLogical(ValueExpressionPtr valueExpression, TARPtr inputTAR,
                               QueryPlanPtr queryPlan, int &idCounter);
-  OperationPtr ParsePredict(QueryExpressionPtr queryExpressionNode,
+    OperationPtr ParseComparison(ValueExpressionPtr valueExpression,
+                                 TARPtr inputTAR, QueryPlanPtr queryPlan,
+                                 int &idCounter);
+    OperationPtr ParseArithmetic(ValueExpressionPtr valueExpression,
+                                 TARPtr inputTAR, std::string newMember,
+                                 QueryPlanPtr queryPlan, int &idCounter);
+    OperationPtr ParseScan(QueryExpressionPtr queryExpressionNode,
+                           QueryPlanPtr queryPlan, int &idCounter);
+    OperationPtr ParseSelect(QueryExpressionPtr queryExpressionNode,
+                             QueryPlanPtr queryPlan, int &idCounter);
+    OperationPtr ParseFilter(QueryExpressionPtr queryExpressionNode,
+                             QueryPlanPtr queryPlan, int &idCounter);
+    OperationPtr ParseSubset(QueryExpressionPtr queryExpressionNode,
+                             QueryPlanPtr queryPlan, int &idCounter);
+    OperationPtr ParseDerive(QueryExpressionPtr queryExpressionNode,
+                             QueryPlanPtr queryPlan, int &idCounter);
+    OperationPtr ParseCross(QueryExpressionPtr queryExpressionNode,
+                            QueryPlanPtr queryPlan, int &idCounter);
+    OperationPtr ParseSlice(QueryExpressionPtr queryExpressionNode,
                               QueryPlanPtr queryPlan, int &idCounter);
-  OperationPtr ParseUserDefined(QueryExpressionPtr queryExpressionNode,
+    OperationPtr ParseSplit(QueryExpressionPtr queryExpressionNode,
+                              QueryPlanPtr queryPlan, int &idCounter);
+    OperationPtr ParseReorient(QueryExpressionPtr queryExpressionNode,
+                              QueryPlanPtr queryPlan, int &idCounter);
+    OperationPtr ParseDimJoin(QueryExpressionPtr queryExpressionNode,
+                              QueryPlanPtr queryPlan, int &idCounter);
+    OperationPtr ParseEquiJoin(QueryExpressionPtr queryExpressionNode,
+                                 QueryPlanPtr queryPlan, int &idCounter);
+    OperationPtr ParseAtt2Dim(QueryExpressionPtr queryExpressionNode,
+                                 QueryPlanPtr queryPlan, int &idCounter);
+    OperationPtr ParseUnion(QueryExpressionPtr queryExpressionNode,
+                            QueryPlanPtr queryPlan, int &idCounter);
+    OperationPtr ParseTranslate(QueryExpressionPtr queryExpressionNode,
+                              QueryPlanPtr queryPlan, int &idCounter);
+    OperationPtr ParseAggregate(QueryExpressionPtr queryExpressionNode,
                                 QueryPlanPtr queryPlan, int &idCounter);
+    OperationPtr ParsePredict(QueryExpressionPtr queryExpressionNode,
+                                QueryPlanPtr queryPlan, int &idCounter);
+    OperationPtr ParseRegisterModel(QueryExpressionPtr queryExpressionNode,
+                                      QueryPlanPtr queryPlan, int &idCounter);
+    OperationPtr ParseUserDefined(QueryExpressionPtr queryExpressionNode,
+                                  QueryPlanPtr queryPlan, int &idCounter);
 
-public:
-  DefaultParser(ConfigurationManagerPtr configurationManager,
-                SystemLoggerPtr systemLogger)
-      : Parser(configurationManager, systemLogger) {
-    _schemaBuilder == nullptr;
-  }
+  public:
+    DefaultParser(ConfigurationManagerPtr configurationManager,
+                  SystemLoggerPtr systemLogger)
+        : Parser(configurationManager, systemLogger) {
+      _schemaBuilder == nullptr;
+    }
 
-  void SetMetadataManager(MetadataManagerPtr metadaManager);
-  void SetStorageManager(StorageManagerPtr storageManager);
-  TARPtr InferOutputTARSchema(OperationPtr operation);
-  SavimeResult Parse(QueryDataManagerPtr queryDataManager);
+    void SetMetadataManager(MetadataManagerPtr metadaManager);
+    void SetStorageManager(StorageManagerPtr storageManager);
+    TARPtr InferOutputTARSchema(OperationPtr operation);
+    SavimeResult Parse(QueryDataManagerPtr queryDataManager);
 };
 
 #endif /* DEFAULT_PARSER_H */
