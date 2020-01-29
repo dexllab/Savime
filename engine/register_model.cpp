@@ -44,12 +44,12 @@ SavimeResult RegisterModel::Run() {
 
   auto configurationManager = new DefaultConfigurationManager();
   configurationManager->LoadConfigFile("/home/anderson/Programacao/Savime/Savime/etc/savime.config");
-  string modelConfigDirectory = configurationManager->GetStringValue("mdl_cfg_dir") + "/models.config";
+  string modelConfigDirectory = configurationManager->GetStringValue("mdl_cfg_dir");
   delete(configurationManager);
 
-  modelConfigurationManager->LoadConfigFile(modelConfigDirectory);
+  modelConfigurationManager->LoadConfigFile(modelConfigDirectory + "/models.config");
 
-  auto numberOfDimensions = split(dimensionString, ',').size();
+  auto numberOfDimensions = split(dimensionString, '|').size();
   modelConfigurationManager->SetLongValue("number_of_dimensions", numberOfDimensions);
 
   modelConfigurationManager->SaveConfigFile(modelConfigDirectory + "/" + modelName);
@@ -66,7 +66,7 @@ SavimeResult RegisterModel::Run() {
 
   modelServerConfiguration[modelName] = modelConfig;
   this->registerModelConfigurationInFile(modelServerConfiguration, model_path);
-  delete(configurationManager);
+  delete(modelConfigurationManager);
   return SAVIME_SUCCESS;
 }
 
