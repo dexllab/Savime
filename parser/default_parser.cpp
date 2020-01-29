@@ -1588,7 +1588,7 @@ DefaultParser::ParsePredict(QueryExpressionPtr queryExpressionNode,
     //First Parameter
     if(identifier = PARSE(*param, IdentifierChain)) {
         string modelName = identifier->getIdentifier()->_identifierBody;
-        ifstream f("/home/anderson/Programacao/Savime/Savime/etc/modelscfg/" + modelName);
+        ifstream f("/tmp/" + modelName);
         if(f.good()){
             operation->AddParam("model_name", modelName);
             f.close();

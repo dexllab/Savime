@@ -26,8 +26,9 @@ PredictionModel::PredictionModel(string modelName) {
 
 void PredictionModel::loadModelConfig(string modelName) {
    auto *configurationManager = new DefaultConfigurationManager();
-   configurationManager->LoadConfigFile("/home/anderson/Programacao/Savime/Savime/etc/savime.config");
-   this->_modelConfigurationManager->LoadConfigFile(configurationManager->GetStringValue("mdl_cfg_dir") + "/" + modelName);
+   //configurationManager->LoadConfigFile("/home/anderson/Programacao/Savime/Savime/etc/savime.config");
+   //this->_modelConfigurationManager->LoadConfigFile(configurationManager->GetStringValue("mdl_cfg_dir") + "/" + modelName);
+   this->_modelConfigurationManager->LoadConfigFile("/tmp");
 }
 
 void PredictionModel::checkInputDimensions(SubtarPtr subtar){

@@ -39,7 +39,6 @@ class RegisterModelParser {
   void parseAttribute(list<ValueExpressionPtr> *params, OperationPtr operation,
                                            QueryPlanPtr queryPlan, int &idCounter);
   void parseDimensionString(list<ValueExpressionPtr> *params, OperationPtr shared_ptr);
-  void parseModelDirectory(list<ValueExpressionPtr> *params, OperationPtr shared_ptr);
 };
 
 #endif //SAVIME_REGISTERMODELPARSER_H

@@ -24,7 +24,7 @@ RegisterModelParser::RegisterModelParser(DefaultParser *parser) {
 OperationPtr RegisterModelParser::parse(QueryExpressionPtr queryExpressionNode,
                                         QueryPlanPtr queryPlan,
                                         int &idCounter) {
-#define EXPECTED_REGISTER_MODEL_PARAMS_NUM 5
+#define EXPECTED_REGISTER_MODEL_PARAMS_NUM 4
     QueryExpressionPtr queryExpression;
 
     IdentifierChainPtr identifierChain;
@@ -43,7 +43,6 @@ OperationPtr RegisterModelParser::parse(QueryExpressionPtr queryExpressionNode,
         this->parseTarName(&params, operation, queryPlan, idCounter);
         this->parseAttribute(&params, operation, queryPlan, idCounter);
         this->parseDimensionString(&params, operation);
-        this->parseModelDirectory(&params, operation);
     } else {
         throw std::runtime_error(this->error_msg);
     }
@@ -81,12 +80,6 @@ void RegisterModelParser::parseAttribute(list<ValueExpressionPtr> *params, Opera
 void RegisterModelParser::parseDimensionString(list<ValueExpressionPtr> *params, OperationPtr operation) {
     auto characterString = this->parseString(params->front());
     operation->AddParam("dimension_string", characterString->getLiteralString());
-    params->pop_front();
-}
-
-void RegisterModelParser::parseModelDirectory(list<ValueExpressionPtr> *params, OperationPtr operation) {
-    auto characterString = this->parseString(params->front());
-    operation->AddParam("model_path", characterString->getLiteralString());
     params->pop_front();
 }
 

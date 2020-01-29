@@ -32,7 +32,7 @@ SavimeResult RegisterModel::Run() {
   string tarName = _operation->GetParametersByName("tar_name")->literal_str;
   string targetAttribute = _operation->GetParametersByName("target_attribute")->literal_str;
   string dimensionString = _operation->GetParametersByName("dimension_string")->literal_str;
-  string modelPath = _operation->GetParametersByName("model_path")->literal_str;
+  //string modelPath = _operation->GetParametersByName("model_path")->literal_str;
 
   dimensionString.erase(std::remove_if(dimensionString.begin(), dimensionString.end(), ::isspace), dimensionString.end());
   ModelConfigurationManager *modelConfigurationManager = new ModelConfigurationManager();
@@ -40,14 +40,15 @@ SavimeResult RegisterModel::Run() {
   modelConfigurationManager->SetStringValue("tar_name", "\"" + tarName + "\"");
   modelConfigurationManager->SetStringValue("target_attribute", "\"" + targetAttribute + "\"");
   modelConfigurationManager->SetStringValue("dimension_specifications", dimensionString);
-  modelConfigurationManager->SetStringValue("model_path", modelPath);
+  //modelConfigurationManager->SetStringValue("model_path", modelPath);
 
   auto configurationManager = new DefaultConfigurationManager();
-  configurationManager->LoadConfigFile("/home/anderson/Programacao/Savime/Savime/etc/savime.config");
-  string modelConfigDirectory = configurationManager->GetStringValue("mdl_cfg_dir");
+  //configurationManager->LoadConfigFile("/home/anderson/Programacao/Savime/Savime/etc/savime.config");
+  //string modelConfigDirectory = configurationManager->GetStringValue("mdl_cfg_dir");
+  string modelConfigDirectory =  "/tmp";
   delete(configurationManager);
 
-  modelConfigurationManager->LoadConfigFile(modelConfigDirectory + "/models.config");
+  //modelConfigurationManager->LoadConfigFile(modelConfigDirectory + "/models.config");
 
   auto numberOfDimensions = split(dimensionString, '|').size();
   modelConfigurationManager->SetLongValue("number_of_dimensions", numberOfDimensions);
@@ -58,14 +59,14 @@ SavimeResult RegisterModel::Run() {
   auto model_path = modelConfigDirectory + "/models.config";
   auto modelServerConfiguration = this->ParseModelsFile(model_path);
 
-  modelServerConfiguration.erase(modelName);
-  unordered_map<string, string> modelConfig ;
-  modelConfig["name"] = "\"" + modelName + "\"";
-  modelConfig["base_path"] = modelPath;
-  modelConfig["model_platform"] = "\"tensorflow\"";
-
-  modelServerConfiguration[modelName] = modelConfig;
-  this->registerModelConfigurationInFile(modelServerConfiguration, model_path);
+//  modelServerConfiguration.erase(modelName);
+//  unordered_map<string, string> modelConfig ;
+//  modelConfig["name"] = "\"" + modelName + "\"";
+//  modelConfig["base_path"] = modelPath;
+//  modelConfig["model_platform"] = "\"tensorflow\"";
+//
+//  modelServerConfiguration[modelName] = modelConfig;
+//  this->registerModelConfigurationInFile(modelServerConfiguration, model_path);
   delete(modelConfigurationManager);
   return SAVIME_SUCCESS;
 }

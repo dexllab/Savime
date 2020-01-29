@@ -47,8 +47,7 @@ vector<string> Predictor::getPredictions(SubtarPtr subtar, StorageManagerPtr sto
     Json::Value JSonPrediction = sendJsonToUrl(JSonQuery, url_address);
 
     /********Only for debug purposes*********/
-    writeJsonFile("/home/anderson/Programacao/Savime/TinyModelServer/example/savime_json_output.json", JSonPrediction);
-
+    writeJsonFile("/tmp/input.json", JSonPrediction);
     return jsonArrayToVector(JSonPrediction["predictions"]);
 }
 
@@ -102,7 +101,7 @@ Json::Value Predictor::createJsonQuery(SubtarPtr subtar, StorageManagerPtr stora
         JSonQuery["instances"] = dimensionalArray;
 
         /********Only for debug purposes*********/
-        writeJsonFile("/home/anderson/Programacao/Savime/TinyModelServer/example/savime_json_test.json", JSonQuery);
+        writeJsonFile("/tmp/output.json", JSonQuery);
 
         return JSonQuery;
     }else{
