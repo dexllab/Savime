@@ -46,8 +46,7 @@ vector<string> Predictor::getPredictions(SubtarPtr subtar, StorageManagerPtr sto
     string url_address = "http://localhost:8501/v1/models/" + modelName + ":predict";
     Json::Value JSonPrediction = sendJsonToUrl(JSonQuery, url_address);
 
-    /********Only for debug purposes*********/
-    writeJsonFile("/tmp/input.json", JSonPrediction);
+    writeJsonFile("/tmp/output.json", JSonPrediction);
     return jsonArrayToVector(JSonPrediction["predictions"]);
 }
 
@@ -100,8 +99,7 @@ Json::Value Predictor::createJsonQuery(SubtarPtr subtar, StorageManagerPtr stora
         JSonQuery["signature_name"] = "serving_default";
         JSonQuery["instances"] = dimensionalArray;
 
-        /********Only for debug purposes*********/
-        writeJsonFile("/tmp/output.json", JSonQuery);
+        writeJsonFile("/tmp/input.json", JSonQuery);
 
         return JSonQuery;
     }else{

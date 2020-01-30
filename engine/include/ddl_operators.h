@@ -156,8 +156,6 @@ class RegisterModel : public EngineOperator {
   SavimeResult Run() override;
  private:
   unordered_map<string, unordered_map<string, string>> ParseModelsFile(string filePath);
-  void registerModelConfigurationInFile(unordered_map<string, unordered_map<string, string>>
-                                        modelServerConfiguration, string filePath);
 };
 
 #endif /* DDL_OPERATORS_H */
