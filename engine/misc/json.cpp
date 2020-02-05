@@ -23,20 +23,39 @@
 #include <cstring>
 #include "../core/include/util.h"
 
-vector<string> jsonArrayToVector(const Json::Value JSonArray){
-    double val;
-    vector<string> literals;
-
-    for (int i = 0; i < JSonArray.size(); ++i) {
-        for (int j = 0; j < JSonArray[i].size(); ++j) {
-            for (int k = 0; k < JSonArray[i][j].size(); ++k) {
-                for (int l = 0; l < JSonArray[i][j][k].size(); ++l) {
-                    val = JSonArray[i][j][k][l][0].asDouble();
-                    literals.push_back(to_string(val));
-                }
-            }
+void push_back_values(Json::Value jsonValue,  vector<string> *literals)
+{
+    int i = 0;
+    if( jsonValue.isArray() ){
+        for (i = 0; i < jsonValue.size(); ++i) {
+            push_back_values(jsonValue[i], literals);
         }
     }
+    else{
+        if (jsonValue.isDouble()) {
+            double val = jsonValue.asDouble();
+            literals->push_back(to_string(val));
+        }
+        else if (jsonValue.isInt()) {
+            int val = jsonValue.asInt();
+            literals->push_back(to_string(val));
+        }
+        else if (jsonValue.isInt64()) {
+            long int val = jsonValue.asInt64();
+            literals->push_back(to_string(val));
+        }
+        else if (jsonValue.isString())
+        {
+            string val = jsonValue.asString();
+            literals->push_back(val);
+        }
+    }
+}
+
+
+vector<string> jsonArrayToVector(const Json::Value JSonArray){
+    vector<string> literals;
+    push_back_values(JSonArray, &literals);
     return literals;
 }
 
@@ -54,4 +73,19 @@ void writeJsonFile(string filePath, Json::Value JSonQuery){
     Json::StyledWriter styledWriter;
     fileId << styledWriter.write(JSonQuery);
     fileId.close();
+}
+
+std::vector<std::string> splitString(const std::string& s, const char& c)
+{
+    std::string buff{""};
+    std::vector<std::string> v;
+
+    for(auto n:s)
+    {
+        if(n != c) buff+=n; else
+        if(n == c && !buff.empty()) { v.push_back(buff); buff = ""; }
+    }
+    if(buff.empty()) v.push_back(buff);
+
+    return v;
 }

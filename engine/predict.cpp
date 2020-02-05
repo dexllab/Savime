@@ -74,7 +74,7 @@ SavimeResult Predict::GenerateSubtar(SubTARIndex subtarIndex){
     }
 
     //Obtaining Predictions
-    auto *p = new Predictor();
+    auto *p = new Predictor(new PredictionModel(modelName));
     vector<string> predictedValues = p->getPredictions(subtar, _storageManager, modelName, predictedAttribute);
     delete(p);
 

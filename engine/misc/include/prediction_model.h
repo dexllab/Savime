@@ -28,6 +28,9 @@ class PredictionModel {
   public:
     PredictionModel(string modelName);
     void checkInputDimensions(SubtarPtr subtar);
+    string getDimensionalString();
+    int getNumberOfInputDimensions();
+    string getTargetAttributeName();
     ~PredictionModel();
  private:
     DefaultConfigurationManager* _modelConfigurationManager;

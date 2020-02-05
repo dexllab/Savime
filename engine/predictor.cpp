@@ -26,12 +26,14 @@
 #include <engine/misc/include/curl.h>
 #include <engine/misc/include/prediction_model.h>
 
-void Predictor::checkModelDimensions(string modelName, SubtarPtr subtar)
+Predictor::Predictor(PredictionModel *predictionModel) {
+    this->_predictionModel= predictionModel;
+}
+
+void Predictor::checkModelDimensions(SubtarPtr subtar)
 {
-    //Check Model Dimensions
-    PredictionModel predictionModel = PredictionModel(modelName);
     try{
-        predictionModel.checkInputDimensions(subtar);
+        this->_predictionModel->checkInputDimensions(subtar);
     }catch(std::exception &e){
         throw std::runtime_error(ERROR_MSG("operation", "PREDICT") + "\n" + e.what());
     }
@@ -40,9 +42,9 @@ void Predictor::checkModelDimensions(string modelName, SubtarPtr subtar)
 vector<string> Predictor::getPredictions(SubtarPtr subtar, StorageManagerPtr storageManager,
                                          string modelName, string predictedAttribute){
     modelName.erase(std::remove(modelName.begin(),modelName.end(),'\"'),modelName.end());
-    checkModelDimensions(modelName, subtar);
+    this->checkModelDimensions(subtar);
 
-    Json::Value JSonQuery = createJsonQuery(subtar, storageManager, predictedAttribute);
+    Json::Value JSonQuery = this->createJsonQuery(subtar, storageManager, predictedAttribute);
     string url_address = "http://localhost:8501/v1/models/" + modelName + ":predict";
     Json::Value JSonPrediction = sendJsonToUrl(JSonQuery, url_address);
 
@@ -50,57 +52,80 @@ vector<string> Predictor::getPredictions(SubtarPtr subtar, StorageManagerPtr sto
     return jsonArrayToVector(JSonPrediction["predictions"]);
 }
 
-Json::Value Predictor::fillDimensionArray(map<string, DimSpecPtr> *dimSpecs, std::map<string, DimSpecPtr>::iterator *it,
-                               int *bufferIndex, double* buffer, SubtarPtr subtar){
+int getAttributeLengthFor(SubtarPtr subtar, string attributeName)
+{
+    auto a = subtar->GetTAR()->GetAttributes();
+    for(auto entry : a){
+        if(entry->GetName() == attributeName) {
+            return entry->GetType().vectorLength();
+        }
+    }
+    return -1;
+}
+
+Json::Value Predictor::fillDimensionArray(long int *bufferIndex, double* buffer, SubtarPtr subtar,
+                                          std::vector<string>::iterator *it, int dimCounter){
     Json::Value dimArray;
+    auto dimSpec = split(**it, '-');
+    string dimName = dimSpec[0];
+    long int dimLength = std::stol(dimSpec[1]);
 
-    if(*it == dimSpecs->end()){//If it is the last dimension
-        long int dimLength = 1;
-
-        for (int i = 0; i < dimLength; ++i) {
-            dimArray.append(buffer[*bufferIndex]);
-            *bufferIndex += 1;
+    if(dimCounter == this->_predictionModel->getNumberOfInputDimensions()){//If it is the last dimension
+        string sourceAttribute = this->_predictionModel->getTargetAttributeName();
+        int attributeLength = getAttributeLengthFor(subtar, sourceAttribute);
+        for (long int i = 0; i < dimLength; ++i) {
+            if(attributeLength > 1) {
+                Json::Value attributeValue;
+                for (long int j = 0; j < attributeLength; j++) {
+                    attributeValue.append(buffer[*bufferIndex]);
+                    *bufferIndex += 1;
+                }
+                dimArray.append(attributeValue);
+            } else {
+                dimArray.append(buffer[*bufferIndex]);
+            }
         }
         --(*it);
         return dimArray;
     }
     else {
-        auto dimensionString = (*it)->first;
-        long int dimLength = (long int) subtar->GetDimensionSpecificationFor(dimensionString)->GetUpperBound() -
-            subtar->GetDimensionSpecificationFor(dimensionString)->GetLowerBound()+1;
-
-        for (int i = 0; i < dimLength; i++) {
-            dimArray[i] = fillDimensionArray(dimSpecs, &(++(*it)), bufferIndex, buffer, subtar);
+        for (long int i = 0; i < dimLength; i++) {
+            dimArray.append(fillDimensionArray(bufferIndex, buffer, subtar, &(++(*it)), dimCounter+1));
         }
         --(*it);
         return dimArray;
     }
 }
 
-Json::Value Predictor::createJsonQuery(SubtarPtr subtar, StorageManagerPtr storageManager, string predictedAttribute) {
-    auto dimSpecs = subtar->GetDimSpecs();
+DatasetHandlerPtr getDatasetHandler(SubtarPtr subtar, StorageManagerPtr storageManager, string attribute){
     auto datasetList = subtar->GetDataSets();
     DatasetHandlerPtr datasetHandler;
     for (auto ds : datasetList) {
-        if(ds.first == predictedAttribute){
+        if (ds.first == attribute) {
             datasetHandler = storageManager->GetHandler(ds.second);
-      }
+        }
     }
+    return datasetHandler;
+}
+
+Json::Value Predictor::createJsonQuery(SubtarPtr subtar, StorageManagerPtr storageManager,
+                                       string inputAttribute) {
+    auto dimSpecs = subtar->GetDimSpecs();
+    auto datasetHandler = getDatasetHandler(subtar, storageManager, inputAttribute);
 
     if(datasetHandler != nullptr) {
         double *buffer = (double *) datasetHandler->GetBuffer();
 
         Json::Value JSonQuery;
 
-        int ct = 0;
-        auto it = dimSpecs.begin();
-        Json::Value dimensionalArray = fillDimensionArray(&dimSpecs, &it, &ct, buffer, subtar);
-
+        long int ct = 0;
+        string dimString = this->_predictionModel->getDimensionalString();
+        auto dimList = split(dimString, '|');
+        auto it = dimList.begin();
+        Json::Value dimensionalArray = fillDimensionArray(&ct, buffer, subtar, &it, 1);
         JSonQuery["signature_name"] = "serving_default";
         JSonQuery["instances"] = dimensionalArray;
-
         writeJsonFile("/tmp/input.json", JSonQuery);
-
         return JSonQuery;
     }else{
         throw std::runtime_error(ERROR_MSG("Could not get handler for dataset", "PREDICT"));

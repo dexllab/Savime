@@ -17,7 +17,7 @@
 
 #include <utility>
 #include "engine/misc/include/prediction_model.h"
-
+#include "include/json.h"
 
 PredictionModel::PredictionModel(string modelName) {
    this->_modelConfigurationManager = new DefaultConfigurationManager();
@@ -25,27 +25,40 @@ PredictionModel::PredictionModel(string modelName) {
 }
 
 void PredictionModel::loadModelConfig(string modelName) {
-   auto *configurationManager = new DefaultConfigurationManager();
-   //configurationManager->LoadConfigFile("/home/anderson/Programacao/Savime/Savime/etc/savime.config");
-   //this->_modelConfigurationManager->LoadConfigFile(configurationManager->GetStringValue("mdl_cfg_dir") + "/" + modelName);
-   this->_modelConfigurationManager->LoadConfigFile("/tmp");
+   this->_modelConfigurationManager->LoadConfigFile("/tmp/" + modelName);
+}
+
+string PredictionModel::getDimensionalString(){
+    return _modelConfigurationManager->GetStringValue("dimension_specifications");
+}
+
+int PredictionModel::getNumberOfInputDimensions(){
+    int numberOfInputDimensions = int(split(this->getDimensionalString(), '|').size());
+    return numberOfInputDimensions;
+}
+
+string PredictionModel::getTargetAttributeName(){
+    return this->_modelConfigurationManager->GetStringValue("target_attribute");
 }
 
 void PredictionModel::checkInputDimensions(SubtarPtr subtar){
    string dimString = _modelConfigurationManager->GetStringValue("dimension_specifications");
 
    auto dimSpecs = split(dimString, '|');
-   for(auto entry : dimSpecs){
-      auto s = split(entry, '-');
-      long int dimLength = subtar->GetDimensionSpecificationFor(s[0])->GetUpperBound() -
-          subtar->GetDimensionSpecificationFor(s[0])->GetLowerBound()+1;
-      if(dimLength != std::stoi(s[1]))
-      {
-         string errorMsg = "Unexpected dimension length for " + s[0]+ "." +
-             "Expected: " + s[1] + " Found: " + std::to_string(dimLength);
-         throw std::runtime_error(errorMsg );
-      }
+   for (auto entry : dimSpecs) {
+         auto s = split(entry, '-');
+         if(s.empty()) {
+            throw std::runtime_error("Could not parse dimension string: \n" + dimString);
+         }
+         long int dimLength = subtar->GetDimensionSpecificationFor(s[0])->GetUpperBound() -
+             subtar->GetDimensionSpecificationFor(s[0])->GetLowerBound() + 1;
+         if (dimLength != std::stoi(s[1])) {
+            string errorMsg = "Unexpected dimension length for " + s[0] + "." +
+                "Expected: " + s[1] + " Found: " + std::to_string(dimLength);
+            throw std::runtime_error(errorMsg);
+         }
    }
+
 }
 
 PredictionModel::~PredictionModel() = default;
