@@ -34,18 +34,6 @@ Predict::Predict(OperationPtr operation,
 }
 
 SavimeResult Predict::GenerateSubtar(SubTARIndex subtarIndex){
-    /*
-     * PARTIAL IMPLEMENTATION
-     *  - PREDICT(DOMAIN)
-     *    DOMAIN SHOULD CONTAIN THE SPATIAL DOMAIN AS DIMENSIONS AND THE INPUT DATA AS AN ATTRIBUTE
-     *    PREDICT SHOULD GET THE SUBTARS FROM DOMAIN AND DO THE FOLLOWING
-     *        FOR EVERY X' POINT IN THE SUBTAR
-     *            H = DETERMINE_MODEL(X')
-     *            VAL = USE_MODEL_TO_PREDICT(H, X')
-     *            WRITE VAL TO THE OUTPUT DATASET
-     *            BUFFER[X_POSITION] = VAL
-     * */
-
     TARPtr inputTAR = _inputTAR;
     string modelName = _operation->GetParametersByName("model_name")->literal_str;
     string predictedAttribute = _operation->GetParametersByName("attribute")->literal_str;

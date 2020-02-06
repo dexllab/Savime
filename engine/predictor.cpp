@@ -83,6 +83,7 @@ Json::Value Predictor::fillDimensionArray(long int *bufferIndex, double* buffer,
                 dimArray.append(attributeValue);
             } else {
                 dimArray.append(buffer[*bufferIndex]);
+                *bufferIndex += 1;
             }
         }
         --(*it);
