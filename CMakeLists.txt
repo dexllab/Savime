@@ -54,7 +54,7 @@ if(REGENEREATE_PARSER)
 endif(REGENEREATE_PARSER)
 
 
-add_library(savime STATIC lib/savime_lib.cpp engine/include/json_parser.h engine/predictor.cpp engine/include/predictor.h)
+add_library(savime STATIC lib/savime_lib.cpp)
 install(TARGETS savime DESTINATION lib)
 
 if(BUILD_SAVIME_CLIENT)
