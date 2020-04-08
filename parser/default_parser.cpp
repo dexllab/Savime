@@ -1570,7 +1570,7 @@ DefaultParser::ParseUserDefined(QueryExpressionPtr queryExpressionNode,
 OperationPtr
 DefaultParser::ParsePredict(QueryExpressionPtr queryExpressionNode,
                                 QueryPlanPtr queryPlan, int &idCounter) {
-#define EXPECTED_PREDICT_PARAMS_NUM 3
+#define EXPECTED_PREDICT_PARAMS_NUM 2
   CharacterStringLiteralPtr stringLiteral;
   OperationPtr operation = std::make_shared<Operation>(TAL_PREDICT);
   IdentifierChainPtr identifier; int32_t identifierCount = 0;
@@ -1585,7 +1585,7 @@ DefaultParser::ParsePredict(QueryExpressionPtr queryExpressionNode,
 
     auto param = params.begin();
 
-    //First Parameter
+    //Model Name
     if(identifier = PARSE(*param, IdentifierChain)) {
         string modelName = identifier->getIdentifier()->_identifierBody;
         ifstream f("/tmp/" + modelName);
@@ -1601,18 +1601,6 @@ DefaultParser::ParsePredict(QueryExpressionPtr queryExpressionNode,
         throw std::runtime_error(predict_error);
     }
     param++;
-    //Second Parameter
-    if (identifier = PARSE(*param, IdentifierChain)) {
-        if (!inputTAR->HasDataElement(GET_IDENTIFER_BODY(identifier))) {
-            throw std::runtime_error("Schema element " +
-                GET_IDENTIFER_BODY(identifier) +
-                " is not a valid attribute in TAR " + inputTAR->GetName() + ".");
-        }
-
-    } else {
-        throw std::runtime_error(predict_error);
-    }
-    operation->AddParam("attribute", GET_IDENTIFER_BODY(identifier));
 
   }
   else {

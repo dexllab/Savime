@@ -29,21 +29,23 @@ RegisterModel::RegisterModel(OperationPtr operation, ConfigurationManagerPtr con
 
 SavimeResult RegisterModel::Run() {
   string modelName = _operation->GetParametersByName("model_name")->literal_str;
-  string tarName = _operation->GetParametersByName("tar_name")->literal_str;
-  string targetAttribute = _operation->GetParametersByName("target_attribute")->literal_str;
-  string dimensionString = _operation->GetParametersByName("dimension_string")->literal_str;
+  string attributeList = _operation->GetParametersByName("attribute_string")->literal_str;
+  string inputDimensionString = _operation->GetParametersByName("input_dimension_string")->literal_str;
+  string outputDimensionString = _operation->GetParametersByName("output_dimension_string")->literal_str;
 
-  dimensionString.erase(std::remove_if(dimensionString.begin(), dimensionString.end(), ::isspace), dimensionString.end());
+  attributeList = remove_str(attributeList, ' ');
+  inputDimensionString  = remove_str(inputDimensionString, ' ');
+  outputDimensionString = remove_str(outputDimensionString, ' ');
+
   ModelConfigurationManager *modelConfigurationManager = new ModelConfigurationManager();
   modelConfigurationManager->SetStringValue("model_name", "\"" + modelName + "\"");
-  modelConfigurationManager->SetStringValue("tar_name", "\"" + tarName + "\"");
-  modelConfigurationManager->SetStringValue("target_attribute", "\"" + targetAttribute + "\"");
-  modelConfigurationManager->SetStringValue("dimension_specifications", dimensionString);
+  modelConfigurationManager->SetStringValue("attribute_list",  attributeList  );
+  modelConfigurationManager->SetStringValue("input_dimension_specifications", inputDimensionString);
+  modelConfigurationManager->SetStringValue("output_dimension_specifications", outputDimensionString);
 
   string modelConfigDirectory =  "/tmp";
-  auto numberOfDimensions = split(dimensionString, '|').size();
+  auto numberOfDimensions = split(inputDimensionString, '|').size();
   modelConfigurationManager->SetLongValue("number_of_dimensions", numberOfDimensions);
-
   modelConfigurationManager->SaveConfigFile(modelConfigDirectory + "/" + modelName);
   auto list = _operation->GetParameters();
 

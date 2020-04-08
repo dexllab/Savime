@@ -17,6 +17,7 @@
 #include <cassert>
 #include <math.h>
 #include <memory.h>
+#include <engine/misc/include/prediction_model.h>
 #include "schema_builder.h"
 #include "default_parser.h"
 
@@ -482,15 +483,23 @@ TARPtr SchemaBuilder::InferSchemaForPredict(OperationPtr operation) {
     //Creates the output tar structure for predict operator
     TARPtr resultingTAR = nullptr;
 
-    for(ParameterPtr inputTARParam : operation->GetParameters()){
-        if(inputTARParam->tar != nullptr){
-            resultingTAR = inputTARParam->tar->Clone(false, false, false);
-            resultingTAR->AddAttribute("op_result", DataType(DOUBLE, 1));
-            SetResultingType(inputTARParam->tar, resultingTAR);
-            break;
-        }
+    string modelName = operation->GetParametersByName("model_name")->literal_str;
+    resultingTAR = std::make_shared<TAR>(0, "", nullptr);
+    ParameterPtr inputTARParam = operation->GetParametersByName(PARAM(TAL_PREDICT, _INPUT_TAR));
 
+    auto model = new PredictionModel(modelName);
+    auto outputDimList = model->getOutputDimensionList();
+    auto outputAttributeList = model->getOutputAttributeList();
+    DimensionPtr dimPtr;
+    for(auto dimPtr : outputDimList){
+        resultingTAR->AddDimension(dimPtr);
     }
+    for(auto attribute : outputAttributeList){
+        auto attr_name      = attribute.first;
+        auto attributeSize = attribute.second;
+        resultingTAR->AddAttribute(attr_name, DataType(DOUBLE, attributeSize));
+    }
+    SetResultingType(inputTARParam->tar, resultingTAR);
     return resultingTAR;
 }
 
@@ -498,22 +507,7 @@ TARPtr SchemaBuilder::InferSchemaForUserDefined(OperationPtr operation) {
 
   std::string operatorName = operation->GetParametersByName(OPERATOR_NAME)->literal_str;
 
-  if(operatorName == "predict"){
-    //Criar estrutura do tar de saída do operador predict
-    TARPtr resultingTAR = nullptr;
-
-    for(ParameterPtr inputTARParam : operation->GetParameters()){
-        if(inputTARParam->tar != nullptr){
-            resultingTAR = inputTARParam->tar->Clone(false, false, false);
-            resultingTAR->AddAttribute("op_result", DataType(DOUBLE, 1));
-            SetResultingType(inputTARParam->tar, resultingTAR);
-            break;
-        }
-
-    }
-    return resultingTAR;
-  }
-  else if(_configurationManager->GetBooleanValue(OPERATOR_TAR(operatorName))){
+  if(_configurationManager->GetBooleanValue(OPERATOR_TAR(operatorName))){
 
     TARPtr resultingTAR = nullptr;
     for(ParameterPtr inputTARParam : operation->GetParameters()){

@@ -28,10 +28,14 @@ class PredictionModel {
   public:
     PredictionModel(string modelName);
     void checkInputDimensions(SubtarPtr subtar);
-    string getDimensionalString();
+    string getInputDimensionString();
     int getNumberOfInputDimensions();
-    string getTargetAttributeName();
+    string getAttributeString();
+    vector<string> getAttributeList();
+    string getOutputDimensionString();
     ~PredictionModel();
+    list<DimensionPtr> getOutputDimensionList();
+    list<pair<string, savime_size_t>> getOutputAttributeList();
  private:
     DefaultConfigurationManager* _modelConfigurationManager;
     void loadModelConfig(string modelName);

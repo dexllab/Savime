@@ -28,7 +28,8 @@ class RegisterModelParser {
  private:
    DefaultParser *_parser;
    const char *error_msg = "Invalid parameter for operator REGISTER_MODEL. Expected "
-                              "REGISTER_MODEL(model_name, tar, attribute, [\"dim\"], \"path\")";
+                             "REGISTER_MODEL(model_name, \"input_dim_name-dim_size|...\", "
+                                "\"output_dim_name-dim_size|...\", \"attribute_1, attribute_2 , ...\")";
    TARPtr _inputTAR;
   IdentifierChainPtr parseIdentifierChain(ValueExpressionPtr value);
   TARPtr parseTAR(ValueExpressionPtr value, QueryPlanPtr queryPlan, int &idCounter);
@@ -36,9 +37,9 @@ class RegisterModelParser {
   void parseModelName(list<ValueExpressionPtr> *params, OperationPtr operation);
   void parseTarName(list<ValueExpressionPtr> *params, OperationPtr operation,
                                          QueryPlanPtr queryPlan, int &idCounter);
-  void parseAttribute(list<ValueExpressionPtr> *params, OperationPtr operation,
-                                           QueryPlanPtr queryPlan, int &idCounter);
-  void parseDimensionString(list<ValueExpressionPtr> *params, OperationPtr shared_ptr);
+  void parseAttributeString(list<ValueExpressionPtr> *params, OperationPtr operation);
+  void parseInputDimensionString(list<ValueExpressionPtr> *params, OperationPtr shared_ptr);
+  void parseOutputDimensionString(list<ValueExpressionPtr> *params, OperationPtr operation);
 };
 
 #endif //SAVIME_REGISTERMODELPARSER_H

@@ -25,6 +25,7 @@
 #include <json_parser.h>
 #include <engine/misc/include/curl.h>
 #include <engine/misc/include/prediction_model.h>
+#include <utility>
 
 Predictor::Predictor(PredictionModel *predictionModel) {
     this->_predictionModel= predictionModel;
@@ -39,17 +40,21 @@ void Predictor::checkModelDimensions(SubtarPtr subtar)
     }
 }
 
-vector<string> Predictor::getPredictions(SubtarPtr subtar, StorageManagerPtr storageManager,
-                                         string modelName, string predictedAttribute){
+vector<string> Predictor::getPredictions(SubtarPtr subtar, StorageManagerPtr storageManager, string modelName) {
     modelName.erase(std::remove(modelName.begin(),modelName.end(),'\"'),modelName.end());
     this->checkModelDimensions(subtar);
 
-    Json::Value JSonQuery = this->createJsonQuery(subtar, storageManager, predictedAttribute);
+    std::vector<string> targetAttributeList = this->getTargetAttributeList();
+    Json::Value JSonQuery = this->createJsonQuery(subtar, storageManager, targetAttributeList);
     string url_address = "http://localhost:8501/v1/models/" + modelName + ":predict";
     Json::Value JSonPrediction = sendJsonToUrl(JSonQuery, url_address);
-
-    writeJsonFile("/tmp/output.json", JSonPrediction);
-    return jsonArrayToVector(JSonPrediction["predictions"]);
+    if(JSonPrediction["error"].type() == Json::stringValue)
+    {
+        throw std::runtime_error("Error while communicating to prediction server: \n TFX: " +
+            JSonPrediction["error"].asString());
+    }
+    vector<string> result = jsonArrayToVector(JSonPrediction["predictions"]);
+    return result;
 }
 
 int getAttributeLengthFor(SubtarPtr subtar, string attributeName)
@@ -63,26 +68,39 @@ int getAttributeLengthFor(SubtarPtr subtar, string attributeName)
     return -1;
 }
 
-Json::Value Predictor::fillDimensionArray(long int *bufferIndex, double* buffer, SubtarPtr subtar,
-                                          std::vector<string>::iterator *it, int dimCounter){
+Json::Value Predictor::fillDimensionArray(long int *bufferIndex,
+                                          list<DatasetHandlerPtr> *dsHandlerList,
+                                          SubtarPtr subtar,
+                                          std::vector<string>::iterator *it,
+                                          int dimCounter){
     Json::Value dimArray;
     auto dimSpec = split(**it, '-');
     string dimName = dimSpec[0];
     long int dimLength = std::stol(dimSpec[1]);
 
     if(dimCounter == this->_predictionModel->getNumberOfInputDimensions()){//If it is the last dimension
-        string sourceAttribute = this->_predictionModel->getTargetAttributeName();
-        int attributeLength = getAttributeLengthFor(subtar, sourceAttribute);
+        vector<string> sourceAttributeList = this->_predictionModel->getAttributeList();
+        int attributeLength = getAttributeLengthFor(subtar, sourceAttributeList[0]);
         for (long int i = 0; i < dimLength; ++i) {
-            if(attributeLength > 1) {
-                Json::Value attributeValue;
+            if(attributeLength > 1 or sourceAttributeList.size() > 1) {
+                Json::Value attributeListValue;
                 for (long int j = 0; j < attributeLength; j++) {
-                    attributeValue.append(buffer[*bufferIndex]);
+                    for (std::list<DatasetHandlerPtr>::iterator it = dsHandlerList->begin(); it != dsHandlerList->end(); ++it)
+                        if((*it)->GetDataSet()->GetType() == INT64)
+                        {
+                            attributeListValue.append(((int *) (*it)->GetBuffer())[*bufferIndex]);
+                        } else if ((*it)->GetDataSet()->GetType() == DOUBLE)
+                        {
+                            attributeListValue.append(((double *) (*it)->GetBuffer())[*bufferIndex]);
+                        }
+
+                        //attributeValue.append(dsHandlerList->[*bufferIndex]);
                     *bufferIndex += 1;
                 }
-                dimArray.append(attributeValue);
+                dimArray.append(attributeListValue);
             } else {
-                dimArray.append(buffer[*bufferIndex]);
+                std::list<DatasetHandlerPtr>::iterator it = dsHandlerList->begin();
+                dimArray.append(((double *) (*it)->GetBuffer())[*bufferIndex]);
                 *bufferIndex += 1;
             }
         }
@@ -91,7 +109,7 @@ Json::Value Predictor::fillDimensionArray(long int *bufferIndex, double* buffer,
     }
     else {
         for (long int i = 0; i < dimLength; i++) {
-            dimArray.append(fillDimensionArray(bufferIndex, buffer, subtar, &(++(*it)), dimCounter+1));
+            dimArray.append(fillDimensionArray(bufferIndex, dsHandlerList, subtar, &(++(*it)), dimCounter+1));
         }
         --(*it);
         return dimArray;
@@ -110,20 +128,23 @@ DatasetHandlerPtr getDatasetHandler(SubtarPtr subtar, StorageManagerPtr storageM
 }
 
 Json::Value Predictor::createJsonQuery(SubtarPtr subtar, StorageManagerPtr storageManager,
-                                       string inputAttribute) {
+                                       vector<string> inputAttribute) {
     auto dimSpecs = subtar->GetDimSpecs();
-    auto datasetHandler = getDatasetHandler(subtar, storageManager, inputAttribute);
 
-    if(datasetHandler != nullptr) {
-        double *buffer = (double *) datasetHandler->GetBuffer();
+    list<DatasetHandlerPtr> datasetHandlerList;
+    for(vector <string> :: iterator it = inputAttribute. begin(); it != inputAttribute. end(); ++it){
+        auto datasetHandler = getDatasetHandler(subtar, storageManager, *it);
+        datasetHandlerList.push_back(datasetHandler);
+    }
 
+    if(!datasetHandlerList.empty()) {
         Json::Value JSonQuery;
 
         long int ct = 0;
-        string dimString = this->_predictionModel->getDimensionalString();
+        string dimString = this->_predictionModel->getInputDimensionString();
         auto dimList = split(dimString, '|');
         auto it = dimList.begin();
-        Json::Value dimensionalArray = fillDimensionArray(&ct, buffer, subtar, &it, 1);
+        Json::Value dimensionalArray = fillDimensionArray(&ct, &datasetHandlerList, subtar, &it, 1);
         JSonQuery["signature_name"] = "serving_default";
         JSonQuery["instances"] = dimensionalArray;
         writeJsonFile("/tmp/input.json", JSonQuery);
@@ -131,5 +152,8 @@ Json::Value Predictor::createJsonQuery(SubtarPtr subtar, StorageManagerPtr stora
     }else{
         throw std::runtime_error(ERROR_MSG("Could not get handler for dataset", "PREDICT"));
     }
+}
+std::vector<string> Predictor::getTargetAttributeList() {
+    return this->_predictionModel->getAttributeList();
 }
 

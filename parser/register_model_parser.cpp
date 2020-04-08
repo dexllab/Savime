@@ -40,9 +40,9 @@ OperationPtr RegisterModelParser::parse(QueryExpressionPtr queryExpressionNode,
 
     if (params.size() == EXPECTED_REGISTER_MODEL_PARAMS_NUM) {
         this->parseModelName(&params, operation);
-        this->parseTarName(&params, operation, queryPlan, idCounter);
-        this->parseAttribute(&params, operation, queryPlan, idCounter);
-        this->parseDimensionString(&params, operation);
+        this->parseInputDimensionString(&params, operation);
+        this->parseOutputDimensionString(&params, operation);
+        this->parseAttributeString(&params, operation);
     } else {
         throw std::runtime_error(this->error_msg);
     }
@@ -64,22 +64,21 @@ void RegisterModelParser::parseTarName(list<ValueExpressionPtr> *params, Operati
     params->pop_front();
 }
 
-void RegisterModelParser::parseAttribute(list<ValueExpressionPtr> *params, OperationPtr operation,
-                                       QueryPlanPtr queryPlan, int &idCounter) {
-    auto identifierChain = this->parseIdentifierChain(params->front());
-    string identifier = identifierChain->getIdentifier()->_identifierBody;
-
-    if (this->_inputTAR->HasDataElement(identifier)) {
-        operation->AddParam("target_attribute", identifierChain->getIdentifier()->_identifierBody);
-        params->pop_front();
-    } else {
-        throw std::runtime_error("Schema element " + identifier + " is not a valid member.");
-    }
+void RegisterModelParser::parseAttributeString(list<ValueExpressionPtr> *params, OperationPtr operation) {
+    auto characterString = this->parseString(params->front());
+    operation->AddParam("attribute_string", characterString->getLiteralString());
+    params->pop_front();
 }
 
-void RegisterModelParser::parseDimensionString(list<ValueExpressionPtr> *params, OperationPtr operation) {
+void RegisterModelParser::parseInputDimensionString(list<ValueExpressionPtr> *params, OperationPtr operation) {
     auto characterString = this->parseString(params->front());
-    operation->AddParam("dimension_string", characterString->getLiteralString());
+    operation->AddParam("input_dimension_string", characterString->getLiteralString());
+    params->pop_front();
+}
+
+void RegisterModelParser::parseOutputDimensionString(list<ValueExpressionPtr> *params, OperationPtr operation) {
+    auto characterString = this->parseString(params->front());
+    operation->AddParam("output_dimension_string", characterString->getLiteralString());
     params->pop_front();
 }
 

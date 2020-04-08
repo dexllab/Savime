@@ -28,25 +28,42 @@ void PredictionModel::loadModelConfig(string modelName) {
    this->_modelConfigurationManager->LoadConfigFile("/tmp/" + modelName);
 }
 
-string PredictionModel::getDimensionalString(){
-    return _modelConfigurationManager->GetStringValue("dimension_specifications");
+string PredictionModel::getInputDimensionString(){
+    return _modelConfigurationManager->GetStringValue("input_dimension_specifications");
+}
+
+string PredictionModel::getOutputDimensionString(){
+    return this->_modelConfigurationManager->GetStringValue("output_dimension_specifications");
 }
 
 int PredictionModel::getNumberOfInputDimensions(){
-    int numberOfInputDimensions = int(split(this->getDimensionalString(), '|').size());
+    int numberOfInputDimensions = int(split(this->getInputDimensionString(), '|').size());
     return numberOfInputDimensions;
 }
 
-string PredictionModel::getTargetAttributeName(){
-    return this->_modelConfigurationManager->GetStringValue("target_attribute");
+string PredictionModel::getAttributeString(){
+    return this->_modelConfigurationManager->GetStringValue("attribute_list");
+}
+
+vector<string> PredictionModel::getAttributeList(){
+    string attrList = this->getAttributeString();
+    return split(attrList, ',');
 }
 
 void PredictionModel::checkInputDimensions(SubtarPtr subtar){
-   string dimString = _modelConfigurationManager->GetStringValue("dimension_specifications");
+   string dimString = _modelConfigurationManager->GetStringValue("input_dimension_specifications");
 
    auto dimSpecs = split(dimString, '|');
    for (auto entry : dimSpecs) {
          auto s = split(entry, '-');
+         if(s[1].compare("*") == 0)
+             continue;
+         auto subtarDimSpec = subtar->GetDimensionSpecificationFor(s[0]);
+         if(subtarDimSpec->GetSpecsType() == TOTAL)
+         {
+             throw std::runtime_error(s[0] + ": Dimension Specification cannot be of type TOTAL.\n"
+                                             "Use operator SUBSET for filters.");
+         }
          if(s.empty()) {
             throw std::runtime_error("Could not parse dimension string: \n" + dimString);
          }
@@ -59,6 +76,26 @@ void PredictionModel::checkInputDimensions(SubtarPtr subtar){
          }
    }
 
+}
+list<DimensionPtr> PredictionModel::getOutputDimensionList() {
+    auto dimString = this->getOutputDimensionString();
+    list<DimensionPtr> dimensionList;
+    auto dimensionSpecifications = split(this->getOutputDimensionString(), '|');
+    for(auto dimSpecification : dimensionSpecifications){
+        auto dimVector = split(dimSpecification, '-');
+        DimensionPtr dimension =                             //Lower, upper bound and spacing
+            make_shared<Dimension>(UNSAVED_ID, dimVector[0], INT64, 0, stoi(dimVector[1]), 1); //stoi(dimVector[1]) , 1);
+        dimensionList.emplace_back(dimension);
+    }
+    return dimensionList;
+}
+list<pair<string, savime_size_t>> PredictionModel::getOutputAttributeList() {
+    std::list<pair<string, savime_size_t>> outputAttributeList;
+    pair<string, savime_size_t> outputAttribute;
+    outputAttribute.first = "op_result";
+    outputAttribute.second = 1;
+    outputAttributeList.emplace_back(outputAttribute);
+    return outputAttributeList;
 }
 
 PredictionModel::~PredictionModel() = default;

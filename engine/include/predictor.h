@@ -11,15 +11,16 @@
 
 class Predictor {
  public:
-   vector<string> getPredictions(SubtarPtr subtar, StorageManagerPtr storageManager, string modelName, string predictedAttribute);
+   vector<string> getPredictions(SubtarPtr subtar, StorageManagerPtr storageManager, string modelName);
    Predictor(PredictionModel *predictionModel);
  private:
    PredictionModel *_predictionModel;
    Json::Value createJsonQuery(SubtarPtr subtar, StorageManagerPtr storageManager,
-                               string inputAttribute);
-  Json::Value fillDimensionArray(long int *bufferIndex, double* buffer, SubtarPtr subtar,
+                               vector<string> inputAttribute);
+  Json::Value fillDimensionArray(long int *bufferIndex, list<DatasetHandlerPtr> *dsHandlerList, SubtarPtr subtar,
                                  std::vector<string>::iterator *it, int dimCounter);
    void checkModelDimensions(SubtarPtr subtar);
+  std::vector<string> getTargetAttributeList();
 };
 
 #endif //SAVIME_PREDICTOR_H
