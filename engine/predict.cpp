@@ -18,6 +18,7 @@
 #include "include/dml_operators.h"
 #include "include/viz.h"
 #include "engine/include/predictor.h"
+#include <malloc.h>
 
 Predict::Predict(OperationPtr operation,
             ConfigurationManagerPtr configurationManager,
@@ -54,6 +55,8 @@ SavimeResult Predict::GenerateSubtar(SubTARIndex subtarIndex){
     auto *p = new Predictor(new PredictionModel(modelName));
     vector<string> predictedValues = p->getPredictions(subtar, _storageManager, modelName);
     delete(p);
+    //Returns the allocated memory to the OS
+    malloc_trim(0);
 
     //Create new subtar
     SubtarPtr newSubtar = make_shared<Subtar>();
