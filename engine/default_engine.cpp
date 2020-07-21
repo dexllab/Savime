@@ -32,7 +32,7 @@
 #include "../core/include/parser.h"
 #include "include/ddl_operators.h"
 #include "include/dml_operators.h"
-
+#include "include/ml_operators.h"
 
 const string _DEFAULT_ENGINE_ERROR_MSG = "Error during query execution, "
                                          "check the log file for more info.";
@@ -291,13 +291,16 @@ EngineOperatorPtr EngineOperatorFactory::Make(OperationPtr operation) {
         return make_shared<RegisterModel>(operation, _configurationManager,
                                           _queryDataManager, _metadataManager,
                                           _storageManager, _engine);
-      case TAL_USER_DEFINED:
-      return make_shared<UserDefined>(operation, _configurationManager,
+     case TAL_ASSIGN_LEARNING_TAR:
+        return make_shared<AssignLearningTAR>(operation, _configurationManager,
+                                            _queryDataManager, _metadataManager,
+                                            _storageManager, _engine);
+     case TAL_USER_DEFINED:
+     return make_shared<UserDefined>(operation, _configurationManager,
                                       _queryDataManager, _metadataManager,
                                       _storageManager, _engine);
       ;
   }
-
   return nullptr;
 }
 

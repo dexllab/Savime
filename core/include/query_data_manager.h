@@ -62,6 +62,9 @@
 #define _AGGREGATE "aggregate"
 #define _PREDICT "predict"
 #define _REGISTER_MODEL "register_model"
+#define _ASSIGN_LEARNING_TAR "assign_learning_tar"
+
+// The values defined above represent the operators keywords in SAVIME's query language.
 
 using namespace std;
 
@@ -84,7 +87,10 @@ enum OperationCode {
   TAL_DELETE,      /*!<DML operation that removes all Subtars intersecting a n-dimensional slice.*/
   TAL_SAVE,        /*!<DML operation saves a logical backup. */
   TAL_SHOW,        /*!<DML operation that lists TARs and Subtars. */
+
   TAL_PREDICT,     /*!<DML operation that invokes machine learning models. */
+  TAL_ASSIGN_LEARNING_TAR, /*!<DML operation that assigns a learning query to a model */
+
   TAL_SCAN,        /*!<DDL operation to allow fully TAR retrieval as is. */
   TAL_SELECT, /*!<DDL operation that projects dimensions and attributes from the
                  TAR. */

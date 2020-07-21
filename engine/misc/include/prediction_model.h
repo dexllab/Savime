@@ -27,16 +27,18 @@ using namespace std;
 class PredictionModel {
   public:
     PredictionModel(string modelName);
+    string getModelName();
     void checkInputDimensions(SubtarPtr subtar);
     string getInputDimensionString();
     int getNumberOfInputDimensions();
     string getAttributeString();
     vector<string> getAttributeList();
     string getOutputDimensionString();
-    ~PredictionModel();
     list<DimensionPtr> getOutputDimensionList();
     list<pair<string, savime_size_t>> getOutputAttributeList();
+    ~PredictionModel();
  private:
+    string _modelName;
     DefaultConfigurationManager* _modelConfigurationManager;
     void loadModelConfig(string modelName);
 };

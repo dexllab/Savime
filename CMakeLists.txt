@@ -103,6 +103,7 @@ if(BUILD_SAVIME_TESTS)
     engine/include/aggregate_engine.h
     engine/include/create_tar.h
     engine/include/ddl_operators.h
+    engine/include/ml_operators.h
     engine/include/default_engine.h
     engine/include/dimjoin.h
     engine/include/dml_operators.h
@@ -150,7 +151,9 @@ if(BUILD_SAVIME_TESTS)
     engine/store.cpp engine/drop_tar.cpp test/optimizer/mock_optimizer.h test/optimizer/test_optimizer.cpp optimizer/query_cost.cpp
     optimizer/dependency_checker.cpp optimizer/query_graph.cpp optimizer/operation_splitter.cpp engine/split.cpp engine/reorient.cpp
     engine/misc/curl.cpp engine/misc/include/curl.h engine/predict.cpp engine/predictor.cpp engine/include/predictor.h
-    engine/register_model.cpp engine/misc/prediction_model.cpp engine/misc/include/prediction_model.h parser/register_model_parser.cpp parser/register_model_parser.h configuration/model_configuration_manager.cpp configuration/model_configuration_manager.h)
+    engine/register_model.cpp engine/misc/prediction_model.cpp engine/misc/include/prediction_model.h parser/register_model_parser.cpp
+    parser/register_model_parser.h configuration/model_configuration_manager.cpp configuration/model_configuration_manager.h
+    engine/assignLearningTAR.cpp core/time_evaluator.cpp core/include/time_evaluator.h)
 
     target_compile_options(savime-test PRIVATE ${OpenMP_CXX_FLAGS})
     target_link_libraries(savime-test ${OpenMP_CXX_FLAGS})
@@ -230,6 +233,7 @@ if(BUILD_WITH_CATALYST)
         engine/include/aggregate_engine.h
         engine/include/create_tar.h
         engine/include/ddl_operators.h
+        engine/include/ml_operators.h
         engine/include/default_engine.h
         engine/include/dimjoin.h
         engine/include/dml_operators.h
@@ -273,7 +277,8 @@ if(BUILD_WITH_CATALYST)
         engine/split.cpp engine/reorient.cpp engine/predict.cpp engine/misc/curl.cpp engine/misc/include/curl.h
         engine/predictor.cpp engine/include/predictor.h engine/register_model.cpp engine/misc/prediction_model.cpp
         engine/misc/include/prediction_model.h parser/register_model_parser.cpp parser/register_model_parser.h
-        configuration/model_configuration_manager.cpp configuration/model_configuration_manager.h)
+        configuration/model_configuration_manager.cpp configuration/model_configuration_manager.h
+        engine/assignLearningTAR.cpp)
 
     target_compile_definitions(savime-bin PUBLIC -DCATALYST)
 
@@ -344,6 +349,7 @@ else(BUILD_WITH_CATALYST)
             engine/include/aggregate_engine.h
             engine/include/create_tar.h
             engine/include/ddl_operators.h
+            engine/include/ml_operators.h
             engine/include/default_engine.h
             engine/include/dimjoin.h
             engine/include/dml_operators.h
@@ -392,7 +398,7 @@ else(BUILD_WITH_CATALYST)
             engine/predictor.cpp engine/include/predictor.h
             engine/register_model.cpp engine/misc/prediction_model.cpp engine/misc/include/prediction_model.h
             parser/register_model_parser.cpp parser/register_model_parser.h configuration/model_configuration_manager.cpp
-            configuration/model_configuration_manager.h)
+            configuration/model_configuration_manager.h engine/assignLearningTAR.cpp core/time_evaluator.cpp core/include/time_evaluator.h)
 
     set_target_properties(savime-bin
             PROPERTIES OUTPUT_NAME savime)

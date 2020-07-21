@@ -50,12 +50,12 @@ class DefaultParser : public Parser {
                     QueryPlanPtr queryPlan, int &idCounter);
     int CreateQueryPlan(ParseTreeNodePtr root,
                         QueryDataManagerPtr queryDataManager);
-    TARPtr ParseOperation(QueryExpressionPtr queryExpressionNode,
-                          QueryPlanPtr queryPlan, int &idCounter);
+    TARPtr ParseDMLOperation(QueryExpressionPtr queryExpressionNode,
+                             QueryPlanPtr queryPlan, int &idCounter);
     bool ValidateNumericalFunction(QueryExpressionPtr expression,
                                    TARPtr inputTAR);
     bool ValidateBoolFunction(QueryExpressionPtr expression, TARPtr inputTAR);
-    OperationPtr ParseDMLOperation(QueryExpressionPtr queryExpressionNode,
+    OperationPtr ParseDDLOperation(QueryExpressionPtr queryExpressionNode,
                                    QueryPlanPtr queryPlan, int &idCounter);
   private:
     // DDL
@@ -128,10 +128,14 @@ class DefaultParser : public Parser {
                                 QueryPlanPtr queryPlan, int &idCounter);
     OperationPtr ParseRegisterModel(QueryExpressionPtr queryExpressionNode,
                                       QueryPlanPtr queryPlan, int &idCounter);
+    OperationPtr ParseAssignLearningTAR(QueryExpressionPtr queryExpressionNode,
+                                    QueryPlanPtr queryPlan, int &idCounter);
     OperationPtr ParseUserDefined(QueryExpressionPtr queryExpressionNode,
                                   QueryPlanPtr queryPlan, int &idCounter);
+    //Parse of basic types
+    CharacterStringLiteralPtr parseString(ValueExpressionPtr value);
 
-  public:
+public:
     DefaultParser(ConfigurationManagerPtr configurationManager,
                   SystemLoggerPtr systemLogger)
         : Parser(configurationManager, systemLogger) {
@@ -142,6 +146,8 @@ class DefaultParser : public Parser {
     void SetStorageManager(StorageManagerPtr storageManager);
     TARPtr InferOutputTARSchema(OperationPtr operation);
     SavimeResult Parse(QueryDataManagerPtr queryDataManager);
+
+    bool isDDLFunction(string basicString);
 };
 
 #endif /* DEFAULT_PARSER_H */

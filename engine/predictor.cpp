@@ -12,23 +12,36 @@
 *    You should have received a copy of the GNU General Public License
 *    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *
-*    ANDERSON C. SILVA				JANUARY 2020
+*    JANUARY 2020
 */
 
 #include "predictor.h"
 #include "include/dml_operators.h"
 #include "engine/misc/include/json.h"
-#include <curl/curl.h>
 #include <list>
-#include <jsoncpp/json/json.h>
-#include <jsoncpp/json/reader.h>
-#include <json_parser.h>
 #include <engine/misc/include/curl.h>
 #include <engine/misc/include/prediction_model.h>
-#include <utility>
+#include <core/include/time_evaluator.h>
+#include <core/include/system_logger.h>
+#include <string>
 
-Predictor::Predictor(PredictionModel *predictionModel) {
-    this->_predictionModel= predictionModel;
+Predictor::Predictor(PredictionModel *predictionModel, StorageManagerPtr _storageManager,
+                                 ConfigurationManagerPtr _configurationManager) {
+    this->_predictionModel = predictionModel;
+    this->_storageManager  = _storageManager;
+    this->_configurationManager = _configurationManager;
+}
+
+vector<string> Predictor::getPredictions(SubtarPtr subtar) {
+    auto modelName = this->_predictionModel->getModelName();
+    modelName.erase(std::remove(modelName.begin(),modelName.end(),'\"'),modelName.end());
+    this->checkModelDimensions(subtar);
+    std::vector<string> targetAttributeList = this->getTargetAttributeList();
+
+    auto jsonQuery      = this->stepCreateJSonQuery(subtar, targetAttributeList);
+    auto jsonPrediction = this->stepSendJsonToUrl(jsonQuery, modelName);
+    auto result         = this->stepConvertJsonToVector(jsonPrediction["predictions"]);
+    return result;
 }
 
 void Predictor::checkModelDimensions(SubtarPtr subtar)
@@ -40,22 +53,28 @@ void Predictor::checkModelDimensions(SubtarPtr subtar)
     }
 }
 
-vector<string> Predictor::getPredictions(SubtarPtr subtar, StorageManagerPtr storageManager, string modelName) {
-    modelName.erase(std::remove(modelName.begin(),modelName.end(),'\"'),modelName.end());
-    this->checkModelDimensions(subtar);
+Json::Value Predictor::stepCreateJSonQuery(SubtarPtr subtar, vector<string> inputAttribute) {
+    auto jsonQuery = this->createJsonQuery(subtar, this->_storageManager, inputAttribute);
+    return jsonQuery;
+}
 
-    std::vector<string> targetAttributeList = this->getTargetAttributeList();
-    Json::Value JSonQuery = this->createJsonQuery(subtar, storageManager, targetAttributeList);
+Json::Value Predictor::stepSendJsonToUrl(Json::Value jsonQuery, string modelName){
     string url_address = "http://localhost:8501/v1/models/" + modelName + ":predict";
-    Json::Value JSonPrediction = sendJsonToUrl(JSonQuery, url_address);
-    if(JSonPrediction["error"].type() == Json::stringValue)
+    auto jsonPrediction = sendJsonToUrl(jsonQuery, url_address);
+
+    if(jsonPrediction["error"].type() == Json::stringValue)
     {
         throw std::runtime_error("Error while communicating to prediction server: \n TFX: " +
-            JSonPrediction["error"].asString());
+                                 jsonPrediction["error"].asString());
     }
-    vector<string> result = jsonArrayToVector(JSonPrediction["predictions"]);
-    return result;
+    return jsonPrediction;
 }
+
+vector<string> Predictor::stepConvertJsonToVector(Json::Value &value) {
+    auto convertedData = jsonArrayToVector(value);
+    return convertedData;
+}
+
 
 int getAttributeLengthFor(SubtarPtr subtar, string attributeName)
 {
@@ -93,8 +112,7 @@ Json::Value Predictor::fillDimensionArray(long int *bufferIndex,
                         {
                             attributeListValue.append(((double *) (*it)->GetBuffer())[*bufferIndex]);
                         }
-
-                        //attributeValue.append(dsHandlerList->[*bufferIndex]);
+                    //attributeValue.append(dsHandlerList->[*bufferIndex]);
                     *bufferIndex += 1;
                 }
                 dimArray.append(attributeListValue);
@@ -131,6 +149,7 @@ Json::Value Predictor::createJsonQuery(SubtarPtr subtar, StorageManagerPtr stora
                                        vector<string> inputAttribute) {
     auto dimSpecs = subtar->GetDimSpecs();
 
+    //Creates a list of datasetHandlers
     list<DatasetHandlerPtr> datasetHandlerList;
     for(vector <string> :: iterator it = inputAttribute. begin(); it != inputAttribute. end(); ++it){
         auto datasetHandler = getDatasetHandler(subtar, storageManager, *it);
@@ -140,14 +159,19 @@ Json::Value Predictor::createJsonQuery(SubtarPtr subtar, StorageManagerPtr stora
     if(!datasetHandlerList.empty()) {
         Json::Value JSonQuery;
 
+        //Gets an iterator for the list of dimensions
         long int ct = 0;
         string dimString = this->_predictionModel->getInputDimensionString();
         auto dimList = split(dimString, '|');
         auto it = dimList.begin();
-        Json::Value dimensionalArray = fillDimensionArray(&ct, &datasetHandlerList, subtar, &it, 1);
+
+        Json::Value dimensionalArray(Json::arrayValue);
+        dimensionalArray.append(fillDimensionArray(&ct, &datasetHandlerList, subtar, &it, 1));
         JSonQuery["signature_name"] = "serving_default";
         JSonQuery["instances"] = dimensionalArray;
+#ifdef DEBUG
         writeJsonFile("/tmp/input.json", JSonQuery);
+#endif
         return JSonQuery;
     }else{
         throw std::runtime_error(ERROR_MSG("Could not get handler for dataset", "PREDICT"));
@@ -156,4 +180,3 @@ Json::Value Predictor::createJsonQuery(SubtarPtr subtar, StorageManagerPtr stora
 std::vector<string> Predictor::getTargetAttributeList() {
     return this->_predictionModel->getAttributeList();
 }
-
