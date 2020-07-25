@@ -19,7 +19,9 @@
 #ifndef SAVIME_ML_OPERATORS_H
 #define SAVIME_ML_OPERATORS_H
 
+#include "engine/misc/include/prediction_model.h"
 #include "../core/include/engine.h"
+#include "default_engine.h"
 
 class AssignLearningTAR : public EngineOperator {
 public:
@@ -29,8 +31,49 @@ public:
 
     SavimeResult GenerateSubtar(SubTARIndex subtarIndex) override { return SAVIME_FAILURE; }
     SavimeResult Run() override;
-//private:
-    //unordered_map<string, unordered_map<string, string>> ParseModelsFile(string filePath);
+};
+
+class RegisterModel : public EngineOperator {
+public:
+    RegisterModel(OperationPtr operation, ConfigurationManagerPtr configurationManager,
+                  QueryDataManagerPtr queryDataManager, MetadataManagerPtr metadataManager, StorageManagerPtr storageManager,
+                  EnginePtr engine);
+
+    SavimeResult GenerateSubtar(SubTARIndex subtarIndex) override { return SAVIME_FAILURE; }
+    SavimeResult Run() override;
+private:
+    unordered_map<string, unordered_map<string, string>> ParseModelsFile(string filePath);
+};
+
+class Predict : public EngineOperator {
+
+    int32_t _numSubtars;
+    TARPtr _inputTAR;
+    TARPtr _outputTAR;
+    TARGeneratorPtr _generator;
+    TARGeneratorPtr _outputGenerator;
+
+public :
+    Predict(OperationPtr operation, ConfigurationManagerPtr configurationManager,
+            QueryDataManagerPtr queryDataManager, MetadataManagerPtr metadataManager, StorageManagerPtr storageManager,
+            EnginePtr engine);
+
+    SavimeResult GenerateSubtar(SubTARIndex subtarIndex) override;
+    SavimeResult Run() override{ return SAVIME_FAILURE; }
+    string toString() override {return "PREDICT";};
+
+    vector<string> getPredictions(SubtarPtr subtar, PredictionModel *model);
+
+    SubtarPtr createNewSubtar(vector<string> predictedValues, PredictionModel *predictionModel);
+
+    PredictionModel * getModel();
+
+    void sendOutputSubtar(SubTARIndex subtarIndex, SubtarPtr newSubtar);
+};
+
+//TO-DO: Develop Function
+class AssignLearningFunction : EngineOperator {
+
 };
 
 

@@ -103,32 +103,6 @@ public :
 
 };
 
-class Predict : public EngineOperator {
-
-  int32_t _numSubtars;
-  TARPtr _inputTAR;
-  TARPtr _outputTAR;
-  TARGeneratorPtr _generator;
-  TARGeneratorPtr _outputGenerator;
-
- public :
-   Predict(OperationPtr operation, ConfigurationManagerPtr configurationManager,
-          QueryDataManagerPtr queryDataManager, MetadataManagerPtr metadataManager, StorageManagerPtr storageManager,
-          EnginePtr engine);
-
-   SavimeResult GenerateSubtar(SubTARIndex subtarIndex) override;
-   SavimeResult Run() override{ return SAVIME_FAILURE; }
-   string toString() override {return "PREDICT";};
-
-    vector<string> getPredictions(SubtarPtr subtar, PredictionModel *model);
-
-    SubtarPtr createNewSubtar(vector<string> predictedValues, PredictionModel *predictionModel);
-
-    PredictionModel * getModel();
-
-    void sendOutputSubtar(SubTARIndex subtarIndex, SubtarPtr newSubtar);
-};
-
 class Filter : public EngineOperator {
 
     int32_t _numThreads;

@@ -153,7 +153,7 @@ if(BUILD_SAVIME_TESTS)
     engine/misc/curl.cpp engine/misc/include/curl.h engine/predict.cpp engine/predictor.cpp engine/include/predictor.h
     engine/register_model.cpp engine/misc/prediction_model.cpp engine/misc/include/prediction_model.h parser/register_model_parser.cpp
     parser/register_model_parser.h configuration/model_configuration_manager.cpp configuration/model_configuration_manager.h
-    engine/assignLearningTAR.cpp core/time_evaluator.cpp core/include/time_evaluator.h)
+            engine/assign_learning_tar.cpp core/time_evaluator.cpp core/include/time_evaluator.h)
 
     target_compile_options(savime-test PRIVATE ${OpenMP_CXX_FLAGS})
     target_link_libraries(savime-test ${OpenMP_CXX_FLAGS})
@@ -278,7 +278,7 @@ if(BUILD_WITH_CATALYST)
         engine/predictor.cpp engine/include/predictor.h engine/register_model.cpp engine/misc/prediction_model.cpp
         engine/misc/include/prediction_model.h parser/register_model_parser.cpp parser/register_model_parser.h
         configuration/model_configuration_manager.cpp configuration/model_configuration_manager.h
-        engine/assignLearningTAR.cpp)
+            engine/assign_learning_tar.cpp)
 
     target_compile_definitions(savime-bin PUBLIC -DCATALYST)
 
@@ -398,7 +398,7 @@ else(BUILD_WITH_CATALYST)
             engine/predictor.cpp engine/include/predictor.h
             engine/register_model.cpp engine/misc/prediction_model.cpp engine/misc/include/prediction_model.h
             parser/register_model_parser.cpp parser/register_model_parser.h configuration/model_configuration_manager.cpp
-            configuration/model_configuration_manager.h engine/assignLearningTAR.cpp core/time_evaluator.cpp core/include/time_evaluator.h)
+            configuration/model_configuration_manager.h engine/assign_learning_tar.cpp core/time_evaluator.cpp core/include/time_evaluator.h)
 
     set_target_properties(savime-bin
             PROPERTIES OUTPUT_NAME savime)

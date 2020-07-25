@@ -146,17 +146,5 @@ public:
     SavimeResult Run() override;
 };
 
-class RegisterModel : public EngineOperator {
- public:
-  RegisterModel(OperationPtr operation, ConfigurationManagerPtr configurationManager,
-                QueryDataManagerPtr queryDataManager, MetadataManagerPtr metadataManager, StorageManagerPtr storageManager,
-                EnginePtr engine);
-
-  SavimeResult GenerateSubtar(SubTARIndex subtarIndex) override { return SAVIME_FAILURE; }
-  SavimeResult Run() override;
- private:
-  unordered_map<string, unordered_map<string, string>> ParseModelsFile(string filePath);
-};
-
 #endif /* DDL_OPERATORS_H */
 

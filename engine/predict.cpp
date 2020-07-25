@@ -15,7 +15,7 @@
 *    ANDERSON C. SILVA				OCTOBER 2019
 */
 
-#include "include/dml_operators.h"
+#include "include/ml_operators.h"
 #include "include/viz.h"
 #include "engine/include/predictor.h"
 #include <malloc.h>
@@ -40,8 +40,7 @@ Predict::Predict(OperationPtr operation,
 
 SavimeResult Predict::GenerateSubtar(SubTARIndex subtarIndex){
 
-
-    //Getting current subTAR
+    //Get current subTAR
     auto subtar = _generator->GetSubtar(subtarIndex);
     if(subtar == nullptr){
         return SAVIME_SUCCESS;
@@ -52,7 +51,6 @@ SavimeResult Predict::GenerateSubtar(SubTARIndex subtarIndex){
     auto newSubtar = this->createNewSubtar(predictedValues, predictionModel);
     this->sendOutputSubtar(subtarIndex, newSubtar);
 
-    //Must return success
     return SAVIME_SUCCESS;
 }
 
@@ -99,7 +97,6 @@ PredictionModel* Predict::getModel() {
     string modelName = _operation->GetParametersByName("model_name")->literal_str;
     auto predictionModel = new PredictionModel(modelName);
     return predictionModel;
-
 }
 
 void Predict::sendOutputSubtar(SubTARIndex subtarIndex, SubtarPtr newSubtar) {
