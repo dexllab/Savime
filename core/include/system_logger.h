@@ -25,11 +25,11 @@ class DefaultSystemLogger : public SystemLogger {
   static ConfigurationManagerPtr _configurationManager;
   static void SystemLoggerHandler(int32_t signal);
   static string GatherStackTrace();
-  static void WriteLog(string module, string message);
 
 public:
   explicit DefaultSystemLogger(ConfigurationManagerPtr configurationManager);
   void LogEvent(string module, string message) override;
+  static void WriteLog(string module, string message);
 };
 
 #endif /* SYSTEM_LOGGER_H */

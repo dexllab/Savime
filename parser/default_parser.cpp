@@ -66,6 +66,9 @@ const char *reorient_error =
 const char *predict_error = "Invalid parameter for operator PREDICT. Expected "
                              "PREDICT(tar, \"model\", attribute)";
 
+const char *assign_learing_tar_error = "Invalid parameter for operator ASSIGN_LEARNING_TAR. Expected "
+                            "ASSIGN_LEARNING_TAR(model, \"Learning-TAR-Query\")";
+
 using namespace std;
 
 // UTIL FUNCTIONS
@@ -154,7 +157,7 @@ TARPtr DefaultParser::ParseTAR(ValueExpressionPtr param, string errorMsg,
     }
     return tar;
   } else if (queryExpression = PARSE(param, QueryExpression)) {
-    tar = ParseOperation(queryExpression, std::move(queryPlan), idCounter);
+    tar = ParseDMLOperation(queryExpression, std::move(queryPlan), idCounter);
     if (tar == nullptr) {
       throw std::runtime_error(errorMsg);
     }
@@ -462,7 +465,7 @@ OperationPtr DefaultParser::ParseBatch(QueryExpressionPtr queryExpressionNode,
 
   for (const ValueExpressionPtr &expression : params) {
     if (subexpression = PARSE(expression, QueryExpression)) {
-      ParseDMLOperation(subexpression, queryPlan, idCounter);
+        ParseDDLOperation(subexpression, queryPlan, idCounter);
     } else {
       throw std::runtime_error("Invalid parameters for batch operator.");
     }
@@ -1548,7 +1551,7 @@ DefaultParser::ParseUserDefined(QueryExpressionPtr queryExpressionNode,
                             GET_IDENTIFER_BODY(identifier));
 
     } else if (queryExpression = PARSE(param, QueryExpression)) {
-      inputTAR = ParseOperation(queryExpression, queryPlan, idCounter);
+      inputTAR = ParseDMLOperation(queryExpression, queryPlan, idCounter);
       if (inputTAR)
         operation->AddParam(OPERAND(op_count++), inputTAR);
     } else if (stringLiteral = PARSE(param, CharacterStringLiteral)) {
@@ -1566,64 +1569,9 @@ DefaultParser::ParseUserDefined(QueryExpressionPtr queryExpressionNode,
   return operation;
 }
 
-//Predict Operator
-OperationPtr
-DefaultParser::ParsePredict(QueryExpressionPtr queryExpressionNode,
-                                QueryPlanPtr queryPlan, int &idCounter) {
-#define EXPECTED_PREDICT_PARAMS_NUM 2
-  CharacterStringLiteralPtr stringLiteral;
-  OperationPtr operation = std::make_shared<Operation>(TAL_PREDICT);
-  IdentifierChainPtr identifier; int32_t identifierCount = 0;
-  auto params = queryExpressionNode->_value_expression_list->ParamsToList();
-  int32_t op_count = 1;
-
-  if (params.size() == EXPECTED_PREDICT_PARAMS_NUM) {
-    TARPtr inputTAR =
-        ParseTAR(params.front(), predict_error, queryPlan, idCounter);
-    operation->AddParam(PARAM(TAL_PREDICT, _INPUT_TAR), inputTAR);
-    params.pop_front();
-
-    auto param = params.begin();
-
-    //Model Name
-    if(identifier = PARSE(*param, IdentifierChain)) {
-        string modelName = identifier->getIdentifier()->_identifierBody;
-        ifstream f("/tmp/" + modelName);
-        if(f.good()){
-            operation->AddParam("model_name", modelName);
-            f.close();
-        }
-        else {
-            throw std::runtime_error("Element " +
-                modelName + " is not a registered model name.");
-        }
-    } else {
-        throw std::runtime_error(predict_error);
-    }
-    param++;
-
-  }
-  else {
-    throw std::runtime_error(predict_error);
-  }
-
-  operation->SetResultingTAR(_schemaBuilder->InferSchema(operation));
-  return operation;
-
-}
-
-OperationPtr
-DefaultParser::ParseRegisterModel(QueryExpressionPtr queryExpressionNode,
-                                  QueryPlanPtr queryPlan, int &idCounter) {
-  RegisterModelParser *registerModelParser = new RegisterModelParser(this);
-  OperationPtr operation = registerModelParser->parse(queryExpressionNode, queryPlan, idCounter);
-  delete(registerModelParser);
-  return operation;
-}
-
 // MAIN FUNCTIONS
 OperationPtr
-DefaultParser::ParseDMLOperation(QueryExpressionPtr queryExpressionNode,
+DefaultParser::ParseDDLOperation(QueryExpressionPtr queryExpressionNode,
                                  QueryPlanPtr queryPlan, int &idCounter) {
   std::string functionName = queryExpressionNode->_identifier->_identifierBody;
   std::transform(functionName.begin(), functionName.end(), functionName.begin(),
@@ -1659,6 +1607,8 @@ DefaultParser::ParseDMLOperation(QueryExpressionPtr queryExpressionNode,
     operation = ParseBatch(queryExpressionNode, queryPlan, idCounter);
   } else if (functionName == _REGISTER_MODEL) {
     operation = ParseRegisterModel(queryExpressionNode, queryPlan, idCounter);
+  } else if (functionName == _ASSIGN_LEARNING_TAR) {
+      operation = ParseAssignLearningTAR(queryExpressionNode, queryPlan, idCounter);
   } else {
     throw std::runtime_error("Unknown or invalid operator: " + functionName + ".");
   }
@@ -1667,8 +1617,8 @@ DefaultParser::ParseDMLOperation(QueryExpressionPtr queryExpressionNode,
   return operation;
 }
 
-TARPtr DefaultParser::ParseOperation(QueryExpressionPtr queryExpressionNode,
-                                     QueryPlanPtr queryPlan, int &idCounter) {
+TARPtr DefaultParser::ParseDMLOperation(QueryExpressionPtr queryExpressionNode,
+                                        QueryPlanPtr queryPlan, int &idCounter) {
   string functionName = queryExpressionNode->_identifier->_identifierBody;
   std::transform(functionName.begin(), functionName.end(), functionName.begin(),
                  ::tolower);
@@ -1707,8 +1657,6 @@ TARPtr DefaultParser::ParseOperation(QueryExpressionPtr queryExpressionNode,
     operation = ParseReorient(queryExpressionNode, queryPlan, idCounter);
   } else if (functionName == (_PREDICT)) {
       operation = ParsePredict(queryExpressionNode, queryPlan, idCounter);
-  } else if (functionName == (_REGISTER_MODEL)) {
-    operation = ParseRegisterModel(queryExpressionNode, queryPlan, idCounter);
   } else if (_configurationManager->GetBooleanValue(
       OPERATOR(functionName))) {
     operation = ParseUserDefined(queryExpressionNode, queryPlan, idCounter);
@@ -1733,19 +1681,11 @@ int DefaultParser::CreateQueryPlan(ParseTreeNodePtr root,
       std::transform(functionName.begin(), functionName.end(),
                      functionName.begin(), ::tolower);
 
-      if (!functionName.compare(0, 6, "create") ||
-          !functionName.compare(0, 4, "drop") ||
-          !functionName.compare(0, 4, "load") ||
-          !functionName.compare(0, 4, "show") ||
-          !functionName.compare(0, 4, "save") ||
-          !functionName.compare(0, 6, "delete") ||
-          !functionName.compare(0, 7, "restore") ||
-          !functionName.compare(0, 5, "batch") ||
-          !functionName.compare(0, 8, "register")) {
-        ParseDMLOperation(queryExpression, queryPlan, idCounter);
+      if (this->isDDLFunction(functionName)) {
+          ParseDDLOperation(queryExpression, queryPlan, idCounter);
         queryPlan->SetType(DDL);
       } else {
-        ParseOperation(queryExpression, queryPlan, idCounter);
+          ParseDMLOperation(queryExpression, queryPlan, idCounter);
         queryPlan->SetType(DML);
       }
 
@@ -1833,4 +1773,133 @@ SavimeResult DefaultParser::Parse(QueryDataManagerPtr queryDataManager) {
   }
 
   return SAVIME_SUCCESS;
+}
+
+/*-----------------Machine Learning Related operators----------------------*/
+
+//Predict Operator
+OperationPtr
+DefaultParser::ParsePredict(QueryExpressionPtr queryExpressionNode,
+                            QueryPlanPtr queryPlan, int &idCounter) {
+#define EXPECTED_PREDICT_PARAMS_NUM 2
+    CharacterStringLiteralPtr stringLiteral;
+    OperationPtr operation = std::make_shared<Operation>(TAL_PREDICT);
+    IdentifierChainPtr identifier; int32_t identifierCount = 0;
+    auto params = queryExpressionNode->_value_expression_list->ParamsToList();
+    int32_t op_count = 1;
+
+    if (params.size() == EXPECTED_PREDICT_PARAMS_NUM) {
+        TARPtr inputTAR =
+                ParseTAR(params.front(), predict_error, queryPlan, idCounter);
+        operation->AddParam(PARAM(TAL_PREDICT, _INPUT_TAR), inputTAR);
+        params.pop_front();
+
+        auto param = params.begin();
+
+        //Model Name
+        if(identifier = PARSE(*param, IdentifierChain)) {
+            string modelName = identifier->getIdentifier()->_identifierBody;
+            ifstream f("/tmp/" + modelName);
+            if(f.good()){
+                operation->AddParam("model_name", modelName);
+                f.close();
+            }
+            else {
+                throw std::runtime_error("Element " +
+                                         modelName + " is not a registered model name.");
+            }
+        } else {
+            throw std::runtime_error(predict_error);
+        }
+        param++;
+
+    }
+    else {
+        throw std::runtime_error(predict_error);
+    }
+
+    operation->SetResultingTAR(_schemaBuilder->InferSchema(operation));
+    return operation;
+
+}
+
+//Register Model Operator
+OperationPtr
+DefaultParser::ParseRegisterModel(QueryExpressionPtr queryExpressionNode,
+                                  QueryPlanPtr queryPlan, int &idCounter) {
+    RegisterModelParser *registerModelParser = new RegisterModelParser(this);
+    OperationPtr operation = registerModelParser->parse(queryExpressionNode, queryPlan, idCounter);
+    delete(registerModelParser);
+    return operation;
+}
+
+//Assign learning tar operator
+OperationPtr
+DefaultParser::ParseAssignLearningTAR(QueryExpressionPtr queryExpressionNode,
+                                  QueryPlanPtr queryPlan, int &idCounter) {
+#define EXPECTED_PREDICT_PARAMS_NUM 2
+    CharacterStringLiteralPtr stringLiteral;
+    IdentifierChainPtr identifier;
+    OperationPtr operation = std::make_shared<Operation>(TAL_ASSIGN_LEARNING_TAR);
+
+    auto params = queryExpressionNode->_value_expression_list->ParamsToList();
+
+    if (params.size() == EXPECTED_PREDICT_PARAMS_NUM) {
+        auto param = params.begin();
+        //Model Name
+
+        identifier = PARSE(params.front(), IdentifierChain);
+        if(identifier != nullptr) {
+            string modelName = identifier->getIdentifier()->_identifierBody;
+            auto filename = "/tmp/" + modelName;
+            ifstream f(filename);
+            if(f.good()){
+                operation->AddParam("model_name", modelName);
+                f.close();
+            }
+            else {
+                throw std::runtime_error("Element " +
+                                         modelName + " is not a registered model name.");
+            }
+            params.pop_front();
+        } else {
+            throw std::runtime_error(assign_learing_tar_error);
+        }
+
+        stringLiteral = this->parseString(params.front());
+        if(stringLiteral != nullptr) {
+            operation->AddParam("learning_query", stringLiteral->getLiteralString());
+            params.pop_front();
+        }
+    }
+    else {
+        throw std::runtime_error(assign_learing_tar_error);
+    }
+
+    return operation;
+}
+
+CharacterStringLiteralPtr DefaultParser::parseString(ValueExpressionPtr value){
+    auto s = PARSE(value, CharacterStringLiteral);
+    if (s != nullptr) {
+        return s;
+    } else {
+        throw std::runtime_error("Error while parsing string: null string");
+    }
+}
+
+bool DefaultParser::isDDLFunction(string functionName) {
+    if (!functionName.compare(0, 6, "create") ||
+        !functionName.compare(0, 4, "drop") ||
+        !functionName.compare(0, 4, "load") ||
+        !functionName.compare(0, 4, "show") ||
+        !functionName.compare(0, 4, "save") ||
+        !functionName.compare(0, 6, "delete") ||
+        !functionName.compare(0, 7, "restore") ||
+        !functionName.compare(0, 5, "batch") ||
+        !functionName.compare(0, 8, "register") ||
+        !functionName.compare(0, 6, "assign"))
+        return true;
+    else
+        return false;
 }

@@ -21,7 +21,12 @@
 
 PredictionModel::PredictionModel(string modelName) {
    this->_modelConfigurationManager = new DefaultConfigurationManager();
-   this->loadModelConfig(std::move(modelName));
+   this->loadModelConfig(modelName);
+   this->_modelName = modelName;
+}
+
+string PredictionModel::getModelName() {
+    return this->_modelName;
 }
 
 void PredictionModel::loadModelConfig(string modelName) {
@@ -59,7 +64,10 @@ void PredictionModel::checkInputDimensions(SubtarPtr subtar){
          if(s[1].compare("*") == 0)
              continue;
          auto subtarDimSpec = subtar->GetDimensionSpecificationFor(s[0]);
-         if(subtarDimSpec->GetSpecsType() == TOTAL)
+         if(subtarDimSpec == NULL){
+             throw std::runtime_error(s[0] + ": Dimension Specification is NULL\n");
+         }
+         else if(subtarDimSpec->GetSpecsType() == TOTAL)
          {
              throw std::runtime_error(s[0] + ": Dimension Specification cannot be of type TOTAL.\n"
                                              "Use operator SUBSET for filters.");
@@ -77,6 +85,7 @@ void PredictionModel::checkInputDimensions(SubtarPtr subtar){
    }
 
 }
+
 list<DimensionPtr> PredictionModel::getOutputDimensionList() {
     auto dimString = this->getOutputDimensionString();
     list<DimensionPtr> dimensionList;
@@ -84,11 +93,12 @@ list<DimensionPtr> PredictionModel::getOutputDimensionList() {
     for(auto dimSpecification : dimensionSpecifications){
         auto dimVector = split(dimSpecification, '-');
         DimensionPtr dimension =                             //Lower, upper bound and spacing
-            make_shared<Dimension>(UNSAVED_ID, dimVector[0], INT64, 0, stoi(dimVector[1]), 1); //stoi(dimVector[1]) , 1);
+            make_shared<Dimension>(UNSAVED_ID, dimVector[0], INT32, 0, stoi(dimVector[1]), 1); //stoi(dimVector[1]) , 1);
         dimensionList.emplace_back(dimension);
     }
     return dimensionList;
 }
+
 list<pair<string, savime_size_t>> PredictionModel::getOutputAttributeList() {
     std::list<pair<string, savime_size_t>> outputAttributeList;
     pair<string, savime_size_t> outputAttribute;

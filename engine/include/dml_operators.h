@@ -18,6 +18,7 @@
 #define DML_OPERATORS_H
 
 #include <unordered_map>
+#include <engine/misc/include/prediction_model.h>
 #include "../core/include/engine.h"
 #include "../core/include/util.h"
 #include "../core/include/query_data_manager.h"
@@ -100,24 +101,6 @@ public :
     SavimeResult GenerateSubtar(SubTARIndex subtarIndex) override;
     SavimeResult Run() override{ return SAVIME_FAILURE; }
 
-};
-
-class Predict : public EngineOperator {
-
-  int32_t _numSubtars;
-  TARPtr _inputTAR;
-  TARPtr _outputTAR;
-  TARGeneratorPtr _generator;
-  TARGeneratorPtr _outputGenerator;
-
- public :
-   Predict(OperationPtr operation, ConfigurationManagerPtr configurationManager,
-          QueryDataManagerPtr queryDataManager, MetadataManagerPtr metadataManager, StorageManagerPtr storageManager,
-          EnginePtr engine);
-
-   SavimeResult GenerateSubtar(SubTARIndex subtarIndex) override;
-   SavimeResult Run() override{ return SAVIME_FAILURE; }
-   string toString() override {return "PREDICT";};
 };
 
 class Filter : public EngineOperator {

@@ -84,7 +84,9 @@ Json::Value sendJsonToUrl(Json::Value JSonQuery, string url) {
             std::cout << "Could not parse JSon data" << std::endl;
             throw std::runtime_error("Could not parse JSon data");
         }
-
+#ifdef DEBUG
+        writeJsonFile("/tmp/output.json", JSonQuery);
+#endif
         return root;
     } else {
         std::cout << "Could not initialize curl." << std::endl;
